@@ -404,3 +404,47 @@ footer {
     margin-top: 20px;
     color: #0a1f44;
 }
+
+.pricing-calculator {
+    max-width: 700px;
+    margin: 50px auto;
+    padding: 40px;
+    background: #0a1f44;
+    color: white;
+    border-radius: 15px;
+    text-align: center;
+}
+
+.pricing-calculator h2 {
+    margin-bottom: 15px;
+    color: white;
+}
+
+.pricing-calculator p {
+    margin-bottom: 20px;
+}
+
+.pricing-calculator input {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 8px;
+}
+
+.pricing-calculator button {
+    width: 100%;
+    padding: 15px;
+    background: #00c6ff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#priceResult {
+    margin-top: 20px;
+    font-size: 22px;
+    font-weight: bold;
+}
