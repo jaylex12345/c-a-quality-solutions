@@ -6,6 +6,23 @@
     <title>Contact Us | C&A Quality Solutions</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
+
+<script>
+function calculatePrice() {
+    let miles = document.getElementById("miles").value;
+    let waitTime = document.getElementById("waitTime").value;
+
+    let baseFee = 25;
+    let perMile = 2;
+    let waitingRate = 20;
+
+    let total = baseFee + (miles * perMile) + (waitTime * waitingRate);
+
+    document.getElementById("priceResult").innerText =
+        "Estimated Cost: $" + total.toFixed(2);
+}
+</script>
+
 <body>
 
 <header>
@@ -32,6 +49,18 @@
     <h2>Request Transportation or Delivery Service</h2>
     <p>Serving Maryland and the DMV with reliable transportation solutions</p>
     </section>
+
+    <section class="pricing-calculator">
+    <h2>Estimate Your Service Cost</h2>
+    <p>Use this quick estimate before submitting your request.</p>
+
+    <input type="number" id="miles" placeholder="Estimated miles">
+    <input type="number" id="waitTime" placeholder="Waiting time in hours">
+
+    <button onclick="calculatePrice()">Calculate Estimate</button>
+
+    <h3 id="priceResult"></h3>
+</section>
 
     <form class="contact-form" action="https://formspree.io/f/xredagoj" method="POST">
 

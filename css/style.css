@@ -372,3 +372,35 @@ footer {
     cursor: pointer;
     font-weight: bold;
 }
+
+.pricing-calculator {
+    max-width: 700px;
+    margin: 40px auto;
+    padding: 30px;
+    text-align: center;
+    background: #eaf4ff;
+    border-radius: 12px;
+}
+
+.pricing-calculator input {
+    width: 100%;
+    margin: 10px 0;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+.pricing-calculator button {
+    background: #00bcd4;
+    color: white;
+    border: none;
+    padding: 15px 25px;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#priceResult {
+    margin-top: 20px;
+    color: #0a1f44;
+}
