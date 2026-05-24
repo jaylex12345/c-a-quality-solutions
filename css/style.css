@@ -513,7 +513,29 @@ footer {
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
+    padding: 15px 30px;
+}
+
+.text-logo {
+    width: 70px;
+    height: 70px;
+    background: white;
+    color: #0a1f44;
+    border: 3px solid #00cfff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.logo-area h1 {
+    margin: 0;
+    font-size: 52px;
+}
 }
 
 .logo-area img {
@@ -526,8 +548,30 @@ footer {
 .logo-area {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 20px;
+    padding: 15px 30px;
 }
+
+.text-logo {
+    width: 70px;
+    height: 70px;
+    background: white;
+    color: #0a1f44;
+    border: 3px solid #00cfff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 22px;
+    flex-shrink: 0;
+}
+
+.logo-area h1 {
+    margin: 0;
+    font-size: 52px;
+}
+
 
 .logo-area img {
     width: 70px;
@@ -553,3 +597,4 @@ footer {
     font-weight: bold;
     font-size: 22px;
 }
+
