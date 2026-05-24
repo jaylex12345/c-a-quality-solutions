@@ -536,7 +536,7 @@ footer {
     margin: 0;
     font-size: 52px;
 }
-}
+
 
 .logo-area img {
     width: 60px;
@@ -598,3 +598,62 @@ footer {
     font-size: 22px;
 }
 
+.whatsapp-booking {
+    margin-top: 30px;
+}
+
+.whatsapp-btn {
+    background: #25D366;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.whatsapp-btn:hover {
+    background: #1ebe5d;
+}
+
+
+.hero-text {
+    text-align: center;
+    color: white;
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.hero-text h2 {
+    font-size: 54px;
+    margin-bottom: 15px;
+}
+
+.hero-text p {
+    font-size: 22px;
+    margin-bottom: 25px;
+}
+
+.whatsapp-btn {
+    background: #25D366;
+    color: white;
+    padding: 16px 32px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.whatsapp-btn {
+    display: inline-block;
+    margin-top: 20px;
+    background: #25D366;
+    color: white;
+    padding: 16px 32px;
+    border-radius: 10px;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+}
