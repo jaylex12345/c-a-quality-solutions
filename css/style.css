@@ -489,6 +489,11 @@ footer {
 
 #priceResult {
     margin-top: 20px;
-    font-size: 22px;
+    font-size: 28px;
     font-weight: bold;
+    color: #00ff88;
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
 }
