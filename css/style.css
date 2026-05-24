@@ -52,7 +52,21 @@ nav a:hover {
 
 /* Hero Section */
 .hero {
-    height: 85vh;
+    html, body {
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+.hero {
+    min-height: 100vh;
+    height: auto;
+    background-size: cover;
+    background-position: center;
+}
     background: linear-gradient(rgba(10,31,68,0.7),
     rgba(10,31,68,0.7)),
     url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d') center/cover;
@@ -661,7 +675,7 @@ footer {
 .hero {
     height: 85vh;
     background: linear-gradient(rgba(10,31,68,0.7), rgba(10,31,68,0.7)),
-    url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d') center/cover;
+url('https://images.unsplash.com/photo-1519003722824-194d4455a60c') center/cover;
     color: white;
     display: flex;
     flex-direction: column;
@@ -679,4 +693,19 @@ footer {
 .hero p {
     font-size: 1.3rem;
     margin-bottom: 30px;
+}
+
+@media (max-width: 768px) {
+    nav {
+        flex-direction: column;
+    }
+
+    .hero h1 {
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    .hero-content {
+        padding: 20px;
+    }
 }
