@@ -657,3 +657,26 @@ footer {
     font-size: 20px;
     font-weight: bold;
 }
+
+.hero {
+    height: 85vh;
+    background: linear-gradient(rgba(10,31,68,0.7), rgba(10,31,68,0.7)),
+    url('https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d') center/cover;
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 20px;
+}
+
+.hero h2 {
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 1.3rem;
+    margin-bottom: 30px;
+}
