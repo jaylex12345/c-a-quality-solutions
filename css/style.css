@@ -675,7 +675,7 @@ footer {
 .hero {
     height: 85vh;
     background: linear-gradient(rgba(10,31,68,0.7), rgba(10,31,68,0.7)),
-url('https://images.unsplash.com/photo-1519003722824-194d4455a60c') center/cover;
+url('logo.jpg') center/cover;
     color: white;
     display: flex;
     flex-direction: column;
