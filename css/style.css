@@ -961,3 +961,16 @@ url('logo.jpg') center/cover;
 .about-text{
     max-width:600px;
 }
+
+.gold-line{
+    width:120px;
+    height:4px;
+    background:#d4af37;
+    margin:15px auto 25px auto;
+    border-radius:10px;
+}
+
+.about-text{
+    text-align:left;
+    line-height:1.8;
+}
