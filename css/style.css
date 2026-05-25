@@ -772,3 +772,49 @@ url('https://images.unsplash.com/photo-1519003722824-194d4455a60c') center/cover
         font-size: 16px;
     }
 }
+
+@media (max-width: 768px) {
+    header {
+        padding: 12px;
+    }
+
+    .logo-area {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: nowrap;
+    }
+
+    .text-logo {
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+    }
+
+    .logo-area h1 {
+        font-size: 20px;
+        margin: 0;
+        white-space: nowrap;
+    }
+
+    nav ul {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        flex-wrap: wrap;
+        padding: 10px 0;
+    }
+
+    nav ul li a {
+        font-size: 15px;
+    }
+
+    .hero h2 {
+        font-size: 28px;
+    }
+
+    .hero p {
+        font-size: 14px;
+    }
+}
