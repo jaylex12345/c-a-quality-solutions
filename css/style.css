@@ -1291,3 +1291,10 @@ url('logo.jpg') center/cover;
     font-size: 32px;
   }
 }
+
+.site-logo {
+  width: 70px;
+  height: 70px;
+  object-fit: contain;
+  border-radius: 50%;
+}
