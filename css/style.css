@@ -1196,3 +1196,98 @@ url('logo.jpg') center/cover;
         grid-template-columns: 1fr;
     }
 }
+
+.pricing-section {
+  padding: 80px 8%;
+  background: #ffffff;
+  text-align: center;
+}
+
+.pricing-section h1 {
+  font-size: 46px;
+  color: #081f4d;
+  margin-bottom: 10px;
+}
+
+.pricing-subtitle {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 45px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.price-card {
+  background: #ffffff;
+  padding: 35px 25px;
+  border-radius: 14px;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  border: 1px solid #eee;
+  transition: 0.3s ease;
+}
+
+.price-card:hover {
+  transform: translateY(-6px);
+}
+
+.icon {
+  font-size: 38px;
+  margin-bottom: 15px;
+}
+
+.price-card h3 {
+  color: #081f4d;
+  font-size: 21px;
+  margin-bottom: 12px;
+}
+
+.price-card p {
+  color: #555;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.price-card span {
+  display: block;
+  color: #0077a8;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.pricing-contact {
+  margin-top: 40px;
+  font-size: 17px;
+  color: #111;
+}
+
+.book-btn {
+  display: inline-block;
+  margin-top: 20px;
+  background: #081f4d;
+  color: white;
+  padding: 15px 35px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.book-btn:hover {
+  background: #c49a2c;
+  color: #081f4d;
+}
+
+@media (max-width: 900px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-section h1 {
+    font-size: 32px;
+  }
+}
