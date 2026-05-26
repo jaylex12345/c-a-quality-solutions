@@ -1130,3 +1130,69 @@ url('logo.jpg') center/cover;
     font-size: 28px;
   }
 }
+
+.pricing {
+    padding: 80px 20px;
+    text-align: center;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.pricing h2 {
+    font-size: 42px;
+    color: #0b2454;
+    margin-bottom: 10px;
+}
+
+.pricing-subtitle {
+    font-size: 18px;
+    margin-bottom: 40px;
+    color: #555;
+}
+
+.pricing-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.price-card {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    text-align: center;
+}
+
+.price-card strong {
+    display: block;
+    margin-top: 15px;
+    color: #00a8cc;
+    font-size: 24px;
+}
+
+.wait-time {
+    margin-top: 30px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.quote-btn {
+    display: inline-block;
+    margin-top: 25px;
+    padding: 14px 30px;
+    background: #0b2454;
+    color: white;
+    border-radius: 8px;
+    text-decoration: none;
+}
+
+@media (max-width: 768px) {
+    .pricing-grid {
+        grid-template-columns: 1fr;
+    }
+}
