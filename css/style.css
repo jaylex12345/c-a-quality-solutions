@@ -1309,3 +1309,13 @@ img.site-logo {
     object-fit: contain;
     border-radius: 50%;
 }
+header .site-logo,
+nav .site-logo,
+.site-logo {
+    width: 60px !important;
+    height: 60px !important;
+    max-width: 60px !important;
+    min-width: 60px !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
+}
