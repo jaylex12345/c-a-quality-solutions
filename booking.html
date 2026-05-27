@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Now | C&A Quality Solutions</title>
+
+<style>
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,sans-serif;
+}
+
+body{
+background:#f4f6f9;
+color:#111;
+}
+
+header{
+background:#061f45;
+color:white;
+padding:20px;
+text-align:center;
+}
+
+header h1{
+font-size:32px;
+}
+
+header p{
+color:#f2b632;
+margin-top:8px;
+}
+
+.container{
+max-width:1000px;
+margin:40px auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:30px;
+border-radius:15px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+}
+
+h2{
+color:#061f45;
+margin-bottom:20px;
+}
+
+label{
+display:block;
+margin-top:15px;
+font-weight:bold;
+}
+
+input, select, textarea{
+width:100%;
+padding:15px;
+margin-top:8px;
+border:1px solid #ccc;
+border-radius:8px;
+font-size:16px;
+}
+
+button{
+width:100%;
+padding:16px;
+margin-top:20px;
+border:none;
+border-radius:10px;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+}
+
+.calculate{
+background:#f2b632;
+color:#061f45;
+}
+
+.submit{
+background:#061f45;
+color:white;
+}
+
+.price-box{
+margin-top:20px;
+padding:20px;
+background:#061f45;
+color:white;
+font-size:24px;
+text-align:center;
+border-radius:12px;
+font-weight:bold;
+}
+
+.whatsapp{
+display:block;
+text-align:center;
+margin-top:20px;
+padding:16px;
+background:#25D366;
+color:white;
+text-decoration:none;
+border-radius:10px;
+font-weight:bold;
+font-size:18px;
+}
+
+footer{
+text-align:center;
+padding:20px;
+margin-top:40px;
+background:#061f45;
+color:white;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>C&A Quality Solutions</h1>
+<p>Professional Courier & Transportation Booking</p>
+</header>
+
+<div class="container">
+<div class="card">
+
+<h2>Book Your Transportation Service</h2>
+
+<label>Full Name</label>
+<input type="text" id="name">
+
+<label>Phone Number</label>
+<input type="text" id="phone">
+
+<label>Service Type</label>
+<select id="service">
+<option>Courier Delivery</option>
+<option>Medical Courier</option>
+<option>Scheduled Transportation</option>
+<option>Priority Delivery</option>
+</select>
+
+<label>Pickup Address</label>
+<input type="text" id="pickup">
+
+<label>Drop-off Address</label>
+<input type="text" id="dropoff">
+
+<label>Estimated Miles</label>
+<input type="number" id="miles">
+
+<label>Special Instructions</label>
+<textarea id="notes"></textarea>
+
+<button class="calculate" onclick="calculatePrice()">Calculate Price</button>
+
+<div class="price-box" id="result">
+Estimated Price: $0.00
+</div>
+
+<button class="submit" onclick="submitBooking()">Submit Booking</button>
+
+<a class="whatsapp" href="https://wa.me/14108785949">
+Message Us on WhatsApp
+</a>
+
+</div>
+</div>
+
+<footer>
+© 2026 C&A Quality Solutions LLC
+</footer>
+
+<script>
+function calculatePrice(){
+let miles=document.getElementById("miles").value;
+let total=miles*2.5;
+
+if(total<30){
+total=30;
+}
+
+document.getElementById("result").innerHTML=
+"Estimated Price: $" + total.toFixed(2);
+}
+
+function submitBooking(){
+alert("Booking request submitted successfully!");
+}
+</script>
+
+</body>
+</html>
