@@ -1293,10 +1293,11 @@ url('logo.jpg') center/cover;
 }
 
 
-.site-logo {
-    width: 45px !important;
-    height: 45px !important;
-    max-width: 45px !important;
-    object-fit: contain;
-    border-radius: 50%;
+img.site-logo {
+    width: 25px !important;
+    height: 25px !important;
+    max-width: 25px !important;
+    min-width: 25px !important;
+    object-fit: contain !important;
+    border-radius: 50% !important;
 }
