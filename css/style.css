@@ -1290,11 +1290,11 @@ url('logo.jpg') center/cover;
   .pricing-section h1 {
     font-size: 32px;
   }
-}
 
-.site-logo {
-    width: 30px;
-    height: 30px;
+  .site-logo {
+    width: 45px !important;
+    height: 45px !important;
+    max-width: 45px !important;
     object-fit: contain;
-    border-radius: 20%;
+    border-radius: 50%;
 }
