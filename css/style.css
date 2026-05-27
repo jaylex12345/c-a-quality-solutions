@@ -1293,15 +1293,9 @@ url('logo.jpg') center/cover;
 }
 
 .site-logo {
-  width: 70px;
-  height: 70px;
-  object-fit: contain;
-  border-radius: 50%;
-}
-
-.site-logo {
-    width: 120px;
-    height: 120px;
+    width: 65px;
+    height: 65px;
     object-fit: contain;
     border-radius: 50%;
+}
 }
