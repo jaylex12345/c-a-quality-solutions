@@ -1290,8 +1290,10 @@ url('logo.jpg') center/cover;
   .pricing-section h1 {
     font-size: 32px;
   }
+}
 
-  .site-logo {
+
+.site-logo {
     width: 45px !important;
     height: 45px !important;
     max-width: 45px !important;
