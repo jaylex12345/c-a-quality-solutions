@@ -1301,3 +1301,10 @@ img.site-logo {
     object-fit: contain !important;
     border-radius: 50% !important;
 }
+
+.site-logo {
+    width: 50px !important;
+    height: 50px !important;
+    object-fit: contain;
+    border-radius: 50%;
+}
