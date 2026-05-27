@@ -1293,8 +1293,8 @@ url('logo.jpg') center/cover;
 }
 
 .site-logo {
-    width: 65px;
-    height: 65px;
+    width: 30px;
+    height: 30px;
     object-fit: contain;
-    border-radius: 50%;
+    border-radius: 20%;
 }
