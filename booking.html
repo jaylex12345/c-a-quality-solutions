@@ -201,28 +201,10 @@ Cancellations made less than 2 hours before scheduled pickup are subject to a $1
 </div>
 
 <footer>
-© 2026 C&A Quality Solutions LLC
+  © 2026 C&A Quality Solutions LLC
 </footer>
 
 <script>
-function calculatePrice() {
-    const miles = parseFloat(document.getElementById("miles").value);
-    const resultBox = document.getElementById("result");
-
-    if (!miles || miles <= 0) {
-        alert("Please enter estimated miles");
-        resultBox.innerText = "Estimated Price: $0.00";
-        return;
-    }
-
-    const baseFare = 35;
-    const pricePerMile = 2.5;
-    const total = baseFare + (miles * pricePerMile);
-
-    resultBox.innerText = "Estimated Price: $" + total.toFixed(2);
-}
-</script>
-
 async function payFullAmount() {
     const resultText = document.getElementById("result").innerText;
     const amount = parseFloat(resultText.replace("Estimated Price: $", ""));
@@ -235,9 +217,9 @@ async function payFullAmount() {
     const response = await fetch("/.netlify/functions/create-checkout", {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
+            "Content-Type": "application/json"
         },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount })
     });
 
     const data = await response.json();
@@ -245,10 +227,13 @@ async function payFullAmount() {
     if (data.url) {
         window.location.href = data.url;
     } else {
-        alert("Payment error: " + data.error);
+        alert("Payment error");
     }
 }
+</script>
 
+</body>
+</html>
 
 
 </body>
