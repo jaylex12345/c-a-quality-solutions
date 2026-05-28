@@ -211,27 +211,6 @@ Cancellations made less than 2 hours before scheduled pickup are subject to a $1
 © 2026 C&A Quality Solutions LLC
 </footer>
 
-
-
-
-<script>
-function calculatePrice() {
-    const miles = parseFloat(document.getElementById("miles").value);
-    const resultBox = document.getElementById("result");
-
-    if (!miles || miles <= 0) {
-        alert("Please enter estimated miles");
-        resultBox.innerText = "Estimated Price: $0.00";
-        return;
-    }
-
-    const baseFare = 35;
-    const pricePerMile = 2.5;
-    const total = baseFare + (miles * pricePerMile);
-
-    resultBox.innerText = "Estimated Price: $" + total.toFixed(2);
-}
-
 <script>
 function calculatePrice() {
     const miles = parseFloat(document.getElementById("miles").value);
@@ -250,6 +229,7 @@ function calculatePrice() {
     resultBox.innerText = "Estimated Price: $" + total.toFixed(2);
 }
 </script>
+
 
 
 </body>
