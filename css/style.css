@@ -1572,3 +1572,15 @@ nav a:hover {
     width:100%;
     text-align:center;
 }
+
+.payment-note{
+    font-size:14px;
+    color:#b45309;
+    font-weight:bold;
+    text-align:center;
+    margin:10px 0 15px 0;
+    padding:12px;
+    border:1px solid #f4b400;
+    border-radius:8px;
+    background:#fff8e1;
+}
