@@ -200,43 +200,47 @@ Message Us on WhatsApp
 
 
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTvZB3b6l-zjyMQY-KrJNy_w1vldHrXEM&libraries=places"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDTvZB3b6l-zjyMQY-KrJNy_w1vldHrXEM"></script>
 
 <script>
-async function calculatePrice() {
-    const pickup = document.getElementById("pickup").value;
-    const dropoff = document.getElementById("dropoff").value;
+function calculatePrice() {
+  const pickup = document.getElementById("pickup").value;
+  const dropoff = document.getElementById("dropoff").value;
 
-    const service = new google.maps.DistanceMatrixService();
+  if (!pickup || !dropoff) {
+    alert("Please enter both pickup and drop-off addresses.");
+    return;
+  }
 
-    service.getDistanceMatrix({
-        origins: [pickup],
-        destinations: [dropoff],
-        travelMode: 'DRIVING',
-        unitSystem: google.maps.UnitSystem.IMPERIAL
-    }, function(response, status) {
+  const service = new google.maps.DistanceMatrixService();
 
-        if (status !== "OK") {
-            alert("Unable to calculate route.");
-            return;
-        }
+  service.getDistanceMatrix({
+    origins: [pickup],
+    destinations: [dropoff],
+    travelMode: google.maps.TravelMode.DRIVING,
+    unitSystem: google.maps.UnitSystem.IMPERIAL
+  }, function(response, status) {
+    if (status !== "OK") {
+      alert("Google Maps error: " + status);
+      return;
+    }
 
-        const distanceText = response.rows[0].elements[0].distance.text;
-        const miles = parseFloat(distanceText.replace(" mi", ""));
+    const element = response.rows[0].elements[0];
 
-        let baseRate = 3.00;
-        let perMile = 2.50;
+    if (element.status !== "OK") {
+      alert("Route error: " + element.status);
+      return;
+    }
 
-        let total = baseRate + (miles * perMile);
+    const miles = element.distance.value / 1609.34;
+    const total = 35 + (miles * 2.5);
 
-        document.getElementById("miles").value = miles.toFixed(1);
+    document.getElementById("miles").value = miles.toFixed(1);
+    document.getElementById("result").innerText =
+      "Estimated Price: $" + total.toFixed(2) + " (" + miles.toFixed(1) + " miles)";
 
-document.getElementById("result").innerText =
-    "Estimated Price: $" + total.toFixed(2);
-
-document.getElementById("estimatedPrice").value =
-    "$" + total.toFixed(2);
-    });
+    document.getElementById("estimatedPrice").value = "$" + total.toFixed(2);
+  });
 }
 </script>
 
