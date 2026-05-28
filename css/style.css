@@ -1522,3 +1522,23 @@ nav a:hover {
 .pay-now-btn:hover {
   background: #4f46e5;
 }
+
+.pay-now-btn {
+    display: block;
+    width: 100%;
+    background: #635BFF;
+    color: white;
+    text-align: center;
+    padding: 16px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    transition: 0.3s;
+}
+
+.pay-now-btn:hover {
+    background: #4b44d4;
+}
