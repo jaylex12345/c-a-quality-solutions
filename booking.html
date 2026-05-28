@@ -162,14 +162,11 @@ color:white;
 <option>Priority Delivery</option>
 </select>
 
-<label>Pickup Address</label>
-<input type="text" name="Pickup Address" required>
+<input type="text" id="pickup" name="Pickup Address" required>
 
-<label>Drop-off Address</label>
-<input type="text" name="Drop-off Address" required>
+<input type="text" id="dropoff" name="Drop-off Address" required>
 
-<label>Estimated Miles</label>
-<input type="number" name="Estimated Miles" required>
+<input type="number" id="miles" name="Estimated Miles" readonly>
 
 <label>Special Instructions</label>
 <textarea name="Instructions"></textarea>
@@ -181,8 +178,6 @@ color:white;
 <div class="price-box" id="result">
 Estimated Price: $0.00
 </div>
-
-<input type="hidden" name="Estimated Price" id="estimatedPrice">
 
 <input type="hidden" name="Estimated Price" id="estimatedPrice">
 
@@ -235,8 +230,12 @@ async function calculatePrice() {
         let total = baseRate + (miles * perMile);
 
         document.getElementById("miles").value = miles.toFixed(1);
-        document.getElementById("price").innerText =
-            "Estimated Price: $" + total.toFixed(2);
+
+document.getElementById("result").innerText =
+    "Estimated Price: $" + total.toFixed(2);
+
+document.getElementById("estimatedPrice").value =
+    "$" + total.toFixed(2);
     });
 }
 </script>
