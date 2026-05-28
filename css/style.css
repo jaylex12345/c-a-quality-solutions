@@ -47,7 +47,7 @@ nav a {
 }
 
 nav a:hover {
-    color: #00bcd4;
+    color: #f4b400;
 }
 
 /* Hero Section */
@@ -1417,4 +1417,23 @@ nav a {
 
 nav a:hover {
   color: white;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    margin-top: 20px;
+}
+
+nav a {
+    color: white !important;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+}
+
+nav a:hover {
+    color: #f2b632 !important;
 }
