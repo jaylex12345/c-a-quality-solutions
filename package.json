@@ -1,0 +1,24 @@
+{
+  "name": "c-a-quality-solutions-code",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaylex12345/c-a-quality-solutions.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/jaylex12345/c-a-quality-solutions/issues"
+  },
+  "homepage": "https://github.com/jaylex12345/c-a-quality-solutions#readme",
+  "dependencies": {
+    "stripe": "^22.2.0"
+  }
+}

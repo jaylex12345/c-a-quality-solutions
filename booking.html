@@ -187,11 +187,6 @@ Estimated Price: $0.00
 
     <button class="submit-btn">Submit Booking</button>
 
-    <a href="https://buy.stripe.com/4gM4gy2VC4y378o5o31Jm00"
-       target="_blank"
-       class="pay-now-btn">
-       Pay Full Amount
-    </a>
 
 <p class="payment-note">
 Full payment is required to confirm your booking.
@@ -199,11 +194,9 @@ Cancellations made less than 2 hours before scheduled pickup are subject to a $1
 </p>
 
 
-    <a href="https://wa.me/YOURNUMBER"
-       target="_blank"
-       class="whatsapp-btn">
-       Message Us on WhatsApp
-    </a>
+    <button type="button" onclick="payFullAmount()" class="pay-now-btn">
+    Pay Full Amount
+</button>
 
 </div>
 
@@ -229,6 +222,32 @@ function calculatePrice() {
     resultBox.innerText = "Estimated Price: $" + total.toFixed(2);
 }
 </script>
+
+async function payFullAmount() {
+    const resultText = document.getElementById("result").innerText;
+    const amount = parseFloat(resultText.replace("Estimated Price: $", ""));
+
+    if (!amount || amount <= 0) {
+        alert("Please calculate the price first.");
+        return;
+    }
+
+    const response = await fetch("/.netlify/functions/create-checkout", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ amount }),
+    });
+
+    const data = await response.json();
+
+    if (data.url) {
+        window.location.href = data.url;
+    } else {
+        alert("Payment error: " + data.error);
+    }
+}
 
 
 
