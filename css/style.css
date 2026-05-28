@@ -1449,3 +1449,46 @@ nav a:hover {
     display: block;
     margin: 15px 0;
 }
+
+.contact-box {
+  max-width: 750px;
+  margin: 50px auto;
+  background: white;
+  color: #111;
+  padding: 40px;
+  border-radius: 14px;
+  text-align: center;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+}
+
+.contact-box h2 {
+  color: #061f45;
+  margin-bottom: 20px;
+}
+
+.contact-box p {
+  font-size: 18px;
+  margin: 12px 0;
+}
+
+.contact-buttons {
+  margin-top: 25px;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.contact-btn {
+  background: #061f45;
+  color: white !important;
+  padding: 14px 22px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.contact-btn:hover {
+  background: #f2b632;
+  color: #061f45 !important;
+}
