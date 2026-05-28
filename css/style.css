@@ -1584,3 +1584,17 @@ nav a:hover {
     border-radius:8px;
     background:#fff8e1;
 }
+
+.payment-note{
+    font-size:15px;
+    color:#b45309;
+    font-weight:bold;
+    text-align:center;
+    margin:15px auto;
+    padding:15px;
+    border:2px solid #f4b400;
+    border-radius:10px;
+    background:#fff8e1;
+    width:90%;
+    line-height:1.6;
+}
