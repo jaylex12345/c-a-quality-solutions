@@ -213,7 +213,6 @@ Cancellations made less than 2 hours before scheduled pickup are subject to a $1
 
 
 
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnOUiDU0upL9wbMydckFUKtPbIZEIKqns"></script>
 
 <script>
 function calculatePrice() {
@@ -233,36 +232,22 @@ function calculatePrice() {
     resultBox.innerText = "Estimated Price: $" + total.toFixed(2);
 }
 
-    service.getDistanceMatrix({
-        origins: [pickup],
-        destinations: [dropoff],
-        travelMode: google.maps.TravelMode.DRIVING,
-        unitSystem: google.maps.UnitSystem.IMPERIAL
-    }, function(response, status) {
+<script>
+function calculatePrice() {
+    const miles = parseFloat(document.getElementById("miles").value);
+    const resultBox = document.getElementById("result");
 
-        if (status !== "OK") {
-            alert("Google Maps Error: " + status);
-            return;
-        }
+    if (!miles || miles <= 0) {
+        alert("Please enter estimated miles");
+        resultBox.innerText = "Estimated Price: $0.00";
+        return;
+    }
 
-        const distance = response.rows[0].elements[0];
+    const baseFare = 35;
+    const pricePerMile = 2.5;
+    const total = baseFare + (miles * pricePerMile);
 
-        if (distance.status !== "OK") {
-            alert("Route not found");
-            return;
-        }
-
-        const miles = distance.distance.value / 1609.34;
-        const total = 35 + (miles * 2.5);
-
-        document.getElementById("result").innerText =
-            "Estimated Price: $" + total.toFixed(2);
-
-            document.getElementById("miles").value = miles.toFixed(1);
-
-        document.getElementById("estimatedPrice").value =
-            total.toFixed(2);
-    });
+    resultBox.innerText = "Estimated Price: $" + total.toFixed(2);
 }
 </script>
 
