@@ -7,22 +7,6 @@
     <link rel="stylesheet" href="style.css">
 </head>
 
-<script>
-function calculatePrice() {
-    let miles = document.getElementById("miles").value;
-    let waitTime = document.getElementById("waitTime").value;
-
-    let baseFee = 25;
-    let perMile = 2;
-    let waitingRate = 20;
-
-    let total = baseFee + (miles * perMile) + (waitTime * waitingRate);
-
-    document.getElementById("priceResult").innerText =
-        "Estimated Cost: $" + total.toFixed(2);
-}
-</script>
-
 <body>
 
 <header class="main-header">
