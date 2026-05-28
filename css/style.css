@@ -1506,3 +1506,19 @@ nav a:hover {
   max-width: 90px !important;
   object-fit: contain !important;
 }
+
+.pay-now-btn {
+  display: block;
+  text-align: center;
+  background: #635bff;
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  margin-top: 15px;
+}
+
+.pay-now-btn:hover {
+  background: #4f46e5;
+}
