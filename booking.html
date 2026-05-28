@@ -166,7 +166,39 @@ color:white;
 Estimated Price: $0.00
 </div>
 
-<button class="submit" onclick="submitBooking()">Submit Booking</button>
+<form action="https://formspree.io/f/xredagoj" method="POST">
+
+<label>Full Name</label>
+<input type="text" name="Customer Name" required>
+
+<label>Phone Number</label>
+<input type="text" name="Phone Number" required>
+
+<label>Service Type</label>
+<select name="Service Type" required>
+<option>Courier Delivery</option>
+<option>Medical Courier</option>
+<option>Scheduled Transportation</option>
+<option>Priority Delivery</option>
+</select>
+
+<label>Pickup Address</label>
+<input type="text" name="Pickup Address" required>
+
+<label>Drop-off Address</label>
+<input type="text" name="Drop-off Address" required>
+
+<label>Estimated Miles</label>
+<input type="number" name="Estimated Miles" required>
+
+<label>Special Instructions</label>
+<textarea name="Instructions"></textarea>
+
+<button class="submit" type="submit">
+Submit Booking
+</button>
+
+</form>
 
 <a class="whatsapp" href="https://wa.me/14108785949">
 Message Us on WhatsApp
