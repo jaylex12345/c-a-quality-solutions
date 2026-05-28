@@ -176,13 +176,14 @@ color:white;
 
 
 
-<button class="calculate" type="button" onclick="calculatePrice()">Calculate Price</button>
+<button class="calculate" type="button" onclick="calculatePrice()">
+  Calculate Price
+</button>
 
 <div class="price-box" id="result">
 Estimated Price: $0.00
 </div>
-
-<input type="hidden" name="Estimated Price" id="estimatedPrice">
+<input type="hidden" id="estimatedPrice" name="Estimated Price">
 
 <button class="submit" type="submit">
 Submit Booking
@@ -207,43 +208,44 @@ Message Us on WhatsApp
 
 <script>
 function calculatePrice() {
-  const pickup = document.getElementById("pickup").value;
-  const dropoff = document.getElementById("dropoff").value;
+    const pickup = document.getElementById("pickup").value;
+    const dropoff = document.getElementById("dropoff").value;
 
-  if (!pickup || !dropoff) {
-    alert("Please enter both pickup and drop-off addresses.");
-    return;
-  }
-
-  const service = new google.maps.DistanceMatrixService();
-
-  service.getDistanceMatrix({
-    origins: [pickup],
-    destinations: [dropoff],
-    travelMode: google.maps.TravelMode.DRIVING,
-    unitSystem: google.maps.UnitSystem.IMPERIAL
-  }, function(response, status) {
-    if (status !== "OK") {
-      alert("Google Maps error: " + status);
-      return;
+    if (!pickup || !dropoff) {
+        alert("Enter pickup and drop-off addresses");
+        return;
     }
 
-    const element = response.rows[0].elements[0];
+    const service = new google.maps.DistanceMatrixService();
 
-    if (element.status !== "OK") {
-      alert("Route error: " + element.status);
-      return;
-    }
+    service.getDistanceMatrix({
+        origins: [pickup],
+        destinations: [dropoff],
+        travelMode: google.maps.TravelMode.DRIVING,
+        unitSystem: google.maps.UnitSystem.IMPERIAL
+    }, function(response, status) {
 
-    const miles = element.distance.value / 1609.34;
-    const total = 35 + (miles * 2.5);
+        if (status !== "OK") {
+            alert("Google Maps Error: " + status);
+            return;
+        }
 
-    document.getElementById("miles").value = miles.toFixed(1);
-    document.getElementById("result").innerText =
-      "Estimated Price: $" + total.toFixed(2) + " (" + miles.toFixed(1) + " miles)";
+        const distance = response.rows[0].elements[0];
 
-    document.getElementById("estimatedPrice").value = "$" + total.toFixed(2);
-  });
+        if (distance.status !== "OK") {
+            alert("Route not found");
+            return;
+        }
+
+        const miles = distance.distance.value / 1609.34;
+        const total = 35 + (miles * 2.5);
+
+        document.getElementById("result").innerText =
+            "Estimated Price: $" + total.toFixed(2);
+
+        document.getElementById("estimatedPrice").value =
+            total.toFixed(2);
+    });
 }
 </script>
 
