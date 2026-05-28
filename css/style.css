@@ -1399,3 +1399,22 @@ nav .site-logo,
     margin-top: 15px;
   }
 }
+
+nav {
+  display: flex;
+  justify-content: center;
+  gap: 25px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+nav a {
+  color: #f2b632;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 18px;
+}
+
+nav a:hover {
+  color: white;
+}
