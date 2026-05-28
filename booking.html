@@ -162,9 +162,15 @@ color:white;
 <label>Special Instructions</label>
 <textarea name="Instructions"></textarea>
 
-<button class="submit" type="submit">
-Submit Booking
-</button>
+
+
+<button class="calculate" type="button" onclick="calculatePrice()">Calculate Price</button>
+
+<div class="price-box" id="result">
+Estimated Price: $0.00
+</div>
+
+<input type="hidden" name="Estimated Price" id="estimatedPrice">
 
 </form>
 
@@ -181,19 +187,18 @@ Message Us on WhatsApp
 
 <script>
 function calculatePrice(){
-let miles=document.getElementById("miles").value;
-let total=miles*2.5;
+let miles = document.getElementById("miles").value;
+let total = miles * 2.5;
 
-if(total<30){
-total=30;
+if(total < 30){
+total = 30;
 }
 
-document.getElementById("result").innerHTML=
+document.getElementById("result").innerHTML =
 "Estimated Price: $" + total.toFixed(2);
-}
 
-function submitBooking(){
-alert("Booking request submitted successfully!");
+document.getElementById("estimatedPrice").value =
+"$" + total.toFixed(2);
 }
 </script>
 
