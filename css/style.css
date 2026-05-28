@@ -1497,3 +1497,12 @@ nav a:hover {
   background: #f2b632;
   color: #061f45 !important;
 }
+
+.header-logo,
+.main-header img,
+.brand img {
+  width: 90px !important;
+  height: 90px !important;
+  max-width: 90px !important;
+  object-fit: contain !important;
+}
