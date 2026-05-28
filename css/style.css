@@ -1542,3 +1542,33 @@ nav a:hover {
 .pay-now-btn:hover {
     background: #4b44d4;
 }
+
+.booking-actions{
+    display:flex;
+    flex-direction:column;
+    gap:15px;
+    margin-top:20px;
+}
+
+.pay-now-btn{
+    display:block;
+    width:100%;
+    background:#635BFF;
+    color:white;
+    text-align:center;
+    padding:15px;
+    border-radius:8px;
+    text-decoration:none;
+    font-weight:bold;
+    font-size:18px;
+}
+
+.submit-btn{
+    width:100%;
+}
+
+.whatsapp-btn{
+    display:block;
+    width:100%;
+    text-align:center;
+}
