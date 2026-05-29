@@ -230,7 +230,7 @@ async function submitBookingAndPay() {
   const formData = new FormData(form);
 
   try {
-    await fetch("https://formspree.io/f/xredagoj", {
+    const response = await fetch("https://formspree.io/f/xredagoj", {
       method: "POST",
       body: formData,
       headers: {
@@ -238,11 +238,17 @@ async function submitBookingAndPay() {
       }
     });
 
+    if (!response.ok) {
+      alert("Booking details did not submit. Please try again.");
+      return;
+    }
+
     window.location.href = "https://buy.stripe.com/4gM4gy2VC4y378o5o31Jm00";
 
   } catch (error) {
-    alert("Booking error. Please try again or call C&A Quality Solutions.");
+    alert("Booking error: " + error.message);
   }
+
 }
 </script>
 
