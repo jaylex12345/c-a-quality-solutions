@@ -1,29 +1,38 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-exports.handler = async (event) => {
-  const { amount } = JSON.parse(event.body);
+exports.handler = async function (event) {
+  try {
+    const { amount } = JSON.parse(event.body);
 
-  const session = await stripe.checkout.sessions.create({
-    payment_method_types: ["card"],
-    line_items: [
-      {
-        price_data: {
-          currency: "usd",
-          product_data: {
-            name: "C&A Quality Solutions Booking"
+    const baseUrl = "https://caqualitysolutions.com";
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: "C&A Quality Solutions Booking",
+            },
+            unit_amount: Math.round(amount * 100),
           },
-          unit_amount: Math.round(amount * 100)
+          quantity: 1,
         },
-        quantity: 1
-      }
-    ],
-    mode: "payment",
-    success_url: "https://legendary-tiramisu-32555a.netlify.app/success.html",
-cancel_url: "https://legendary-tiramisu-32555a.netlify.app/cancel.html"
-  });
+      ],
+      mode: "payment",
+      success_url: `${baseUrl}/success.html`,
+      cancel_url: `${baseUrl}/cancel.html`,
+    });
 
-  return {
-    statusCode: 200,
-    body: JSON.stringify({ url: session.url })
-  };
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ url: session.url }),
+    };
+  } catch (error) {
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ error: error.message }),
+    };
+  }
 };
