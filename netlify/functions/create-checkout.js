@@ -18,8 +18,8 @@ exports.handler = async (event) => {
       }
     ],
     mode: "payment",
-    success_url: "https://your-site.netlify.app/success.html",
-    cancel_url: "https://your-site.netlify.app/booking.html"
+    success_url: "https://c-a-quality-solutions-2555a.netlify.app/success.html",
+cancel_url: "https://c-a-quality-solutions-2555a.netlify.app/booking.html"
   });
 
   return {
