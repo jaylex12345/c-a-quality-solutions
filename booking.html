@@ -182,9 +182,7 @@ color:white;
         A $10 non-refundable booking deposit is required to reserve your ride. Customers must book at least 2 hours before pickup time. Remaining balance is due before pickup. Cancellations made less than 2 hours before scheduled pickup are subject to a $15 cancellation fee. Booking is confirmed only after deposit payment is completed.
       </p>
 
-      <button type="button" onclick="submitBookingAndPay()" class="pay-now-btn">
-        Pay $10 & Reserve Booking
-      </button>
+      
     </form>
   </div>
 </div>
@@ -230,9 +228,10 @@ async function submitBookingAndPay() {
   const formData = new FormData(form);
 
   try {
-    const response = await fetch("https://formspree.io/f/xredagoj", {
-      method: "POST",
-      body: formData,
+    
+      body: formData,<button type="submit" class="pay-now-btn">
+  Pay $10 & Reserve Booking
+</button>
       headers: {
         "Accept": "application/json"
       }
