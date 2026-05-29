@@ -217,9 +217,8 @@ function calculatePrice() {
   resultBox.innerText = "Estimated Price: $" + price.toFixed(2);
 }
 
+<script>
 async function payFullAmount() {
-  alert("Button clicked");
-
   const resultText = document.getElementById("result").innerText;
   const amount = parseFloat(resultText.replace(/[^0-9.]/g, ""));
 
@@ -228,21 +227,31 @@ async function payFullAmount() {
     return;
   }
 
-  const response = await fetch("/.netlify/functions/create-checkout", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ amount })
-  });
+  try {
+    const response = await fetch("/.netlify/functions/create-checkout", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ amount: amount })
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (data.url) {
-    window.location.href = data.url;
-  } else {
-    alert("Payment error");
+    console.log(data);
+
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert("No Stripe checkout URL returned");
+    }
+
+  } catch (error) {
+    alert("Checkout Error: " + error.message);
   }
 }
 </script>
+
 
 </body>
 </html>
