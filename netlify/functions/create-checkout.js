@@ -18,8 +18,8 @@ exports.handler = async (event) => {
       }
     ],
     mode: "payment",
-    success_url: "https://c-a-quality-solutions-2555a.netlify.app/success.html",
-cancel_url: "https://c-a-quality-solutions-2555a.netlify.app/booking.html"
+    success_url: "https://legendary-tiramisu-32555a.netlify.app/success.html",
+cancel_url: "https://legendary-tiramisu-32555a.netlify.app/cancel.html"
   });
 
   return {
