@@ -21,8 +21,8 @@ exports.handler = async function (event) {
         },
       ],
       mode: "payment",
-      success_url: `${baseUrl}/success.html`,
-      cancel_url: `${baseUrl}/cancel.html`,
+      success_url: "https://caqualitysolutions.com/success.html",
+cancel_url: "https://caqualitysolutions.com/cancel.html",
     });
 
     return {
