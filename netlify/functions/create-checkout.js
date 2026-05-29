@@ -2,12 +2,19 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 exports.handler = async function (event) {
   try {
-    const { amount } = JSON.parse(event.body);
+    const body = JSON.parse(event.body || "{}");
+    const amount = Number(body.amount);
 
-    const baseUrl = "https://caqualitysolutions.com";
+    if (!amount || amount <= 0) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Invalid amount" }),
+      };
+    }
 
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
+      mode: "payment",
       line_items: [
         {
           price_data: {
@@ -20,9 +27,8 @@ exports.handler = async function (event) {
           quantity: 1,
         },
       ],
-      mode: "payment",
       success_url: "https://caqualitysolutions.com/success.html",
-cancel_url: "https://caqualitysolutions.com/cancel.html",
+      cancel_url: "https://caqualitysolutions.com/cancel.html",
     });
 
     return {
