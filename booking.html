@@ -243,7 +243,9 @@ async function submitBookingAndPay() {
       return;
     }
 
-    window.location.href = "https://buy.stripe.com/4gM4gy2VC4y378o5o31Jm00";
+    setTimeout(() => {
+  window.location.href = "https://buy.stripe.com/4gM4gy2VC4y378o5o31Jm00";
+}, 3000);
 
   } catch (error) {
     alert("Booking error: " + error.message);
