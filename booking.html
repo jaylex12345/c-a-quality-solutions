@@ -204,6 +204,21 @@ Cancellations made less than 2 hours before scheduled pickup are subject to a $1
 </footer>
 
 <script>
+
+function calculatePrice() {
+    const miles = parseFloat(document.getElementById("miles").value);
+    const resultBox = document.getElementById("result");
+
+    if (isNaN(miles) || miles <= 0) {
+        alert("Please enter estimated miles");
+        resultBox.innerText = "Estimated Price: $0.00";
+        return;
+    }
+
+    const price = (miles * 2.5) + 35;
+    resultBox.innerText = "Estimated Price: $" + price.toFixed(2);
+}
+
 async function payFullAmount() {
     const resultText = document.getElementById("result").innerText;
     const amount = parseFloat(resultText.replace("Estimated Price: $", ""));
