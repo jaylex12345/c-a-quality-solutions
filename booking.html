@@ -182,6 +182,9 @@ color:white;
 
       <div id="result" class="result">Estimated Price: $0.00</div>
 
+      <div id="balanceResult" class="result">Balance Due Before Pickup: $0.00</div>
+<input type="hidden" id="balanceInput" name="Balance Due">
+
       <input type="hidden" id="estimatedPriceInput" name="Estimated Price">
 
       <p class="payment-note">
@@ -220,6 +223,9 @@ function calculateDistanceAndPrice() {
   const milesInput = document.getElementById("miles");
   const priceInput = document.getElementById("estimatedPriceInput");
 
+  const balanceBox = document.getElementById("balanceResult");
+const balanceInput = document.getElementById("balanceInput");
+
   if (!pickup || !dropoff) {
     alert("Please enter pickup and drop-off address.");
     return;
@@ -251,9 +257,14 @@ function calculateDistanceAndPrice() {
       const roundedMiles = miles.toFixed(1);
       const price = 35 + (miles * 2.5);
 
+      const balance = price - 10;
+
       milesInput.value = roundedMiles;
       priceInput.value = "$" + price.toFixed(2);
       resultBox.innerText = "Estimated Price: $" + price.toFixed(2) + " (" + roundedMiles + " miles)";
+
+      balanceBox.innerText = "Balance Due Before Pickup: $" + balance.toFixed(2);
+balanceInput.value = "$" + balance.toFixed(2);
     }
   );
 }
