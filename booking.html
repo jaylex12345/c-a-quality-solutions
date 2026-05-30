@@ -159,13 +159,13 @@ color:white;
       </select>
 
       <label>Pickup Address</label>
-      <input type="text" name="Pickup Address" required>
+      <input type="text" id="pickup" name="Pickup Address" required>
 
       <label>Drop-off Address</label>
-      <input type="text" name="Drop-off Address" required>
+      <input type="text" id="dropoff" name="Drop-off Address" required>
 
       <label>Estimated Miles</label>
-      <input type="number" id="miles" name="Estimated Miles" placeholder="Enter estimated miles" required>
+      <input type="hidden" id="miles" name="Estimated Miles">
 
       <label>Special Instructions</label>
       <textarea name="Instructions"></textarea>
@@ -194,23 +194,66 @@ color:white;
 </footer>
 
 <script>
-function calculatePrice() {
-  const miles = parseFloat(document.getElementById("miles").value);
+let pickupAutocomplete;
+let dropoffAutocomplete;
+
+function initAutocomplete() {
+  pickupAutocomplete = new google.maps.places.Autocomplete(
+    document.getElementById("pickup")
+  );
+
+  dropoffAutocomplete = new google.maps.places.Autocomplete(
+    document.getElementById("dropoff")
+  );
+}
+
+function calculateDistanceAndPrice() {
+  const pickup = document.getElementById("pickup").value;
+  const dropoff = document.getElementById("dropoff").value;
   const resultBox = document.getElementById("result");
+  const milesInput = document.getElementById("miles");
   const priceInput = document.getElementById("estimatedPriceInput");
 
-  if (isNaN(miles) || miles <= 0) {
-    alert("Please enter estimated miles");
-    resultBox.innerText = "Estimated Price: $0.00";
-    priceInput.value = "";
+  if (!pickup || !dropoff) {
+    alert("Please enter pickup and drop-off address.");
     return;
   }
 
-  const price = 35 + (miles * 2.5);
-  resultBox.innerText = "Estimated Price: $" + price.toFixed(2);
-  priceInput.value = "$" + price.toFixed(2);
+  const service = new google.maps.DistanceMatrixService();
+
+  service.getDistanceMatrix(
+    {
+      origins: [pickup],
+      destinations: [dropoff],
+      travelMode: google.maps.TravelMode.DRIVING,
+      unitSystem: google.maps.UnitSystem.IMPERIAL
+    },
+    function (response, status) {
+      if (status !== "OK") {
+        alert("Unable to calculate distance. Please check the addresses.");
+        return;
+      }
+
+      const element = response.rows[0].elements[0];
+
+      if (element.status !== "OK") {
+        alert("No route found. Please check the addresses.");
+        return;
+      }
+
+      const miles = element.distance.value / 1609.344;
+      const roundedMiles = miles.toFixed(1);
+      const price = 35 + (miles * 2.5);
+
+      milesInput.value = roundedMiles;
+      priceInput.value = "$" + price.toFixed(2);
+      resultBox.innerText = "Estimated Price: $" + price.toFixed(2) + " (" + roundedMiles + " miles)";
+    }
+  );
 }
 </script>
+
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCnOUiDU0upL9wbMydckFUKtPbIZEIKqns&libraries=places&callback=initAutocomplete" async defer></script>
 
 </body>
 
