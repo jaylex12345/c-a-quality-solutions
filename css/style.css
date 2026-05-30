@@ -1598,3 +1598,15 @@ nav a:hover {
     width:90%;
     line-height:1.6;
 }
+
+.policy-notice {
+    border: 1px solid #d4af37;
+    background: #fffdf5;
+    padding: 18px;
+    margin-top: 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #555;
+    text-align: left;
+}
