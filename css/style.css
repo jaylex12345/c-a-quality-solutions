@@ -2228,3 +2228,14 @@ grid-template-columns:1fr;
     z-index: 9999;
     box-shadow: 0 4px 10px rgba(0,0,0,.3);
 }
+
+.whatsapp-btn {
+    display: inline-block;
+    background: #25D366;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    margin: 10px;
+}
