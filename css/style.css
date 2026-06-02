@@ -2239,3 +2239,16 @@ grid-template-columns:1fr;
     font-weight: bold;
     margin: 10px;
 }
+
+.whatsapp-btn {
+  display: inline-block !important;
+  width: auto !important;
+  max-width: fit-content !important;
+  background: #25D366;
+  color: white;
+  padding: 12px 25px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  margin: 10px;
+}
