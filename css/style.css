@@ -1695,7 +1695,7 @@ nav a {
 }
 
 .hero h2 {
-  font-size: 48px;
+  font-size: 40px;
   margin-bottom: 18px;
 }
 
@@ -1888,4 +1888,62 @@ footer {
     flex-direction: column;
     text-align: center;
   }
+}
+
+
+.hero-trust{
+    margin-top:20px;
+    font-size:18px;
+    color:#ffd700;
+    font-weight:bold;
+}
+
+.reviews{
+    padding:80px 20px;
+    text-align:center;
+    background:#f8f9fa;
+}
+
+.review-box{
+    margin:20px auto;
+    max-width:700px;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+}
+
+.btn-review{
+    display:inline-block;
+    padding:15px 30px;
+    background:#ffd700;
+    color:#000;
+    text-decoration:none;
+    border-radius:8px;
+    font-weight:bold;
+}
+
+.booking-form{
+    padding:80px 20px;
+    text-align:center;
+}
+
+.booking-form form{
+    max-width:600px;
+    margin:auto;
+}
+
+.booking-form input,
+.booking-form textarea{
+    width:100%;
+    padding:15px;
+    margin:10px 0;
+}
+
+.booking-form button{
+    padding:15px 30px;
+    background:#0d6efd;
+    color:white;
+    border:none;
+    border-radius:8px;
 }
