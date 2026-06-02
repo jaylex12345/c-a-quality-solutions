@@ -1905,13 +1905,12 @@ footer {
 }
 
 .review-box{
-    margin:20px auto;
-    max-width:700px;
-    background:white;
-    padding:25px;
-    border-radius:10px;
-    box-shadow:0 4px 10px rgba(0,0,0,0.1);
+    font-size:18px;
+    line-height:1.8;
+    max-width:800px;
+    margin:25px auto;
 }
+
 
 .btn-review{
     display:inline-block;
@@ -1946,4 +1945,52 @@ footer {
     color:white;
     border:none;
     border-radius:8px;
+}
+
+.booking-form{
+   background:#0a2342;
+   color:white;
+   padding:80px 20px;
+   border-radius:20px;
+   margin:60px auto;
+   max-width:900px;
+}
+
+footer{
+   background:#081a33;
+   color:white;
+   text-align:center;
+   padding:30px;
+}
+
+.review-button{
+   text-align:center;
+   margin:40px 0;
+}
+
+.review-box{
+   font-size:18px;
+   line-height:1.8;
+   max-width:800px;
+   margin:25px auto;
+   background:white;
+   padding:25px;
+   border-radius:12px;
+   box-shadow:0 4px 12px rgba(0,0,0,0.1);
+}
+
+.booking-form{
+   background:#0a2342;
+   color:white;
+   padding:80px 20px;
+   border-radius:20px;
+   margin:60px auto;
+   max-width:900px;
+}
+
+footer{
+   background:#081a33;
+   color:white;
+   text-align:center;
+   padding:30px;
 }
