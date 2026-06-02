@@ -1610,3 +1610,282 @@ nav a:hover {
     color: #555;
     text-align: left;
 }
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background: #f6f8fb;
+  color: #111827;
+  line-height: 1.6;
+}
+
+.site-header {
+  background: #06264d;
+  color: white;
+  padding: 18px 20px;
+}
+
+.nav-container {
+  max-width: 1200px;
+  margin: auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.logo-area img {
+  width: 75px;
+  height: 75px;
+  object-fit: contain;
+}
+
+.logo-area h1 {
+  font-size: 24px;
+}
+
+.logo-area p {
+  color: #d4af37;
+  font-size: 14px;
+}
+
+nav {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+
+nav a {
+  color: white;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.nav-btn {
+  background: #d4af37;
+  color: #06264d;
+  padding: 10px 16px;
+  border-radius: 6px;
+}
+
+.hero {
+  background: linear-gradient(rgba(6, 38, 77, 0.78), rgba(6, 38, 77, 0.78)),
+              url("../images/hero-car.jpg");
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 110px 20px;
+  text-align: center;
+}
+
+.hero-content {
+  max-width: 900px;
+  margin: auto;
+}
+
+.hero h2 {
+  font-size: 48px;
+  margin-bottom: 18px;
+}
+
+.hero p {
+  font-size: 22px;
+  margin-bottom: 30px;
+}
+
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-call {
+  padding: 14px 24px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background: #d4af37;
+  color: #06264d;
+}
+
+.btn-secondary {
+  background: white;
+  color: #06264d;
+}
+
+.btn-call {
+  background: #16a34a;
+  color: white;
+}
+
+.trust-bar {
+  background: white;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 25px;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.section {
+  max-width: 1000px;
+  margin: 60px auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.section h2 {
+  font-size: 34px;
+  color: #06264d;
+  margin-bottom: 15px;
+}
+
+.section-text {
+  font-size: 18px;
+}
+
+.services-preview {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.service-card {
+  background: white;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  border-top: 5px solid #d4af37;
+}
+
+.service-card h3 {
+  color: #06264d;
+  margin-bottom: 10px;
+}
+
+.pricing-strip {
+  background: #06264d;
+  color: white;
+  text-align: center;
+  padding: 55px 20px;
+}
+
+.pricing-strip h2 {
+  font-size: 34px;
+  margin-bottom: 10px;
+}
+
+.pricing-strip p {
+  font-size: 20px;
+  margin-bottom: 10px;
+}
+
+.why-section {
+  max-width: 1100px;
+  margin: 60px auto;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.why-section h2 {
+  color: #06264d;
+  font-size: 34px;
+  margin-bottom: 25px;
+}
+
+.why-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 15px;
+}
+
+.why-grid div {
+  background: white;
+  padding: 18px;
+  border-radius: 8px;
+  font-weight: bold;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+}
+
+.cta-section {
+  background: #f1f5f9;
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.cta-section h2 {
+  color: #06264d;
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.cta-section p {
+  font-size: 18px;
+  margin-bottom: 25px;
+}
+
+footer {
+  background: #06264d;
+  color: white;
+  text-align: center;
+  padding: 25px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .nav-container {
+    flex-direction: column;
+  }
+
+  nav {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .hero h2 {
+    font-size: 32px;
+  }
+
+  .hero p {
+    font-size: 18px;
+  }
+
+  .trust-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .services-preview {
+    grid-template-columns: 1fr;
+  }
+
+  .why-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .logo-area {
+    flex-direction: column;
+    text-align: center;
+  }
+}
