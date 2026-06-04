@@ -256,9 +256,7 @@ function calculateDistanceAndPrice() {
   const milesInput = document.getElementById("miles");
   const priceInput = document.getElementById("estimatedPriceInput");
 
-  const balanceBox = document.getElementById("balanceResult");
-const balanceInput = document.getElementById("balanceInput");
-
+  
   if (!pickup || !dropoff) {
     alert("Please enter pickup and drop-off address.");
     return;
@@ -290,14 +288,13 @@ const balanceInput = document.getElementById("balanceInput");
       const roundedMiles = miles.toFixed(1);
       const price = 20 + (miles * 1.5);
 
-      const balance = price - 10;
+      
 
       milesInput.value = roundedMiles;
       priceInput.value = "$" + price.toFixed(2);
       resultBox.innerText = "Estimated Price: $" + price.toFixed(2) + " (" + roundedMiles + " miles)";
 
-      balanceBox.innerText = "Balance Due Before Pickup: $" + balance.toFixed(2);
-balanceInput.value = "$" + balance.toFixed(2);
+    
     }
   );
 }
@@ -307,6 +304,7 @@ balanceInput.value = "$" + balance.toFixed(2);
 
 <script>
 async function payFullAmount() {
+  const form = document.getElementById("bookingForm");
   const priceText = document.getElementById("result").innerText;
   const amountMatch = priceText.match(/\$([0-9.]+)/);
 
@@ -317,6 +315,17 @@ async function payFullAmount() {
 
   const amount = amountMatch[1];
 
+  // Send booking details to Formspree first
+  const formData = new FormData(form);
+  await fetch(form.action, {
+    method: "POST",
+    body: formData,
+    headers: {
+      "Accept": "application/json"
+    }
+  });
+
+  // Then send customer to Stripe
   const response = await fetch("/.netlify/functions/create-checkout", {
     method: "POST",
     headers: {
