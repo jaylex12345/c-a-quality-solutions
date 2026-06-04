@@ -21,12 +21,21 @@ exports.handler = async function (event) {
     }
 
     const details =
-      `Customer: ${customerName || "Not provided"}\n` +
-      `Service: ${serviceType || "Not provided"}\n` +
-      `Pickup: ${pickup || "Not provided"}\n` +
-      `Drop-off: ${dropoff || "Not provided"}\n` +
-      `Date: ${pickupDate || "Not provided"}\n` +
-      `Time: ${pickupTime || "Not provided"}`;
+`Customer: ${customerName}
+
+Service: ${serviceType}
+
+Pickup:
+${pickup}
+
+Drop-off:
+${dropoff}
+
+Date:
+${pickupDate}
+
+Time:
+${pickupTime}`;
 
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
