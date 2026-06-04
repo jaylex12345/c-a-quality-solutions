@@ -1,5 +1,8 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || "{}");
@@ -14,6 +17,47 @@ exports.handler = async function (event) {
     const pickupTime = body.pickupTime;
 
     if (!amount || amount <= 0) {
+
+const bookingHtml = `
+  <h2>C&A Quality Solutions Booking Confirmation</h2>
+
+  <p><strong>Customer:</strong> ${customerName}</p>
+  <p><strong>Email:</strong> ${email}</p>
+  <p><strong>Service:</strong> ${serviceType}</p>
+  <p><strong>Pickup Address:</strong> ${pickup}</p>
+  <p><strong>Drop-off Address:</strong> ${dropoff}</p>
+  <p><strong>Pickup Date:</strong> ${pickupDate}</p>
+  <p><strong>Pickup Time:</strong> ${pickupTime}</p>
+  <p><strong>Amount:</strong> $${amount}</p>
+
+  <hr>
+
+  <p>Thank you for choosing C&A Quality Solutions LLC.</p>
+  <p>Phone: 410-878-5949</p>
+  <p>Email: james@caqualitysolutions.com</p>
+`;
+
+await resend.emails.send({
+  from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+  to: email,
+  subject: "Your C&A Quality Solutions Booking Confirmation",
+  html: bookingHtml,
+});
+
+await resend.emails.send({
+  from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+  to: "james@caqualitysolutions.com",
+  subject: "New Booking Received - C&A Quality Solutions",
+  html: bookingHtml,
+});
+
+await resend.emails.send({
+  from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+  to: "alexisbright@caqualitysolutions.com",
+  subject: "New Booking Received - C&A Quality Solutions",
+  html: bookingHtml,
+});
+
       return {
         statusCode: 400,
         body: JSON.stringify({ error: "Invalid amount" }),
