@@ -149,6 +149,13 @@ color:white;
 
       <label>Phone Number</label>
       <input type="text" name="Phone Number" required>
+      <label>Email Address</label>
+<input
+  type="email"
+  id="customerEmail"
+  name="Email Address"
+  required
+>
 
       <label>Service Type</label>
       <select name="Service Type" required>
@@ -315,6 +322,9 @@ async function payFullAmount() {
 
   const amount = amountMatch[1];
 
+const email =
+document.getElementById("customerEmail").value;
+
   // Send booking details to Formspree first
   const formData = new FormData(form);
   await fetch(form.action, {
@@ -331,8 +341,10 @@ async function payFullAmount() {
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ amount })
-  });
+    body: JSON.stringify({
+  amount,
+  email
+})
 
   const data = await response.json();
 

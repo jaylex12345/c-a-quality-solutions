@@ -4,6 +4,7 @@ exports.handler = async function (event) {
   try {
     const body = JSON.parse(event.body || "{}");
     const amount = Number(body.amount);
+    const email = body.email;
 
     if (!amount || amount <= 0) {
       return {
@@ -13,6 +14,7 @@ exports.handler = async function (event) {
     }
 
     const session = await stripe.checkout.sessions.create({
+      customer_email: email,
       payment_method_types: ["card"],
       mode: "payment",
       line_items: [
