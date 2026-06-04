@@ -334,10 +334,16 @@ async function payFullAmount() {
       headers: {
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        amount,
-        email
-      })
+    body: JSON.stringify({
+  amount,
+  email: document.querySelector('[name="Email Address"]').value,
+  customerName: document.querySelector('[name="Customer Name"]').value,
+  pickup: document.getElementById("pickup").value,
+  dropoff: document.getElementById("dropoff").value,
+  serviceType: document.querySelector('[name="Service Type"]').value,
+  pickupDate: document.querySelector('[name="Pickup Date"]').value,
+  pickupTime: document.querySelector('[name="Pickup Time"]').value
+})
     });
 
     const data = await response.json();
