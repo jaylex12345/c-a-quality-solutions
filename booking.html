@@ -341,10 +341,8 @@ document.getElementById("customerEmail").value;
     headers: {
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({
-  amount,
-  email
-})
+    body: JSON.stringify({ amount })
+  });
 
   const data = await response.json();
 
