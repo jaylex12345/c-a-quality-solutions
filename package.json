@@ -19,6 +19,7 @@
   },
   "homepage": "https://github.com/jaylex12345/c-a-quality-solutions#readme",
   "dependencies": {
+    "resend": "^6.12.4",
     "stripe": "^22.2.0"
   }
 }
