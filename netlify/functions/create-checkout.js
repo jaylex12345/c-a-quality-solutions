@@ -37,26 +37,30 @@ const bookingHtml = `
   <p>Email: james@caqualitysolutions.com</p>
 `;
 
-await resend.emails.send({
-  from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-  to: email,
-  subject: "Your C&A Quality Solutions Booking Confirmation",
-  html: bookingHtml,
-});
+try {
+  await resend.emails.send({
+    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+    to: email,
+    subject: "Your C&A Quality Solutions Booking Confirmation",
+    html: bookingHtml,
+  });
 
-await resend.emails.send({
-  from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-  to: "james@caqualitysolutions.com",
-  subject: "New Booking Received - C&A Quality Solutions",
-  html: bookingHtml,
-});
+  await resend.emails.send({
+    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+    to: "james@caqualitysolutions.com",
+    subject: "New Booking Received - C&A Quality Solutions",
+    html: bookingHtml,
+  });
 
-await resend.emails.send({
-  from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-  to: "alexisbright@caqualitysolutions.com",
-  subject: "New Booking Received - C&A Quality Solutions",
-  html: bookingHtml,
-});
+  await resend.emails.send({
+    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+    to: "alexisbright@caqualitysolutions.com",
+    subject: "New Booking Received - C&A Quality Solutions",
+    html: bookingHtml,
+  });
+} catch (emailError) {
+  console.error("Email sending failed:", emailError);
+}
 
       return {
         statusCode: 400,
