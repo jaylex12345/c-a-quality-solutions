@@ -18,49 +18,6 @@ exports.handler = async function (event) {
 
     if (!amount || amount <= 0) {
 
-const bookingHtml = `
-  <h2>C&A Quality Solutions Booking Confirmation</h2>
-
-  <p><strong>Customer:</strong> ${customerName}</p>
-  <p><strong>Email:</strong> ${email}</p>
-  <p><strong>Service:</strong> ${serviceType}</p>
-  <p><strong>Pickup Address:</strong> ${pickup}</p>
-  <p><strong>Drop-off Address:</strong> ${dropoff}</p>
-  <p><strong>Pickup Date:</strong> ${pickupDate}</p>
-  <p><strong>Pickup Time:</strong> ${pickupTime}</p>
-  <p><strong>Amount:</strong> $${amount}</p>
-
-  <hr>
-
-  <p>Thank you for choosing C&A Quality Solutions LLC.</p>
-  <p>Phone: 410-878-5949</p>
-  <p>Email: james@caqualitysolutions.com</p>
-`;
-
-try {
-  await resend.emails.send({
-    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-    to: email,
-    subject: "Your C&A Quality Solutions Booking Confirmation",
-    html: bookingHtml,
-  });
-
-  await resend.emails.send({
-    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-    to: "james@caqualitysolutions.com",
-    subject: "New Booking Received - C&A Quality Solutions",
-    html: bookingHtml,
-  });
-
-  await resend.emails.send({
-    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-    to: "alexisbright@caqualitysolutions.com",
-    subject: "New Booking Received - C&A Quality Solutions",
-    html: bookingHtml,
-  });
-} catch (emailError) {
-  console.error("Email sending failed:", emailError);
-}
 
       return {
         statusCode: 400,
@@ -113,6 +70,54 @@ ${pickupTime}`;
       success_url: "https://caqualitysolutions.com/success.html",
       cancel_url: "https://caqualitysolutions.com/cancel.html",
     });
+
+const bookingHtml = `
+  <h2>C&A Quality Solutions Booking Confirmation</h2>
+
+  <p><strong>Customer:</strong> ${customerName}</p>
+  <p><strong>Email:</strong> ${email}</p>
+  <p><strong>Service:</strong> ${serviceType}</p>
+  <p><strong>Pickup Address:</strong> ${pickup}</p>
+  <p><strong>Drop-off Address:</strong> ${dropoff}</p>
+  <p><strong>Pickup Date:</strong> ${pickupDate}</p>
+  <p><strong>Pickup Time:</strong> ${pickupTime}</p>
+  <p><strong>Amount:</strong> $${amount}</p>
+
+  <hr>
+
+  <p>Thank you for choosing C&A Quality Solutions LLC.</p>
+  <p>Phone: 410-878-5949</p>
+  <p>Email: james@caqualitysolutions.com</p>
+`;
+
+try {
+  console.log("Starting Resend email send...");
+
+  await resend.emails.send({
+    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+    to: email,
+    subject: "Your C&A Quality Solutions Booking Confirmation",
+    html: bookingHtml,
+  });
+
+  await resend.emails.send({
+    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+    to: "james@caqualitysolutions.com",
+    subject: "New Booking Received - C&A Quality Solutions",
+    html: bookingHtml,
+  });
+
+  await resend.emails.send({
+    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
+    to: "alexisbright@caqualitysolutions.com",
+    subject: "New Booking Received - C&A Quality Solutions",
+    html: bookingHtml,
+  });
+
+  console.log("Resend emails sent successfully.");
+} catch (emailError) {
+  console.error("Email sending failed:", emailError);
+}
 
     return {
       statusCode: 200,
