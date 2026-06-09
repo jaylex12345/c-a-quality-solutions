@@ -2278,3 +2278,157 @@ grid-template-columns:1fr;
   font-weight: bold;
   z-index: 9999;
 }
+
+.pricing-section {
+  padding: 70px 8%;
+  background: #f8f9fb;
+  color: #17233c;
+  text-align: center;
+}
+
+.pricing-header h1 {
+  font-size: 42px;
+  margin-bottom: 10px;
+  color: #10213f;
+}
+
+.pricing-header p {
+  font-size: 18px;
+  color: #555;
+  margin-bottom: 45px;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 25px;
+  margin-bottom: 50px;
+}
+
+.pricing-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 30px 22px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  border-top: 5px solid #d4af37;
+  transition: transform 0.3s ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-6px);
+}
+
+.pricing-card h2 {
+  font-size: 22px;
+  margin-bottom: 15px;
+  color: #10213f;
+}
+
+.pricing-card h3 {
+  font-size: 18px;
+  color: #d4af37;
+  margin-bottom: 18px;
+}
+
+.pricing-card ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.pricing-card li {
+  margin: 10px 0;
+  font-size: 15px;
+}
+
+.pricing-card li::before {
+  content: "✓ ";
+  color: #d4af37;
+  font-weight: bold;
+}
+
+.featured {
+  border-top: 5px solid #10213f;
+}
+
+.pricing-examples {
+  background: #ffffff;
+  padding: 35px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+  max-width: 850px;
+  margin: 0 auto 40px auto;
+}
+
+.pricing-examples h2,
+.additional-charges h2 {
+  color: #10213f;
+  margin-bottom: 20px;
+}
+
+.pricing-examples table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.pricing-examples th {
+  background: #10213f;
+  color: #ffffff;
+  padding: 14px;
+}
+
+.pricing-examples td {
+  padding: 14px;
+  border-bottom: 1px solid #ddd;
+}
+
+.additional-charges {
+  max-width: 850px;
+  margin: 0 auto 35px auto;
+  background: #ffffff;
+  padding: 25px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+.pricing-contact {
+  margin-top: 30px;
+}
+
+.pricing-contact a {
+  color: #10213f;
+  font-weight: bold;
+}
+
+.pricing-main-btn,
+.pricing-btn {
+  display: inline-block;
+  margin-top: 20px;
+  background: #d4af37;
+  color: #10213f !important;
+  padding: 14px 28px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.pricing-main-btn:hover,
+.pricing-btn:hover {
+  background: #b8922d;
+}
+
+@media (max-width: 1000px) {
+  .pricing-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 650px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .pricing-header h1 {
+    font-size: 32px;
+  }
+}
