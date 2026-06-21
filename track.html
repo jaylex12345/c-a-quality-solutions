@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Track Package | C&A Quality Solutions LLC</title>
     <link rel="stylesheet" href="css/style.css">
+
+    <style>
+.track-page{min-height:80vh;background:#f4f7fb;padding:60px 20px;text-align:center}
+.track-card{max-width:650px;margin:auto;background:white;padding:35px;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
+.track-card h2{color:#0b2d52;font-size:34px;margin-bottom:10px}
+.track-card p{color:#555}
+.track-form{display:flex;gap:10px;justify-content:center;margin:25px 0}
+.track-form input{padding:15px;width:65%;border:1px solid #ccc;border-radius:8px;font-size:16px}
+.track-form button{background:#d9b431;color:#071b33;border:none;padding:15px 22px;border-radius:8px;font-weight:bold;cursor:pointer}
+.result-box{margin-top:25px;padding:25px;border-radius:14px;background:#eef5ff;border-left:6px solid #0b2d52}
+.status{display:inline-block;background:#19a84a;color:white;padding:8px 16px;border-radius:20px;font-weight:bold}
+</style>
 </head>
 <body>
 
@@ -14,21 +26,18 @@
     </div>
 </header>
 
-<section style="padding:50px; text-align:center;">
+<section class="track-page">
+  <div class="track-card">
     <h2>Track Your Package</h2>
+    <p>Enter your C&A Quality Solutions tracking number to view delivery status and proof of delivery.</p>
 
-    <input
-        type="text"
-        id="trackingNumber"
-        placeholder="Enter Tracking Number"
-        style="padding:12px;width:300px;"
-    >
+    <div class="track-form">
+      <input type="text" id="trackingNumber" placeholder="Enter Tracking Number">
+      <button onclick="trackPackage()">Track Package</button>
+    </div>
 
-    <button onclick="trackPackage()">
-        Track Package
-    </button>
-
-    <div id="result" style="margin-top:30px;"></div>
+    <div id="result"></div>
+  </div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -70,11 +79,17 @@ if (!data) {
 }
 
     result.innerHTML = `
-        <h3>Tracking Number: ${data.tracking_number}</h3>
-        <p><strong>Customer:</strong> ${data.customer_name || "N/A"}</p>
-        <p><strong>Status:</strong> ${data.status || "Pending"}</p>
-        ${data.proof_of_delivery ? `<p><a href="${data.proof_of_delivery}" target="_blank">View Proof of Delivery</a></p>` : ""}
-    `;
+  <div class="result-box">
+    <h3>Tracking Number: ${data.tracking_number}</h3>
+    <p><strong>Customer:</strong> ${data.customer_name || "N/A"}</p>
+    <p><strong>Status:</strong> <span class="status">${data.status || "Pending"}</span></p>
+    ${
+      data.proof_of_delivery
+        ? `<p><a href="${data.proof_of_delivery}" target="_blank">View Proof of Delivery</a></p>`
+        : `<p><em>Proof of delivery not uploaded yet.</em></p>`
+    }
+  </div>
+`;
 }
 </script>
 
