@@ -41,6 +41,9 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 async function trackPackage() {
     const tracking = document.getElementById("trackingNumber").value.trim();
+    console.log("Searching for:", tracking);
+    console.log("Data:", data);
+console.log("Error:", error);
     const result = document.getElementById("result");
 
     if (!tracking) {
