@@ -31,16 +31,39 @@
     <div id="result" style="margin-top:30px;"></div>
 </section>
 
-<script>
-function trackPackage() {
-    const tracking = document.getElementById("trackingNumber").value;
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    document.getElementById("result").innerHTML =
-    `
-        <h3>Tracking Number: ${tracking}</h3>
-        <p>Status: In Transit</p>
-        <p>Location: Baltimore, MD</p>
-        <p>Estimated Delivery: Tomorrow</p>
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function trackPackage() {
+    const tracking = document.getElementById("trackingNumber").value.trim();
+    const result = document.getElementById("result");
+
+    if (!tracking) {
+        result.innerHTML = "<p>Please enter a tracking number.</p>";
+        return;
+    }
+
+    const { data, error } = await supabaseClient
+        .from("deliveries")
+        .select("*")
+        .eq("tracking_number", tracking)
+        .single();
+
+    if (error || !data) {
+        result.innerHTML = "<p>No delivery found with that tracking number.</p>";
+        return;
+    }
+
+    result.innerHTML = `
+        <h3>Tracking Number: ${data.tracking_number}</h3>
+        <p><strong>Customer:</strong> ${data.customer_name || "N/A"}</p>
+        <p><strong>Status:</strong> ${data.status || "Pending"}</p>
+        ${data.proof_of_delivery ? `<p><a href="${data.proof_of_delivery}" target="_blank">View Proof of Delivery</a></p>` : ""}
     `;
 }
 </script>
