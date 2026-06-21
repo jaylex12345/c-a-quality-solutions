@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Track Package | C&A Quality Solutions LLC</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+    <div class="nav-container">
+        <h1>C&A Quality Solutions LLC</h1>
+    </div>
+</header>
+
+<section style="padding:50px; text-align:center;">
+    <h2>Track Your Package</h2>
+
+    <input
+        type="text"
+        id="trackingNumber"
+        placeholder="Enter Tracking Number"
+        style="padding:12px;width:300px;"
+    >
+
+    <button onclick="trackPackage()">
+        Track Package
+    </button>
+
+    <div id="result" style="margin-top:30px;"></div>
+</section>
+
+<script>
+function trackPackage() {
+    const tracking = document.getElementById("trackingNumber").value;
+
+    document.getElementById("result").innerHTML =
+    `
+        <h3>Tracking Number: ${tracking}</h3>
+        <p>Status: In Transit</p>
+        <p>Location: Baltimore, MD</p>
+        <p>Estimated Delivery: Tomorrow</p>
+    `;
+}
+</script>
+
+</body>
+</html>
