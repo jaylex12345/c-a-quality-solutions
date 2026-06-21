@@ -52,7 +52,7 @@ async function trackPackage() {
         .from("deliveries")
         .select("*")
         .eq("tracking_number", tracking)
-        .single();
+        .maybeSingle();
 
     if (error) {
     result.innerHTML = `<p>Error: ${error.message}</p>`;
