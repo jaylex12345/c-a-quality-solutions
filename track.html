@@ -28,7 +28,8 @@
 
 <section class="track-page">
   <div class="track-card">
-    <h2>Track Your Package</h2>
+  <img src="images/logo.jpeg" alt="C&A Quality Solutions Logo" style="width:110px;margin-bottom:15px;">
+  <h2>Package Tracking</h2>
     <p>Enter your C&A Quality Solutions tracking number to view delivery status and proof of delivery.</p>
 
     <div class="track-form">
@@ -38,6 +39,11 @@
 
     <div id="result"></div>
   </div>
+  <div style="margin-top:25px;font-weight:bold;color:#0b2d52;">
+  Licensed • Insured • Bonded<br>
+  Maryland • DC • Virginia<br>
+  Same-Day Courier Service
+</div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -82,7 +88,17 @@ if (!data) {
   <div class="result-box">
     <h3>Tracking Number: ${data.tracking_number}</h3>
     <p><strong>Customer:</strong> ${data.customer_name || "N/A"}</p>
+
+    <p class="progress">
+      🟢 Picked Up → 🟢 In Transit → ⚪ Out for Delivery → ⚪ Delivered
+    </p>
+
     <p><strong>Status:</strong> <span class="status">${data.status || "Pending"}</span></p>
+
+    <p><strong>Need Help?</strong><br>
+    📞 410-878-5949<br>
+    ✉️ james@caqualitysolutions.com</p>
+
     ${
       data.proof_of_delivery
         ? `<p><a href="${data.proof_of_delivery}" target="_blank">View Proof of Delivery</a></p>`
