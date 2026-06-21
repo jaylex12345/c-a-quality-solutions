@@ -54,10 +54,16 @@ async function trackPackage() {
         .eq("tracking_number", tracking)
         .single();
 
-    if (error || !data) {
-        result.innerHTML = "<p>No delivery found with that tracking number.</p>";
-        return;
-    }
+    if (error) {
+    result.innerHTML = `<p>Error: ${error.message}</p>`;
+    console.log(error);
+    return;
+}
+
+if (!data) {
+    result.innerHTML = "<p>No delivery found with that tracking number.</p>";
+    return;
+}
 
     result.innerHTML = `
         <h3>Tracking Number: ${data.tracking_number}</h3>
