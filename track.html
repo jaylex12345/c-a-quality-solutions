@@ -49,10 +49,10 @@ async function trackPackage() {
     }
 
     const { data, error } = await supabaseClient
-        .from("deliveries")
-        .select("*")
-        .eq("tracking_number", tracking)
-        .maybeSingle();
+  .from("deliveries")
+  .select("*")
+  .eq("tracking_number", tracking)
+  .maybeSingle();
 
     if (error) {
     result.innerHTML = `<p>Error: ${error.message}</p>`;
