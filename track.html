@@ -54,7 +54,7 @@ console.log("Error:", error);
     const { data, error } = await supabaseClient
   .from("deliveries")
   .select("*")
-  .eq("tracking_number", tracking)
+  .ilike("tracking_number", tracking)
   .maybeSingle();
 
     if (error) {
