@@ -6,6 +6,17 @@
 
 <body style="margin:0;background:#f4f7fb;font-family:Arial, sans-serif;">
 
+    <script>
+  const adminPassword = "CA2026";
+
+  const enteredPassword = prompt("Enter admin password:");
+
+  if (enteredPassword !== adminPassword) {
+    alert("Access denied.");
+    window.location.href = "index.html";
+  }
+</script>
+
 <header style="text-align:center;padding:25px;background:#0b2d52;color:white;">
   <img src="images/logo.jpeg" alt="C&A Quality Solutions Logo" style="width:120px;">
   <h1>C&A Quality Solutions LLC</h1>
