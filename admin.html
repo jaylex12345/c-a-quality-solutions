@@ -46,7 +46,12 @@ Logout
     <option>Delivered</option>
   </select>
 
-  <input id="proof_of_delivery" placeholder="Proof of Delivery Link" style="width:100%;padding:12px;margin-bottom:15px;">
+  <input
+  id="proof_file"
+  type="file"
+  accept="image/*"
+  style="width:100%;padding:12px;margin-bottom:15px;"
+>
 
   <button onclick="addDelivery()" style="background:#d9b431;color:#071b33;padding:14px 25px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
     Add Delivery
@@ -221,7 +226,29 @@ async function addDelivery() {
   const tracking_number = document.getElementById("tracking_number").value.trim();
   const customer_name = document.getElementById("customer_name").value.trim();
   const status = document.getElementById("status").value;
-  const proof_of_delivery = document.getElementById("proof_of_delivery").value.trim();
+  const file = document.getElementById("proof_file").files[0];
+
+  let proof_of_delivery = null;
+
+  if (file) {
+    const fileName = `${tracking_number}-${Date.now()}-${file.name}`;
+
+    const { error: uploadError } = await supabaseClient.storage
+      .from("proofs")
+      .upload(fileName, file);
+
+    if (uploadError) {
+      document.getElementById("message").innerText =
+        "Upload error: " + uploadError.message;
+      return;
+    }
+
+    const { data } = supabaseClient.storage
+      .from("proofs")
+      .getPublicUrl(fileName);
+
+    proof_of_delivery = data.publicUrl;
+  }
 
   const { error } = await supabaseClient
     .from("deliveries")
@@ -230,7 +257,9 @@ async function addDelivery() {
   document.getElementById("message").innerText =
     error ? "Error: " + error.message : "Delivery added successfully!";
 
-  loadDeliveries();
+  if (!error) {
+    await loadDeliveries();
+  }
 }
 
 async function deleteDelivery(id) {
