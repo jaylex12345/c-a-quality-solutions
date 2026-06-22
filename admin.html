@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Admin Dashboard | C&A Quality Solutions</title>
+</head>
+
+<body style="margin:0;background:#f4f7fb;font-family:Arial, sans-serif;">
+
+<header style="text-align:center;padding:25px;background:#0b2d52;color:white;">
+  <img src="images/logo.jpeg" alt="C&A Quality Solutions Logo" style="width:120px;">
+  <h1>C&A Quality Solutions LLC</h1>
+  <p>Admin Dashboard</p>
+</header>
+
+<div style="max-width:700px;margin:40px auto;padding:30px;background:white;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1);">
+
+  <h2>Add New Delivery</h2>
+
+  <input id="tracking_number" placeholder="Tracking Number" style="width:100%;padding:12px;margin-bottom:15px;">
+
+  <input id="customer_name" placeholder="Customer Name" style="width:100%;padding:12px;margin-bottom:15px;">
+
+  <select id="status" style="width:100%;padding:12px;margin-bottom:15px;">
+    <option>Picked Up</option>
+    <option>In Transit</option>
+    <option>Out for Delivery</option>
+    <option>Delivered</option>
+  </select>
+
+  <input id="proof_of_delivery" placeholder="Proof of Delivery Link" style="width:100%;padding:12px;margin-bottom:15px;">
+
+  <button onclick="addDelivery()" style="background:#d9b431;color:#071b33;padding:14px 25px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
+    Add Delivery
+  </button>
+
+  <p id="message" style="margin-top:15px;"></p>
+</div>
+
+<footer style="margin-top:50px;padding:25px;background:#0b2d52;color:white;text-align:center;">
+  <p><strong>C&A Quality Solutions LLC</strong></p>
+  <p>Trusted Transportation Across Maryland</p>
+  <p>📞 410-878-5949</p>
+  <p>✉️ james@caqualitysolutions.com</p>
+  <p>🌐 www.caqualitysolutions.com</p>
+  <p>🚚 Same-Day Delivery | 📦 Medical Courier | 📄 Notice Posting</p>
+  <p>Licensed • Insured • Bonded<br>Maryland • DC • Virginia</p>
+  <p>© 2026 C&A Quality Solutions LLC. All Rights Reserved.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function addDelivery() {
+  const tracking_number = document.getElementById("tracking_number").value.trim();
+  const customer_name = document.getElementById("customer_name").value.trim();
+  const status = document.getElementById("status").value;
+  const proof_of_delivery = document.getElementById("proof_of_delivery").value.trim();
+
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .insert([{ tracking_number, customer_name, status, proof_of_delivery }]);
+
+  document.getElementById("message").innerText =
+    error ? "Error: " + error.message : "Delivery added successfully!";
+}
+</script>
+
+</body>
+</html>
