@@ -102,16 +102,26 @@ async function checkLogin() {
 
 checkLogin();
 
+window.logout = async function () {
+  await supabaseClient.auth.signOut();
+  window.location.href = "login.html";
+};
+
+async function checkLogin() {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session) {
+    window.location.href = "login.html";
+  }
+}
+
+checkLogin();
+
 async function logout() {
   await supabaseClient.auth.signOut();
   window.location.href = "login.html";
 }
 
-const { data: { session } } = await supabaseClient.auth.getSession();
-
-if (!session) {
-  window.location.href = "login.html";
-}
 
 async function checkLogin() {
   const { data } = await supabaseClient.auth.getSession();
