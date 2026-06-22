@@ -7,9 +7,6 @@
 <body style="margin:0;background:#f4f7fb;font-family:Arial, sans-serif;">
 
     <script>
-  const adminPassword = "CA2026";
-
-  const enteredPassword = prompt("Enter admin password:");
 
   if (enteredPassword !== adminPassword) {
     alert("Access denied.");
@@ -21,6 +18,21 @@
   <img src="images/logo.jpeg" alt="C&A Quality Solutions Logo" style="width:120px;">
   <h1>C&A Quality Solutions LLC</h1>
   <p>Admin Dashboard</p>
+
+<button onclick="logout()"
+style="
+padding:10px 20px;
+background:#d9b431;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:bold;">
+Logout
+</button>
+
+  <button onclick="logout()" style="padding:10px 20px;background:#d9b431;border:none;border-radius:8px;font-weight:bold;">
+  Logout
+</button>
 </header>
 
 <div style="max-width:700px;margin:40px auto;padding:30px;background:white;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1);">
@@ -94,6 +106,21 @@ const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+async function checkLogin() {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session) {
+    window.location.href = "login.html";
+  }
+}
+
+checkLogin();
+
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = "login.html";
+}
 
 async function editDelivery(id, currentStatus) {
   const newStatus = prompt(
