@@ -168,6 +168,24 @@ async function addDelivery() {
   loadDeliveries();
 }
 
+async function deleteDelivery(id) {
+  const confirmDelete = confirm("Are you sure you want to delete this delivery?");
+
+  if (!confirmDelete) {
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .delete()
+    .eq("id", id);
+
+  document.getElementById("message").innerText =
+    error ? "Error: " + error.message : "Delivery deleted successfully!";
+
+  loadDeliveries();
+}
+
 loadDeliveries();
 </script>
 
