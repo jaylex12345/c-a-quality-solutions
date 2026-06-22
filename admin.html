@@ -53,6 +53,33 @@ Logout
   style="width:100%;padding:12px;margin-bottom:15px;"
 >
 
+<label>Delivery Completed Time</label>
+
+<input 
+type="datetime-local" 
+id="delivery_time"
+style="width:100%;padding:12px;margin-bottom:15px;"
+>
+
+
+<label>Driver Notes</label>
+
+<textarea 
+id="driver_notes"
+placeholder="Example: Package handed to front desk"
+style="width:100%;padding:12px;margin-bottom:15px;"
+></textarea>
+
+
+<label>Completed By</label>
+
+<input 
+type="text"
+id="completed_by"
+value="C&A Quality Solutions LLC"
+style="width:100%;padding:12px;margin-bottom:15px;"
+>
+
   <button onclick="addDelivery()" style="background:#d9b431;color:#071b33;padding:14px 25px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
     Add Delivery
   </button>
@@ -228,6 +255,10 @@ async function addDelivery() {
   const status = document.getElementById("status").value;
   const file = document.getElementById("proof_file").files[0];
 
+  const delivery_time = document.getElementById("delivery_time").value;
+const driver_notes = document.getElementById("driver_notes").value;
+const completed_by = document.getElementById("completed_by").value;
+
   let proof_of_delivery = null;
 
   if (file) {
@@ -252,7 +283,15 @@ async function addDelivery() {
 
   const { error } = await supabaseClient
     .from("deliveries")
-    .insert([{ tracking_number, customer_name, status, proof_of_delivery }]);
+    .insert([{
+  tracking_number,
+  customer_name,
+  status,
+  proof_of_delivery,
+  delivery_time,
+  driver_notes,
+  completed_by
+}]);
 
   document.getElementById("message").innerText =
     error ? "Error: " + error.message : "Delivery added successfully!";
