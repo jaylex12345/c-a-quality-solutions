@@ -81,29 +81,21 @@ const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-async function addDelivery() {
-  const tracking_number = document.getElementById("tracking_number").value.trim();
-  const customer_name = document.getElementById("customer_name").value.trim();
-  const status = document.getElementById("status").value;
-  const proof_of_delivery = document.getElementById("proof_of_delivery").value.trim();
-
-  async function loadDeliveries() {
-
+async function loadDeliveries() {
   const { data, error } = await supabaseClient
-    .from('deliveries')
-    .select('*')
-    .order('tracking_number');
+    .from("deliveries")
+    .select("*")
+    .order("tracking_number");
 
-  if(error){
+  if (error) {
     console.log(error);
     return;
   }
 
-  const body = document.getElementById('deliveryBody');
-  body.innerHTML = '';
+  const body = document.getElementById("deliveryBody");
+  body.innerHTML = "";
 
   data.forEach(delivery => {
-
     body.innerHTML += `
       <tr>
         <td>${delivery.tracking_number}</td>
@@ -111,21 +103,26 @@ async function addDelivery() {
         <td>${delivery.status}</td>
       </tr>
     `;
-
   });
-
 }
 
-loadDeliveries();
+async function addDelivery() {
+  const tracking_number = document.getElementById("tracking_number").value.trim();
+  const customer_name = document.getElementById("customer_name").value.trim();
+  const status = document.getElementById("status").value;
+  const proof_of_delivery = document.getElementById("proof_of_delivery").value.trim();
+
   const { error } = await supabaseClient
     .from("deliveries")
     .insert([{ tracking_number, customer_name, status, proof_of_delivery }]);
 
   document.getElementById("message").innerText =
     error ? "Error: " + error.message : "Delivery added successfully!";
+
+  loadDeliveries();
 }
 
-
+loadDeliveries();
 </script>
 
 </body>
