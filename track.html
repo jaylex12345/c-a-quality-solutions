@@ -83,6 +83,26 @@ const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+function getProgress(status) {
+  if (status === "Picked Up") {
+    return "🟢 Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+  }
+
+  if (status === "In Transit") {
+    return "🟢 Picked Up → 🟢 In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+  }
+
+  if (status === "Out for Delivery") {
+    return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → ⚪ Delivered";
+  }
+
+  if (status === "Delivered") {
+    return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → 🟢 Delivered";
+  }
+
+  return "⚪ Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+}
+
 async function trackPackage() {
     const tracking = document.getElementById("trackingNumber").value.trim();
     console.log("Searching for:", tracking);
@@ -122,7 +142,7 @@ if (!data) {
     <h3>Tracking Number: ${data.tracking_number}</h3>
     <p><strong>Customer:</strong> ${data.customer_name || "N/A"}</p>
 
-    <p>🟢 Picked Up → 🟢 In Transit → ⚪ Out for Delivery → ⚪ Delivered</p>
+    ${getProgress(data.status)}
 
     <p><strong>Status:</strong> <span class="status">${data.status || "Pending"}</span></p>
 
