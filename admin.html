@@ -85,7 +85,10 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 
 async function editDelivery(id, currentStatus) {
-  const newStatus = prompt("Enter new status:", currentStatus);
+  const newStatus = prompt(
+    "Enter new status exactly: Picked Up, In Transit, Out for Delivery, Delivered",
+    currentStatus
+  );
 
   if (!newStatus) return;
 
@@ -94,10 +97,14 @@ async function editDelivery(id, currentStatus) {
     .update({ status: newStatus })
     .eq("id", id);
 
-  document.getElementById("message").innerText =
-    error ? "Error: " + error.message : "Delivery updated successfully!";
+  if (error) {
+    document.getElementById("message").innerText = "Error: " + error.message;
+    console.log(error);
+    return;
+  }
 
-  loadDeliveries();
+  document.getElementById("message").innerText = "Delivery updated successfully!";
+  await loadDeliveries();
 }
 
 async function deleteDelivery(id) {
