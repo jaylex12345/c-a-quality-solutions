@@ -13,6 +13,10 @@
   <h1>C&A Quality Solutions LLC</h1>
   <p>Admin Dashboard</p>
 
+  <button onclick="logout()" style="padding:10px 20px;background:#d9b431;border:none;border-radius:8px;font-weight:bold;">
+Logout
+</button>
+
 
 
 </header>
@@ -87,6 +91,21 @@ const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function checkLogin() {
+  const { data } = await supabaseClient.auth.getSession();
+
+  if (!data.session) {
+    window.location.href = "login.html";
+  }
+}
+
+checkLogin();
+
+async function logout() {
+  await supabaseClient.auth.signOut();
+  window.location.href = "login.html";
+}
 
 const { data: { session } } = await supabaseClient.auth.getSession();
 
