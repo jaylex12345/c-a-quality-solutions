@@ -103,6 +103,12 @@ const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+const { data: { session } } = await supabaseClient.auth.getSession();
+
+if (!session) {
+  window.location.href = "login.html";
+}
+
 async function checkLogin() {
   const { data } = await supabaseClient.auth.getSession();
 
