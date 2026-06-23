@@ -143,7 +143,9 @@ async function trackPackage() {
   .from("deliveries")
   .select("*")
   .ilike("tracking_number", tracking)
-  .maybeSingle();
+  .order("created_at", { ascending: false })
+  .limit(1)
+  .single();
 
   console.log("Data:", data);
 console.log("Error:", error);
