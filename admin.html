@@ -35,7 +35,7 @@ Logout
 
   <h2>Add New Delivery</h2>
 
-  <input id="tracking_number" placeholder="Tracking Number" style="width:100%;padding:12px;margin-bottom:15px;">
+  <input id="tracking_number" placeholder="Auto Tracking Number" readonly style="width:100%;padding:12px;margin-bottom:15px;">
 
   <input id="customer_name" placeholder="Customer Name" style="width:100%;padding:12px;margin-bottom:15px;">
 
@@ -246,8 +246,28 @@ async function loadDeliveries() {
 });
 }
 
+async function generateTrackingNumber() {
+  const { data, error } = await supabaseClient
+    .from("deliveries")
+    .select("tracking_number")
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  let nextNumber = 1;
+
+  if (data && data.length > 0 && data[0].tracking_number) {
+    const lastNumber = parseInt(data[0].tracking_number.replace("CA", ""));
+    nextNumber = lastNumber + 1;
+  }
+
+  return "CA" + String(nextNumber).padStart(4, "0");
+}
+
+
+
 async function addDelivery() {
-  const tracking_number = document.getElementById("tracking_number").value.trim();
+  const tracking_number = await generateTrackingNumber();
+document.getElementById("tracking_number").value = tracking_number;
   const customer_name = document.getElementById("customer_name").value.trim();
   const status = document.getElementById("status").value;
 
