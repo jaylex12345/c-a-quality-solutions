@@ -182,9 +182,19 @@ if (!data) {
     📞 410-878-5949<br>
     ✉️ james@caqualitysolutions.com</p>
 
-    ${data.proof_of_delivery ? `
-<div style="margin-top:20px;">
-    <h3>Proof of Delivery</h3>
+    ${data.proof_of_delivery
+  ?.map(photo => `
+    <img
+      src="${photo}"
+      style="
+        width:100%;
+        max-width:500px;
+        margin-bottom:10px;
+        border-radius:8px;
+      "
+    >
+  `)
+  .join("")}
 
     <p>
 <strong>Delivered:</strong>
