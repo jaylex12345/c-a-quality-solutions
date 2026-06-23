@@ -173,6 +173,21 @@ if (!data) {
 <div style="margin-top:20px;">
     <h3>Proof of Delivery</h3>
 
+    <p>
+<strong>Delivered:</strong>
+${data.delivery_time || "Pending"}
+</p>
+
+<p>
+<strong>Driver Notes:</strong><br>
+${data.driver_notes || "No driver notes added"}
+</p>
+
+<p>
+<strong>Completed By:</strong><br>
+${data.completed_by || "C&A Quality Solutions LLC"}
+</p>
+
     <img src="${data.proof_of_delivery}"
     style="max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #ddd;">
 
