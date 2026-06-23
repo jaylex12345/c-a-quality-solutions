@@ -145,7 +145,20 @@ async function trackPackage() {
   .from("deliveries")
   .select("*")
   .eq("tracking_number", tracking.trim())
-  .single();
+  .limit(1);
+
+if (error) {
+  result.innerHTML = `<p>Error: ${error.message}</p>`;
+  console.log(error);
+  return;
+}
+
+if (!data || data.length === 0) {
+  result.innerHTML = `<p>No delivery found with that tracking number.</p>`;
+  return;
+}
+
+const delivery = data[0];
 
   console.log("Data:", data);
 console.log("Error:", error);
