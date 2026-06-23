@@ -254,7 +254,7 @@ async function addDelivery() {
   const customer_name = document.getElementById("customer_name").value.trim();
   const status = document.getElementById("status").value;
 
-  let delivery_location = null;
+  let delivery_location = "GPS not captured";
 
 try {
   const position = await new Promise((resolve, reject) => {
@@ -266,20 +266,11 @@ try {
 } catch (err) {
   console.log("GPS not available");
 }
-
   
 
 
-    const position = await new Promise((resolve, reject) => {
-      navigator.geolocation.getCurrentPosition(resolve, reject);
-    });
+  
 
-    delivery_location =
-      position.coords.latitude + ", " + position.coords.longitude;
-  } catch (error) {
-    delivery_location = "GPS permission denied or unavailable";
-  }
-}
 
   const file = document.getElementById("proof_file").files[0];
 
