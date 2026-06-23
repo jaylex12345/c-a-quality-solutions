@@ -70,6 +70,22 @@ placeholder="Example: Package handed to front desk"
 style="width:100%;padding:12px;margin-bottom:15px;"
 ></textarea>
 
+<label>Received By</label>
+<input type="text" id="received_by" placeholder="John Smith, Brother, Sister, Front Desk, etc.">
+
+<select id="relationship">
+  <option>Customer</option>
+  <option>Wife</option>
+  <option>Husband</option>
+  <option>Brother</option>
+  <option>Sister</option>
+  <option>Neighbor</option>
+  <option>Receptionist</option>
+  <option>Security Officer</option>
+  <option>Building Staff</option>
+  <option>No Direct Recipient</option>
+</select>
+
 
 <label>Completed By</label>
 
@@ -272,7 +288,11 @@ async function addDelivery() {
 document.getElementById("tracking_number").value = tracking_number;
   const customer_name = document.getElementById("customer_name").value.trim();
   const status = document.getElementById("status").value;
+const received_by =
+    document.getElementById("received_by").value.trim();
 
+const relationship =
+    document.getElementById("relationship").value.trim();
   let delivery_location = "GPS not captured";
 
 try {
@@ -331,15 +351,17 @@ const completed_by = document.getElementById("completed_by").value;
   const { error } = await supabaseClient
     .from("deliveries")
     .insert([{
-  tracking_number,
-  customer_name,
-  status,
-  proof_of_delivery,
-  delivery_time,
-  driver_notes,
-  completed_by,
-  delivery_location
-}]);
+    tracking_number,
+    customer_name,
+    status,
+    proof_of_delivery,
+    delivery_time,
+    driver_notes,
+    completed_by,
+    delivery_location,
+    received_by,
+    relationship
+}])
 
   document.getElementById("message").innerText =
     error ? "Error: " + error.message : "Delivery added successfully!";
