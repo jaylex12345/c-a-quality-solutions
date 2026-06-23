@@ -211,8 +211,21 @@ ${data.completed_by || "C&A Quality Solutions LLC"}
 
 ${data.delivery_location && data.delivery_location !== "GPS not captured" ? `
 <p>
+<p>
 <strong>Delivery Location:</strong><br>
-${data.delivery_location}
+${data.delivery_location || "Not Available"}
+
+<br><br>
+
+${
+  data.delivery_location
+    ? `<a href="https://maps.google.com/?q=${data.delivery_location}"
+         target="_blank"
+         style="display:inline-block;background:#0b4ea2;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:bold;">
+         📍 Open in Google Maps
+       </a>`
+    : ""
+}
 </p>
 
 <p style="color:green;font-weight:bold;">
