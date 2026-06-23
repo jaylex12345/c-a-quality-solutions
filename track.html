@@ -43,6 +43,8 @@
   margin:8px 0;
 }
 </style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 
@@ -238,6 +240,14 @@ ${data.delivery_location && data.delivery_location !== "GPS not captured" ? `
     <a href="${data.proof_of_delivery}" target="_blank">
     View Proof of Delivery Document
     </a>
+
+<br><br>
+
+<button onclick='downloadPODPDF(${JSON.stringify(data)})'
+style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
+📄 Download Proof of Delivery PDF
+</button>
+
 </div>
 ` : `
 <p><em>Proof of delivery not uploaded yet.</em></p>
@@ -245,6 +255,43 @@ ${data.delivery_location && data.delivery_location !== "GPS not captured" ? `
   </div>
 `;
 }
+
+async function downloadPODPDF(data) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.text("C&A Quality Solutions LLC", 20, 20);
+
+  doc.setFontSize(12);
+  doc.text("Professional Courier & Transportation Services", 20, 28);
+
+  doc.line(20, 32, 190, 32);
+
+  doc.text("Proof of Delivery", 20, 45);
+
+  doc.text("Tracking Number: " + (data.tracking_number || ""), 20, 60);
+  doc.text("Customer: " + (data.customer_name || ""), 20, 70);
+  doc.text("Status: " + (data.status || ""), 20, 80);
+  doc.text("Delivered: " + (data.delivery_time || ""), 20, 90);
+  doc.text("Driver Notes: " + (data.driver_notes || ""), 20, 100);
+  doc.text("Received By: " + (data.received_by || "Front Desk"), 20, 110);
+  doc.text("Relationship: " + (data.relationship || "Receptionist"), 20, 120);
+  doc.text("Completed By: " + (data.completed_by || "C&A Quality Solutions LLC"), 20, 130);
+
+  doc.text("Delivery Location:", 20, 145);
+  doc.text((data.delivery_location || "Not captured").substring(0, 80), 20, 155);
+
+  doc.text("GPS Verified: " + (data.delivery_location ? "Yes" : "No"), 20, 170);
+
+  doc.text("Phone: 410-878-5949", 20, 185);
+  doc.text("Email: james@caqualitysolutions.com", 20, 195);
+  doc.text("Website: www.caqualitysolutions.com", 20, 205);
+
+  doc.save((data.tracking_number || "proof-of-delivery") + ".pdf");
+}
+
+
 </script>
 
 <footer style="margin-top:40px;text-align:center;color:#666;">
