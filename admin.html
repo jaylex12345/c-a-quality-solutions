@@ -209,10 +209,7 @@ async function deleteDelivery(id) {
 
   if (!confirmDelete) return;
 
-  const { error } = await supabaseClient
-    .from("deliveries")
-    .delete()
-    .eq("id", id);
+
 
   document.getElementById("message").innerText =
     error ? "Error: " + error.message : "Delivery deleted successfully!";
