@@ -144,9 +144,7 @@ async function trackPackage() {
     const { data, error } = await supabaseClient
   .from("deliveries")
   .select("*")
-  .ilike("tracking_number", tracking)
-  .order("created_at", { ascending: false })
-  .limit(1)
+  .eq("tracking_number", tracking.trim())
   .single();
 
   console.log("Data:", data);
