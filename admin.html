@@ -247,20 +247,22 @@ async function loadDeliveries() {
 }
 
 async function generateTrackingNumber() {
-  const { data, error } = await supabaseClient
-    .from("deliveries")
-    .select("tracking_number")
-    .order("created_at", { ascending: false })
-    .limit(1);
+    const { count } = await supabaseClient
+        .from("deliveries")
+        .select("*", { count: "exact", head: true });
 
-  let nextNumber = 1;
+    const nextNumber = (count || 0) + 1;
 
-  if (data && data.length > 0 && data[0].tracking_number) {
-    const lastNumber = parseInt(data[0].tracking_number.replace("CA", ""));
-    nextNumber = lastNumber + 1;
-  }
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    let randomPart = "";
 
-  return "CA" + String(nextNumber).padStart(4, "0");
+    for (let i = 0; i < 6; i++) {
+        randomPart += chars.charAt(
+            Math.floor(Math.random() * chars.length)
+        );
+    }
+
+    return `CAQS-MD26-${randomPart}-${String(nextNumber).padStart(6, "0")}`;
 }
 
 
