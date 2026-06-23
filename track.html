@@ -209,14 +209,20 @@ ${data.relationship || "Receptionist"}
 ${data.completed_by || "C&A Quality Solutions LLC"}
 </p>
 
+${data.delivery_location && data.delivery_location !== "GPS not captured" ? `
 <p>
 <strong>Delivery Location:</strong><br>
-${data.delivery_location || "Not Available"}
+${data.delivery_location}
 </p>
 
 <p style="color:green;font-weight:bold;">
 ✓ GPS Verified
 </p>
+` : `
+<p style="color:#666;">
+GPS location not captured
+</p>
+`}
 
     <img src="${data.proof_of_delivery}"
     style="max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #ddd;">
