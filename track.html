@@ -269,13 +269,9 @@ style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-rad
 📄 Download Proof of Delivery PDF
 </button>
 
-</div>
-` : `
-<p><em>Proof of delivery not uploaded yet.</em></p>
-`}
-  </div>
-`;
-}
+        </div>
+      `;
+    
 
 async function downloadPODPDF(data) {
   const { jsPDF } = window.jspdf;
@@ -312,7 +308,7 @@ async function downloadPODPDF(data) {
   doc.save((data.tracking_number || "proof-of-delivery") + ".pdf");
 }
 
-
+}
 </script>
 
 <footer style="margin-top:40px;text-align:center;color:#666;">
