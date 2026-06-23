@@ -114,6 +114,21 @@ function getProgress(status) {
   return "⚪ Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
 } 
 
+function formatDateTime(value) {
+  if (!value) return "Pending";
+
+  const date = new Date(value);
+
+  return date.toLocaleString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true
+  });
+}
+
 async function trackPackage() {
     const tracking = document.getElementById("trackingNumber").value.trim();
     console.log("Searching for:", tracking);
@@ -169,7 +184,7 @@ if (!data) {
 
     <p>
 <strong>Delivered:</strong>
-${data.delivery_time || "Pending"}
+${formatDateTime(data.delivery_time)}
 </p>
 
 <p>
