@@ -258,8 +258,17 @@ try {
     navigator.geolocation.getCurrentPosition(resolve, reject);
   });
 
-  delivery_location =
-    `${position.coords.latitude}, ${position.coords.longitude}`;
+  const lat = position.coords.latitude;
+const lng = position.coords.longitude;
+
+const response = await fetch(
+`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+);
+
+const geoData = await response.json();
+
+delivery_location =
+geoData.display_name || `${lat}, ${lng}`;
 } catch (err) {
   console.log("GPS not available");
 }
