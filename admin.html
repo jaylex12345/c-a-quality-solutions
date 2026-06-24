@@ -366,7 +366,7 @@ for (const file of files) {
     tracking_number,
     customer_name,
     status,
-    proof_of_delivery: proofPhotos,
+    proof_of_delivery: proofPhotos[0] || "",
     delivery_time,
     driver_notes,
     completed_by,
