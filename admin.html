@@ -343,6 +343,12 @@ if (file) {
     .from("proofs")
     .upload(fileName, file);
 
+    const { data } = supabaseClient.storage
+  .from("proofs")
+  .getPublicUrl(fileName);
+
+proof_of_delivery = data.publicUrl;
+
   if (uploadError) {
     document.getElementById("message").innerText =
       "Upload error: " + uploadError.message;
