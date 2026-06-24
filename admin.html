@@ -349,17 +349,11 @@ if (file) {
     return;
   }
 
-  const { data } = supabaseClient.storage
-    .from("proofs")
-    .getPublicUrl(fileName);
-
-  proof_of_delivery = data.publicUrl;
-}
-
   
-  const { error } = await supabaseClient
-    .from("deliveries")
-    .insert([{
+
+const { data: insertedData, error } = await supabaseClient
+  .from("deliveries")
+  .insert([{
     tracking_number,
     customer_name,
     status,
@@ -367,37 +361,33 @@ if (file) {
     delivery_time,
     driver_notes,
     completed_by,
+    delivery_location,
     received_by,
     relationship
-}])
+  }])
+  .select();
 
+if (error) {
   document.getElementById("message").innerText =
-    error ? "Error: " + error.message : "Delivery added successfully!";
-
-  if (!error) {
-    await loadDeliveries();
-  }
+    "Save error: " + error.message;
+  console.log("SUPABASE SAVE ERROR:", error);
+  return;
 }
 
-async function deleteDelivery(id) {
-  const confirmDelete = confirm("Are you sure you want to delete this delivery?");
+console.log("SAVED DELIVERY:", insertedData);
 
-  if (!confirmDelete) {
-    return;
-  }
+document.getElementById("message").innerText =
+  "Delivery added successfully! Tracking Number: " + tracking_number;
 
-  const { error } = await supabaseClient
-    .from("deliveries")
-    .delete()
-    .eq("id", id);
+await loadDeliveries();
 
-  document.getElementById("message").innerText =
-    error ? "Error: " + error.message : "Delivery deleted successfully!";
 
-  loadDeliveries();
 }
 
-loadDeliveries();
+
+  
+}
+
 </script>
 
 </body>
