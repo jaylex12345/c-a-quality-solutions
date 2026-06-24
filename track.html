@@ -78,6 +78,13 @@ font-weight:bold;
 }
 
 
+.delivery-photo {
+  max-width: 500px;
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 15px;
+}
+
   </style>
 </head>
 
@@ -145,6 +152,8 @@ const logoUrl = "images/logo.jpeg";
       hour12: true
     });
   }
+
+  
 
   function getProgress(status) {
     const current = (status || "").toLowerCase();
@@ -233,21 +242,24 @@ const logoUrl = "images/logo.jpeg";
 
           
 
+            <div style="text-align:center;">
 
             <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.delivery_location)}"
             target="_blank"
             style="color:#0b4ea2;font-weight:bold;">
               📍 View Delivery Address on Google Maps
             </a>
+            </div>
 
             <br><br>
 
+            <div style="text-align:center;">
             <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.delivery_location)}"
             target="_blank"
             style="display:inline-block;background:#0b4ea2;color:white;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold;">
               📍 Open in Google Maps
             </a>
-
+            </div>
             <p style="color:green;font-weight:bold;">✔ GPS Verified</p>
           `
           : `<p style="color:#666;">GPS location not captured</p>`
@@ -261,12 +273,17 @@ const logoUrl = "images/logo.jpeg";
       ${
   delivery.proof_of_delivery
     ? `
+      
+    <h3 style="margin-top:20px;">📸 Proof of Delivery</h3>
+    
       <img 
         src="${delivery.proof_of_delivery}" 
         class="delivery-photo"
         alt="Proof of Delivery Photo"
       >
       <br>
+     <div style="text-align:center;">
+
       <a href="${delivery.proof_of_delivery}" target="_blank">
         View Proof of Delivery Photo
       </a>
@@ -278,6 +295,8 @@ const logoUrl = "images/logo.jpeg";
         style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
           📄 Download Proof of Delivery PDF
         </button>
+      </div>
+
       </div>
     `;
     }
@@ -318,7 +337,9 @@ const logoUrl = "images/logo.jpeg";
   doc.text("Website: www.caqualitysolutions.com", 20, 265);
 
   doc.line(20, 280, 100, 280);
-  doc.text("Authorized Delivery Confirmation", 20, 288);
+  doc.text("Official Proof of Delivery", 20, 288);
+
+  doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 275);
 
   doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
 }
