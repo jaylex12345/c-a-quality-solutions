@@ -297,20 +297,15 @@ const logoUrl = "images/logo.jpeg";
         </button>
       </div>
     `;
-  }
+  
 
-const img = new Image();
-img.src = "images/logo.jpeg";
 
-img.onload = function () {
-  doc.addImage(img, "JPEG", 80, 10, 40, 40);
 
-  doc.setFontSize(18);
-  doc.text("C&A Quality Solutions LLC", 20, 60);
 
-  // rest of PDF code
+ 
 
-  doc.save(delivery.tracking_number + ".pdf");
+
+  
 
 
   function downloadPODPDF() {
