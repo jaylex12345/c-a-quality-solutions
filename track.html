@@ -102,6 +102,9 @@ font-weight:bold;
 
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+const logoUrl = "images/logo.jpeg";
+
+
   function formatDateTime(value) {
     if (!value) return "Pending";
     const date = new Date(value);
@@ -281,12 +284,25 @@ img.onload = function () {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
 
+    const img = new Image();
+img.src = logoUrl;
+
+img.onload = function() {
+
+doc.addImage(img, 'JPEG', 15, 10, 30, 30);
+
+doc.setFontSize(20);
+doc.text("C&A Quality Solutions LLC", 55, 20);
+
+doc.setFontSize(12);
+doc.text("Professional Courier & Transportation Services", 55, 28);
+
+doc.line(15, 40, 195, 40);
+
     doc.setFontSize(22);
 doc.setTextColor(11,45,82);
 doc.text("C&A Quality Solutions LLC",20,20);
 
-doc.setFontSize(14);
-doc.text("Official Proof of Delivery",20,35);
 
 doc.line(20,40,190,40);
 
@@ -294,42 +310,43 @@ doc.line(20,40,190,40);
     doc.text("Professional Courier & Transportation Services", 20, 28);
     doc.line(20, 32, 190, 32);
 
-    doc.setFontSize(14);
-    doc.text("Proof of Delivery", 20, 45);
+    doc.setFontSize(18);
+doc.text("Official Proof of Delivery",20,40);
 
     
-    doc.setFontSize(11);
+    doc.text(`Tracking Number: ${delivery.tracking_number}`,20,70);
 
-doc.text(`Tracking Number: ${delivery.tracking_number}`,20,55);
-doc.text(`Customer: ${delivery.customer_name}`,20,65);
-doc.text(`Status: ${delivery.status}`,20,75);
-doc.text(`Received By: ${delivery.received_by}`,20,85);
-doc.text(`Relationship: ${delivery.relationship}`,20,95);
-    
-    doc.text(
+doc.text(`Customer: ${delivery.customer_name}`,20,85);
 
-  new Date(delivery.delivery_time).toLocaleString(),
-  20,
-  90
-);
-    doc.text("Driver Notes: " + (delivery.driver_notes || "N/A"), 20, 100);
-    doc.text("Received By: " + (delivery.received_by || "N/A"), 20, 110);
-    doc.text("Relationship: " + (delivery.relationship || "N/A"), 20, 120);
-    doc.text("Completed By: " + (delivery.completed_by || "C&A Quality Solutions LLC"), 20, 130);
+doc.text(`Status: ${delivery.status}`,20,100);
 
-    doc.text("Delivery Location:", 20, 145);
-    doc.text((delivery.delivery_location || "GPS not captured").substring(0, 85), 20, 155);
+doc.text(`Delivered: ${formatDateTime(delivery.delivered_at)}`,20,115);
 
-    doc.text("Phone: 410-878-5949", 20, 185);
-    doc.text("Email: james@caqualitysolutions.com", 20, 195);
-    doc.text("Website: www.caqualitysolutions.com", 20, 205);
+doc.text(`Driver Notes: ${delivery.driver_notes || "N/A"}`,20,130);
 
-    if(delivery.proof_of_delivery){
-    doc.text("Proof of Delivery Attached",20,170);
+doc.text(`Received By: ${delivery.received_by}`,20,145);
+
+doc.text(`Relationship: ${delivery.relationship}`,20,160);
+
+doc.text(`Completed By: C&A Quality Solutions LLC`,20,175);
+
+doc.text(`Delivery Location:`, 20, 195);
+doc.text(delivery.delivery_location || "GPS Verified", 20, 210, { maxWidth: 170 });
+
+if (delivery.proof_of_delivery) {
+  doc.text("Proof of Delivery Attached", 20, 230);
 }
 
-    doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
+doc.text("Phone: 410-878-5949", 20, 245);
+doc.text("Email: james@caqualitysolutions.com", 20, 255);
+doc.text("Website: www.caqualitysolutions.com", 20, 265);
+
+doc.line(20, 280, 100, 280);
+doc.text("Authorized Delivery Confirmation", 20, 288);
+
+doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
   }
+}
 </script>
 
 </body>
