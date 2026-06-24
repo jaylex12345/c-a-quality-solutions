@@ -207,71 +207,92 @@ if (!data) {
   `)
   .join("")}
 
-    <p>
-<strong>Delivered:</strong>
-${formatDateTime(data.delivery_time)}
+<p>
+<strong>Tracking Number:</strong><br>
+${delivery.tracking_number || "N/A"}
+</p>
+
+<p>
+<strong>Customer:</strong><br>
+${delivery.customer_name || "N/A"}
+</p>
+
+<p>
+<strong>Status:</strong><br>
+${delivery.status || "Pending"}
+</p>
+
+<p>
+<strong>Delivered:</strong><br>
+${delivery.delivery_time || "Pending"}
 </p>
 
 <p>
 <strong>Driver Notes:</strong><br>
-${data.driver_notes || "No driver notes added"}
+${delivery.driver_notes || "No driver notes added"}
 </p>
 
 <p>
 <strong>Received By:</strong><br>
-${data.received_by || "Front Desk"}
+${delivery.received_by || "Front Desk"}
 </p>
 
 <p>
 <strong>Relationship:</strong><br>
-${data.relationship || "Receptionist"}
+${delivery.relationship || "Receptionist"}
 </p>
-
-<p>
-<strong>Received By:</strong><br>
-${data.received_by || "Not Available"}
-</p>
-
-<p>
-<strong>Relationship:</strong><br>
-${data.relationship || "Not Available"}
-</p>
-
 
 <p>
 <strong>Completed By:</strong><br>
-${data.completed_by || "C&A Quality Solutions LLC"}
+${delivery.completed_by || "C&A Quality Solutions LLC"}
 </p>
 
-${data.delivery_location && data.delivery_location !== "GPS not captured" ? `
-  <p>
-    <strong>Delivery Location:</strong><br>
-    <a href="https://www.google.com/maps/search/?api=1&query=${data.delivery_location}"
-       target="_blank"
-       style="color:#0b4ea2;font-weight:bold;">
-       📍 View Delivery Address on Google Maps
-    </a>
-  </p>
+${delivery.delivery_location &&
+delivery.delivery_location !== "GPS not captured"
+? `
+<p>
+<strong>Delivery Location:</strong><br>
 
-  <a href="https://www.google.com/maps/search/?api=1&query=${data.delivery_location}"
-     target="_blank"
-     style="display:inline-block;background:#0b4ea2;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;font-weight:bold;">
-     📍 Open in Google Maps
-  </a>
+<a href="https://www.google.com/maps/search/?api=1&query=${delivery.delivery_location}"
+target="_blank"
+style="color:#0b4ea2;font-weight:bold;">
+📍 View Delivery Address on Google Maps
+</a>
 
-  <p style="color:green;font-weight:bold;">✓ GPS Verified</p>
-` : `
-  <p style="color:#666;">GPS location not captured</p>
-`}
+<br><br>
 
-    <img src="${data.proof_of_delivery}"
-    style="max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #ddd;">
+<a href="https://www.google.com/maps/search/?api=1&query=${delivery.delivery_location}"
+target="_blank"
+style="display:inline-block;background:#0b4ea2;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;">
+📍 Open in Google Maps
+</a>
+</p>
 
-    <br><br>
+<p style="color:green;font-weight:bold;">
+✔ GPS Verified
+</p>
+`
+:
+`
+<p style="color:#666;">
+GPS location not captured
+</p>
+`
+}
 
-    <a href="${data.proof_of_delivery}" target="_blank">
-    View Proof of Delivery Document
-    </a>
+${delivery.proof_of_delivery
+? `
+<img src="${delivery.proof_of_delivery}"
+style="max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #ddd;">
+
+<br><br>
+
+<a href="${delivery.proof_of_delivery}" target="_blank">
+View Proof of Delivery Document
+</a>
+`
+: ""
+}
 
 <br><br>
 
