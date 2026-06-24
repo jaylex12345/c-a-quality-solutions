@@ -173,39 +173,16 @@ if (!data) {
     result.innerHTML = "<p>No delivery found with that tracking number.</p>";
     return;
 }
-window.currentDelivery = data;
+window.currentDelivery = delivery;
+
     result.innerHTML = `
   <div class="success-banner">
     ✔ Tracking information found successfully
   </div>
 
   <div class="result-box">
-    <h3>Tracking Number: ${data.tracking_number}</h3>
-    <p><strong>Customer:</strong> ${data.customer_name || "N/A"}</p>
-
-    ${getProgress(data.status)}
-
-    <p><strong>Status:</strong> <span class="status">${data.status || "Pending"}</span></p>
-
     
 
-    <p><strong>Need Help?</strong><br>
-    📞 410-878-5949<br>
-    ✉️ james@caqualitysolutions.com</p>
-
-    ${data.proof_of_delivery
-  ?.map(photo => `
-    <img
-      src="${photo}"
-      style="
-        width:100%;
-        max-width:500px;
-        margin-bottom:10px;
-        border-radius:8px;
-      "
-    >
-  `)
-  .join("")}
 
 <p>
 <strong>Tracking Number:</strong><br>
