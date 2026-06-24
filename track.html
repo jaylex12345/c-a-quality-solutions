@@ -317,7 +317,7 @@ img.onload = function () {
   const delivery = window.currentDelivery;
 
   if (!delivery) {
-    alert("No delivery loaded.");
+    alert("No delivery loaded. Search tracking first.");
     return;
   }
 
@@ -326,10 +326,8 @@ img.onload = function () {
 
   doc.setFontSize(18);
   doc.text("C&A Quality Solutions LLC", 20, 20);
-
   doc.setFontSize(12);
   doc.text("Professional Courier & Transportation Services", 20, 30);
-
   doc.line(20, 35, 190, 35);
 
   doc.setFontSize(16);
@@ -344,13 +342,8 @@ img.onload = function () {
   doc.text(`Received By: ${delivery.received_by || "N/A"}`, 20, 145);
   doc.text(`Relationship: ${delivery.relationship || "N/A"}`, 20, 160);
   doc.text(`Completed By: ${delivery.completed_by || "C&A Quality Solutions LLC"}`, 20, 175);
-
   doc.text("Delivery Location:", 20, 195);
   doc.text(delivery.delivery_location || "GPS Verified", 20, 210, { maxWidth: 170 });
-
-  if (delivery.proof_of_delivery) {
-    doc.text("Proof of Delivery Photo Attached", 20, 230);
-  }
 
   doc.text("Phone: 410-878-5949", 20, 245);
   doc.text("Email: james@caqualitysolutions.com", 20, 255);
