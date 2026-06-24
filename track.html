@@ -291,7 +291,7 @@ const logoUrl = "images/logo.jpeg";
     : `<p><em>No proof of delivery photo uploaded.</em></p>`
 }
 
-        <button onclick="downloadPODPDF()"
+        <button onclick="window.downloadPODPDF()"
         style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
           📄 Download Proof of Delivery PDF
         </button>
@@ -300,7 +300,7 @@ const logoUrl = "images/logo.jpeg";
       </div>
     `;
     }
-  function downloadPODPDF() {
+  window.downloadPODPDF = function () {
   const delivery = window.currentDelivery;
 
   if (!delivery) {
