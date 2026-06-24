@@ -204,10 +204,7 @@ const logoUrl = "images/logo.jpeg";
 
       <div class="result-box">
 
-      ${delivery.proof_of_delivery ? `
-<img src="${delivery.proof_of_delivery}"
-     class="delivery-photo">
-` : ''}
+      
 
         <h3>Tracking Number: ${delivery.tracking_number || "N/A"}</h3>
 
@@ -256,21 +253,7 @@ const logoUrl = "images/logo.jpeg";
           : `<p style="color:#666;">GPS location not captured</p>`
         }
 
-        ${
-          delivery.proof_of_delivery
-          ? `
-            <br>
-            <img src="${delivery.proof_of_delivery}"
-            style="width:100%;max-width:500px;border-radius:12px;border:1px solid #ddd;">
-
-            <br><br>
-
-            <a href="${delivery.proof_of_delivery}" target="_blank">
-              View Proof of Delivery Document
-            </a>
-          `
-          : ""
-        }
+        
 
         <br><br>
 
