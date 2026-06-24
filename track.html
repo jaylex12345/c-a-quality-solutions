@@ -289,38 +289,35 @@ img.src = logoUrl;
 
 img.onload = function() {
 
-doc.addImage(img, 'JPEG', 15, 10, 30, 30);
+doc.addImage(img, 'JPEG', 15, 10, 20, 20);
 
-doc.setFontSize(20);
-doc.text("C&A Quality Solutions LLC", 55, 20);
+doc.setFontSize(18);
+doc.text("C&A Quality Solutions LLC", 45, 18);
 
-doc.setFontSize(12);
-doc.text("Professional Courier & Transportation Services", 55, 28);
+doc.setFontSize(11);
+doc.text("Professional Courier & Transportation Services", 45, 26);
 
-doc.line(15, 40, 195, 40);
+doc.setLineWidth(0.5);
+doc.line(15, 35, 195, 35);
 
-    doc.setFontSize(22);
-doc.setTextColor(11,45,82);
-doc.text("C&A Quality Solutions LLC",20,20);
+doc.setFontSize(16);
+doc.text("Official Proof of Delivery", 15, 45);
+
+doc.line(15, 50, 195, 50);
 
 
-doc.line(20,40,190,40);
-
-    doc.setFontSize(12);
-    doc.text("Professional Courier & Transportation Services", 20, 28);
-    doc.line(20, 32, 190, 32);
 
     doc.setFontSize(18);
-doc.text("Official Proof of Delivery",20,40);
+doc.text("Official Proof of Delivery", 20, 55);
 
     
-    doc.text(`Tracking Number: ${delivery.tracking_number}`,20,70);
+    doc.text(`Tracking Number: ${delivery.tracking_number}`, 20, 80);
 
 doc.text(`Customer: ${delivery.customer_name}`,20,85);
 
 doc.text(`Status: ${delivery.status}`,20,100);
 
-doc.text(`Delivered: ${formatDateTime(delivery.delivered_at)}`,20,115);
+doc.text(`Delivered: ${formatDateTime(delivery.delivery_time)}`, 20, 115);
 
 doc.text(`Driver Notes: ${delivery.driver_notes || "N/A"}`,20,130);
 
