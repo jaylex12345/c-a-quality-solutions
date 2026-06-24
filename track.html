@@ -6,6 +6,8 @@
     <title>Track Package | C&A Quality Solutions LLC</title>
     <link rel="stylesheet" href="css/style.css">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
     <style>
 .track-page{min-height:80vh;background:#f4f7fb;padding:60px 20px;text-align:center}
 .track-card{max-width:650px;margin:auto;background:white;padding:35px;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
@@ -273,7 +275,7 @@ View Proof of Delivery Document
 
 <br><br>
 
-<button onclick="downloadPODPDF(window.currentDelivery)"
+<button onclick="downloadPODPDF()"
 style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
 📄 Download Proof of Delivery PDF
 </button>
@@ -282,7 +284,14 @@ style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-rad
       `;
     
 
-async function downloadPODPDF(data) {
+function downloadPODPDF() {
+  const data = window.currentDelivery;
+
+  if (!data) {
+    alert("No delivery data available. Please track the package first.");
+    return;
+  }
+
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
@@ -291,22 +300,23 @@ async function downloadPODPDF(data) {
 
   doc.setFontSize(12);
   doc.text("Professional Courier & Transportation Services", 20, 28);
-
   doc.line(20, 32, 190, 32);
 
+  doc.setFontSize(14);
   doc.text("Proof of Delivery", 20, 45);
 
-  doc.text("Tracking Number: " + (data.tracking_number || ""), 20, 60);
-  doc.text("Customer: " + (data.customer_name || ""), 20, 70);
-  doc.text("Status: " + (data.status || ""), 20, 80);
-  doc.text("Delivered: " + (data.delivery_time || ""), 20, 90);
-  doc.text("Driver Notes: " + (data.driver_notes || ""), 20, 100);
-  doc.text("Received By: " + (data.received_by || "Front Desk"), 20, 110);
-  doc.text("Relationship: " + (data.relationship || "Receptionist"), 20, 120);
+  doc.setFontSize(11);
+  doc.text("Tracking Number: " + (data.tracking_number || "N/A"), 20, 60);
+  doc.text("Customer: " + (data.customer_name || "N/A"), 20, 70);
+  doc.text("Status: " + (data.status || "Pending"), 20, 80);
+  doc.text("Delivered: " + (data.delivery_time || "Pending"), 20, 90);
+  doc.text("Driver Notes: " + (data.driver_notes || "N/A"), 20, 100);
+  doc.text("Received By: " + (data.received_by || "N/A"), 20, 110);
+  doc.text("Relationship: " + (data.relationship || "N/A"), 20, 120);
   doc.text("Completed By: " + (data.completed_by || "C&A Quality Solutions LLC"), 20, 130);
 
   doc.text("Delivery Location:", 20, 145);
-  doc.text((data.delivery_location || "Not captured").substring(0, 80), 20, 155);
+  doc.text((data.delivery_location || "GPS not captured").substring(0, 85), 20, 155);
 
   doc.text("GPS Verified: " + (data.delivery_location ? "Yes" : "No"), 20, 170);
 
