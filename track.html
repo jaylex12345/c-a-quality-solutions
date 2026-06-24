@@ -1,60 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Track Package | C&A Quality Solutions LLC</title>
-    <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Track Package | C&A Quality Solutions LLC</title>
+  <link rel="stylesheet" href="css/style.css">
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
-    <style>
-.track-page{min-height:80vh;background:#f4f7fb;padding:60px 20px;text-align:center}
-.track-card{max-width:650px;margin:auto;background:white;padding:35px;border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.12)}
-.track-card h2{color:#0b2d52;font-size:34px;margin-bottom:10px}
-.track-card p{color:#555}
-.track-form{display:flex;gap:10px;justify-content:center;margin:25px 0}
-.track-form input{padding:15px;width:65%;border:1px solid #ccc;border-radius:8px;font-size:16px}
-.track-form button{background:#d9b431;color:#071b33;border:none;padding:15px 22px;border-radius:8px;font-weight:bold;cursor:pointer}
-.result-box{margin-top:25px;padding:25px;border-radius:14px;background:#eef5ff;border-left:6px solid #0b2d52}
-.status{display:inline-block;background:#19a84a;color:white;padding:8px 16px;border-radius:20px;font-weight:bold}
-</style>
-
-<style>
-.success-banner{
-  background:#e8f5e9;
-  color:#2e7d32;
-  padding:12px;
-  border-radius:8px;
-  margin-bottom:15px;
-  font-weight:bold;
-}
-.trust-badges{
-  margin-top:15px;
-  font-weight:bold;
-  color:#0b2d52;
-}
-.details-grid{
-  background:white;
-  border-radius:10px;
-  padding:15px;
-  margin-top:15px;
-  text-align:left;
-}
-.details-grid p{
-  margin:8px 0;
-}
-</style>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    .track-page { min-height:80vh; background:#f4f7fb; padding:60px 20px; text-align:center; }
+    .track-card { max-width:650px; margin:auto; background:white; padding:35px; border-radius:18px; }
+    .track-card h2 { color:#0b2d52; font-size:34px; }
+    .track-form { display:flex; gap:10px; justify-content:center; margin:25px 0; }
+    .track-form input { padding:15px; width:65%; border:1px solid #ccc; border-radius:8px; font-size:16px; }
+    .track-form button { background:#d9b431; color:#071b33; border:none; padding:15px 22px; border-radius:8px; font-weight:bold; cursor:pointer; }
+    .success-banner { background:#e8f5e9; color:#2e7d32; padding:12px; border-radius:8px; margin-bottom:15px; font-weight:bold; }
+    .result-box { background:#eef5ff; padding:25px; border-radius:15px; border-left:6px solid #0b2d52; margin-top:20px; }
+    .status { display:inline-block; background:#19a84a; color:white; padding:8px 16px; border-radius:20px; font-weight:bold; }
+  </style>
 </head>
+
 <body>
 
 <header class="site-header">
-    <div class="nav-container">
-        <h1>C&A Quality Solutions LLC</h1>
-    </div>
+  <div class="nav-container">
+    <h1>C&A Quality Solutions LLC</h1>
+  </div>
 </header>
+
 <nav style="text-align:center;padding:15px;background:#0b2d52;">
   <a href="index.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Home</a>
   <a href="services.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Services</a>
@@ -66,11 +41,9 @@
 
 <section class="track-page">
   <div class="track-card">
-  <img src="images/logo.jpeg" alt="C&A Quality Solutions Logo" style="width:110px;margin-bottom:15px;">
+    <img src="images/logo.jpeg" alt="C&A Quality Solutions Logo" style="width:110px;margin-bottom:15px;">
 
-
-
-  <h2>Package Tracking</h2>
+    <h2>Package Tracking</h2>
     <p>Enter your C&A Quality Solutions tracking number to view delivery status and proof of delivery.</p>
 
     <div class="track-form">
@@ -78,261 +51,212 @@
       <button onclick="trackPackage()">Track Package</button>
     </div>
 
-    <div class="trust-badges">
-  🚚 Same-Day Delivery • 🔒 Secure Handling • 📍 Maryland DC Virginia • 📦 Medical Courier
-</div>
+    <div style="margin-top:15px;font-weight:bold;color:#0b2d52;">
+      🚚 Same-Day Delivery • 🔒 Secure Handling • 📍 Maryland DC Virginia • 📦 Medical Courier
+    </div>
+
     <div id="result"></div>
   </div>
+
   <div style="margin-top:25px;font-weight:bold;color:#0b2d52;">
-  Licensed • Insured • Bonded<br>
-  Maryland • DC • Virginia<br>
-  Same-Day Courier Service
-</div>
+    Licensed • Insured • Bonded<br>
+    Maryland • DC • Virginia<br>
+    Same-Day Courier Service
+  </div>
 </section>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
-const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+  const supabaseUrl = "https://ncdozhypelmkvaxsdswwt.supabase.co";
+  const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-function getProgress(status) {
-  if (status === "Picked Up") {
-    return "🟢 Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+  function formatDateTime(value) {
+    if (!value) return "Pending";
+    const date = new Date(value);
+    return date.toLocaleString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
   }
 
-  if (status === "In Transit") {
-    return "🟢 Picked Up → 🟢 In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+  function getProgress(status) {
+    const current = (status || "").toLowerCase();
+
+    if (current === "picked up") {
+      return "🟢 Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+    }
+
+    if (current === "in transit") {
+      return "🟢 Picked Up → 🟢 In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+    }
+
+    if (current === "out for delivery") {
+      return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → ⚪ Delivered";
+    }
+
+    if (current === "delivered") {
+      return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → 🟢 Delivered";
+    }
+
+    return "⚪ Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
   }
 
-  if (status === "Out for Delivery") {
-    return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → ⚪ Delivered";
-  }
-
-  if (status === "Delivered") {
-    return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → 🟢 Delivered";
-  }
-
-  return "⚪ Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
-} 
-
-function formatDateTime(value) {
-  if (!value) return "Pending";
-
-  const date = new Date(value);
-
-  return date.toLocaleString("en-US", {
-    month: "long",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-    hour12: true
-  });
-}
-
-async function trackPackage() {
-    const tracking = document.getElementById("trackingNumber").value.trim();
-    console.log("Searching for:", tracking);
+  async function trackPackage() {
+    const trackingNumber = document.getElementById("trackingNumber").value.trim();
     const result = document.getElementById("result");
 
-    if (!tracking) {
-        result.innerHTML = "<p>Please enter a tracking number.</p>";
-        return;
+    if (!trackingNumber) {
+      result.innerHTML = "<p>Please enter a tracking number.</p>";
+      return;
     }
 
     const { data, error } = await supabaseClient
-  .from("deliveries")
-  .select("*")
-  .eq("tracking_number", tracking.trim())
-  .limit(1);
-
-if (error) {
-  result.innerHTML = `<p>Error: ${error.message}</p>`;
-  console.log(error);
-  return;
-}
-
-if (!data || data.length === 0) {
-  result.innerHTML = `<p>No delivery found with that tracking number.</p>`;
-  return;
-}
-
-const delivery = data[0];
-
-  console.log("Data:", data);
-console.log("Error:", error);
+      .from("deliveries")
+      .select("*")
+      .eq("tracking_number", trackingNumber)
+      .limit(1);
 
     if (error) {
-    result.innerHTML = `<p>Error: ${error.message}</p>`;
-    console.log(error);
-    return;
-}
+      result.innerHTML = `<p>Error: ${error.message}</p>`;
+      console.log(error);
+      return;
+    }
 
-if (!data) {
-    result.innerHTML = "<p>No delivery found with that tracking number.</p>";
-    return;
-}
-window.currentDelivery = delivery;
+    if (!data || data.length === 0) {
+      result.innerHTML = "<p>No delivery found with that tracking number.</p>";
+      return;
+    }
+
+    const delivery = data[0];
+    window.currentDelivery = delivery;
 
     result.innerHTML = `
-  <div class="success-banner">
-    ✔ Tracking information found successfully
-  </div>
+      <div class="success-banner">
+        ✓ Tracking information found successfully
+      </div>
 
-  <div class="result-box">
-    
+      <div class="result-box">
+        <h3>Tracking Number: ${delivery.tracking_number || "N/A"}</h3>
 
+        <p><strong>Customer:</strong><br>${delivery.customer_name || "N/A"}</p>
 
-<p>
-<strong>Tracking Number:</strong><br>
-${delivery.tracking_number || "N/A"}
-</p>
+        <p>${getProgress(delivery.status)}</p>
 
-<p>
-<strong>Customer:</strong><br>
-${delivery.customer_name || "N/A"}
-</p>
+        <p><strong>Status:</strong><br>
+          <span class="status">${delivery.status || "Pending"}</span>
+        </p>
 
-<p>
-<strong>Status:</strong><br>
-${delivery.status || "Pending"}
-</p>
+        <p><strong>Delivered:</strong><br>${formatDateTime(delivery.delivery_time)}</p>
 
-<p>
-<strong>Delivered:</strong><br>
-${delivery.delivery_time || "Pending"}
-</p>
+        <p><strong>Driver Notes:</strong><br>${delivery.driver_notes || "No driver notes added"}</p>
 
-<p>
-<strong>Driver Notes:</strong><br>
-${delivery.driver_notes || "No driver notes added"}
-</p>
+        <p><strong>Received By:</strong><br>${delivery.received_by || "Not Available"}</p>
 
-<p>
-<strong>Received By:</strong><br>
-${delivery.received_by || "Front Desk"}
-</p>
+        <p><strong>Relationship:</strong><br>${delivery.relationship || "Not Available"}</p>
 
-<p>
-<strong>Relationship:</strong><br>
-${delivery.relationship || "Receptionist"}
-</p>
+        <p><strong>Completed By:</strong><br>${delivery.completed_by || "C&A Quality Solutions LLC"}</p>
 
-<p>
-<strong>Completed By:</strong><br>
-${delivery.completed_by || "C&A Quality Solutions LLC"}
-</p>
+        ${
+          delivery.delivery_location && delivery.delivery_location !== "GPS not captured"
+          ? `
+            <p><strong>Delivery Location:</strong></p>
 
-${delivery.delivery_location &&
-delivery.delivery_location !== "GPS not captured"
-? `
-<p>
-<strong>Delivery Location:</strong><br>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.delivery_location)}"
+            target="_blank"
+            style="color:#0b4ea2;font-weight:bold;">
+              📍 View Delivery Address on Google Maps
+            </a>
 
-<a href="https://www.google.com/maps/search/?api=1&query=${delivery.delivery_location}"
-target="_blank"
-style="color:#0b4ea2;font-weight:bold;">
-📍 View Delivery Address on Google Maps
-</a>
+            <br><br>
 
-<br><br>
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(delivery.delivery_location)}"
+            target="_blank"
+            style="display:inline-block;background:#0b4ea2;color:white;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold;">
+              📍 Open in Google Maps
+            </a>
 
-<a href="https://www.google.com/maps/search/?api=1&query=${delivery.delivery_location}"
-target="_blank"
-style="display:inline-block;background:#0b4ea2;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;">
-📍 Open in Google Maps
-</a>
-</p>
+            <p style="color:green;font-weight:bold;">✔ GPS Verified</p>
+          `
+          : `<p style="color:#666;">GPS location not captured</p>`
+        }
 
-<p style="color:green;font-weight:bold;">
-✔ GPS Verified
-</p>
-`
-:
-`
-<p style="color:#666;">
-GPS location not captured
-</p>
-`
-}
+        ${
+          delivery.proof_of_delivery
+          ? `
+            <br>
+            <img src="${delivery.proof_of_delivery}"
+            style="width:100%;max-width:500px;border-radius:12px;border:1px solid #ddd;">
 
-${delivery.proof_of_delivery
-? `
-<img src="${delivery.proof_of_delivery}"
-style="max-width:100%;border-radius:12px;margin-top:10px;border:1px solid #ddd;">
+            <br><br>
 
-<br><br>
+            <a href="${delivery.proof_of_delivery}" target="_blank">
+              View Proof of Delivery Document
+            </a>
+          `
+          : ""
+        }
 
-<a href="${delivery.proof_of_delivery}" target="_blank">
-View Proof of Delivery Document
-</a>
-`
-: ""
-}
+        <br><br>
 
-<br><br>
-
-<button onclick="downloadPODPDF()"
-style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
-📄 Download Proof of Delivery PDF
-</button>
-
-        </div>
-      `;
-    
-
-function downloadPODPDF() {
-  const data = window.currentDelivery;
-
-  if (!data) {
-    alert("No delivery data available. Please track the package first.");
-    return;
+        <button onclick="downloadPODPDF()"
+        style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
+          📄 Download Proof of Delivery PDF
+        </button>
+      </div>
+    `;
   }
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  function downloadPODPDF() {
+    const delivery = window.currentDelivery;
 
-  doc.setFontSize(18);
-  doc.text("C&A Quality Solutions LLC", 20, 20);
+    if (!delivery) {
+      alert("Please track a package first.");
+      return;
+    }
 
-  doc.setFontSize(12);
-  doc.text("Professional Courier & Transportation Services", 20, 28);
-  doc.line(20, 32, 190, 32);
+    if (!window.jspdf) {
+      alert("PDF library not loaded. Refresh the page and try again.");
+      return;
+    }
 
-  doc.setFontSize(14);
-  doc.text("Proof of Delivery", 20, 45);
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
 
-  doc.setFontSize(11);
-  doc.text("Tracking Number: " + (data.tracking_number || "N/A"), 20, 60);
-  doc.text("Customer: " + (data.customer_name || "N/A"), 20, 70);
-  doc.text("Status: " + (data.status || "Pending"), 20, 80);
-  doc.text("Delivered: " + (data.delivery_time || "Pending"), 20, 90);
-  doc.text("Driver Notes: " + (data.driver_notes || "N/A"), 20, 100);
-  doc.text("Received By: " + (data.received_by || "N/A"), 20, 110);
-  doc.text("Relationship: " + (data.relationship || "N/A"), 20, 120);
-  doc.text("Completed By: " + (data.completed_by || "C&A Quality Solutions LLC"), 20, 130);
+    doc.setFontSize(18);
+    doc.text("C&A Quality Solutions LLC", 20, 20);
 
-  doc.text("Delivery Location:", 20, 145);
-  doc.text((data.delivery_location || "GPS not captured").substring(0, 85), 20, 155);
+    doc.setFontSize(12);
+    doc.text("Professional Courier & Transportation Services", 20, 28);
+    doc.line(20, 32, 190, 32);
 
-  doc.text("GPS Verified: " + (data.delivery_location ? "Yes" : "No"), 20, 170);
+    doc.setFontSize(14);
+    doc.text("Proof of Delivery", 20, 45);
 
-  doc.text("Phone: 410-878-5949", 20, 185);
-  doc.text("Email: james@caqualitysolutions.com", 20, 195);
-  doc.text("Website: www.caqualitysolutions.com", 20, 205);
+    doc.setFontSize(11);
+    doc.text("Tracking Number: " + (delivery.tracking_number || "N/A"), 20, 60);
+    doc.text("Customer: " + (delivery.customer_name || "N/A"), 20, 70);
+    doc.text("Status: " + (delivery.status || "Pending"), 20, 80);
+    doc.text("Delivered: " + (delivery.delivery_time || "Pending"), 20, 90);
+    doc.text("Driver Notes: " + (delivery.driver_notes || "N/A"), 20, 100);
+    doc.text("Received By: " + (delivery.received_by || "N/A"), 20, 110);
+    doc.text("Relationship: " + (delivery.relationship || "N/A"), 20, 120);
+    doc.text("Completed By: " + (delivery.completed_by || "C&A Quality Solutions LLC"), 20, 130);
 
-  doc.save((data.tracking_number || "proof-of-delivery") + ".pdf");
-}
+    doc.text("Delivery Location:", 20, 145);
+    doc.text((delivery.delivery_location || "GPS not captured").substring(0, 85), 20, 155);
 
-}
+    doc.text("Phone: 410-878-5949", 20, 185);
+    doc.text("Email: james@caqualitysolutions.com", 20, 195);
+    doc.text("Website: www.caqualitysolutions.com", 20, 205);
+
+    doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
+  }
 </script>
 
-<footer style="margin-top:40px;text-align:center;color:#666;">
-  © 2026 C&A Quality Solutions LLC<br>
-  Licensed Courier & Medical Delivery Services
-</footer>
 </body>
 </html>
