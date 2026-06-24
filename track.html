@@ -49,6 +49,34 @@ font-weight:bold;
     box-shadow:0 2px 10px rgba(0,0,0,.15);
 }
 
+.delivery-photo{
+  width:100%;
+  max-width:500px;
+  display:block;
+  margin:20px auto;
+  border-radius:12px;
+  border:1px solid #ddd;
+}
+
+
+.delivery-photo{
+  width:100%;
+  max-width:500px;
+  border-radius:10px;
+  margin:15px auto;
+  display:block;
+}
+
+
+.delivery-photo{
+  width:100%;
+  max-width:500px;
+  display:block;
+  margin:20px auto;
+  border-radius:12px;
+  border:1px solid #ddd;
+}
+
 
   </style>
 </head>
@@ -245,6 +273,23 @@ const logoUrl = "images/logo.jpeg";
         }
 
         <br><br>
+
+
+      ${
+  delivery.proof_of_delivery
+    ? `
+      <img 
+        src="${delivery.proof_of_delivery}" 
+        class="delivery-photo"
+        alt="Proof of Delivery Photo"
+      >
+      <br>
+      <a href="${delivery.proof_of_delivery}" target="_blank">
+        View Proof of Delivery Photo
+      </a>
+    `
+    : `<p><em>No proof of delivery photo uploaded.</em></p>`
+}
 
         <button onclick="downloadPODPDF()"
         style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
