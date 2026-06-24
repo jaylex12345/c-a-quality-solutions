@@ -53,7 +53,6 @@ Logout
   type="file"
   id="proof_file"
   accept="image/*"
-  multiple
   style="width:100%;padding:12px;margin-bottom:15px;">
 
 <label>Delivery Completed Time</label>
@@ -329,34 +328,32 @@ geoData.display_name || `${lat}, ${lng}`;
 
 
   
-
-
-  const files =
-document.getElementById("proof_file").files;
+const file = document.getElementById("proof_file").files[0];
 
   const delivery_time = document.getElementById("delivery_time").value;
 const driver_notes = document.getElementById("driver_notes").value;
 const completed_by = document.getElementById("completed_by").value;
 
-  let proofPhotos = [];
+let proof_of_delivery = "";
 
-for (const file of files) {
+if (file) {
+  const fileName = `${tracking_number}-${Date.now()}-${file.name}`;
 
-  const fileName =
-    `${tracking_number}/${Date.now()}-${file.name}`;
-
-  const { error } = await supabaseClient.storage
+  const { error: uploadError } = await supabaseClient.storage
     .from("proofs")
     .upload(fileName, file);
 
-  if (!error) {
-
-    const { data } = supabaseClient.storage
-      .from("proofs")
-      .getPublicUrl(fileName);
-
-    proofPhotos.push(data.publicUrl);
+  if (uploadError) {
+    document.getElementById("message").innerText =
+      "Upload error: " + uploadError.message;
+    return;
   }
+
+  const { data } = supabaseClient.storage
+    .from("proofs")
+    .getPublicUrl(fileName);
+
+  proof_of_delivery = data.publicUrl;
 }
 
   
@@ -366,7 +363,7 @@ for (const file of files) {
     tracking_number,
     customer_name,
     status,
-    proof_of_delivery: proofPhotos[0] || "",
+    proof_of_delivery,
     delivery_time,
     driver_notes,
     completed_by,
