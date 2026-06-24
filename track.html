@@ -348,14 +348,7 @@ if (delivery.proof_of_delivery) {
         doc.setFontSize(16);
         doc.text("Proof of Delivery Photo", 20, 20);
 
-        doc.addImage(
-            img,
-            "JPEG",
-            15,
-            35,
-            180,
-            120
-        );
+        
 
         if (!delivery.proof_of_delivery) {
     doc.save(
@@ -374,8 +367,10 @@ if (delivery.proof_of_delivery) {
   doc.text("Official Proof of Delivery", 20, 288);
 
   doc.text(`Generated: ${new Date().toLocaleString()}`, 20, 275);
+doc.line(20, 280, 100, 280);
+doc.text("Official Proof of Delivery", 20, 288);
 
-  doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
+doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
 }
     
 
