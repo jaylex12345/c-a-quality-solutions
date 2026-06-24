@@ -297,17 +297,7 @@ const logoUrl = "images/logo.jpeg";
         </button>
       </div>
     `;
-  
-
-
-
-
- 
-
-
-  
-
-
+    }
   function downloadPODPDF() {
   const delivery = window.currentDelivery;
 
@@ -350,43 +340,6 @@ const logoUrl = "images/logo.jpeg";
   doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
 }
     
-
-   
-
-
-    
-    doc.text(`Tracking Number: ${delivery.tracking_number}`, 20, 80);
-
-doc.text(`Customer: ${delivery.customer_name}`,20,85);
-
-doc.text(`Status: ${delivery.status}`,20,100);
-
-doc.text(`Delivered: ${formatDateTime(delivery.delivery_time)}`, 20, 115);
-
-doc.text(`Driver Notes: ${delivery.driver_notes || "N/A"}`,20,130);
-
-doc.text(`Received By: ${delivery.received_by}`,20,145);
-
-doc.text(`Relationship: ${delivery.relationship}`,20,160);
-
-doc.text(`Completed By: C&A Quality Solutions LLC`,20,175);
-
-doc.text(`Delivery Location:`, 20, 195);
-doc.text(delivery.delivery_location || "GPS Verified", 20, 210, { maxWidth: 170 });
-
-if (delivery.proof_of_delivery) {
-  doc.text("Proof of Delivery Attached", 20, 230);
-}
-
-doc.text("Phone: 410-878-5949", 20, 245);
-doc.text("Email: james@caqualitysolutions.com", 20, 255);
-doc.text("Website: www.caqualitysolutions.com", 20, 265);
-
-doc.line(20, 280, 100, 280);
-doc.text("Authorized Delivery Confirmation", 20, 288);
-
-doc.save((delivery.tracking_number || "proof-of-delivery") + ".pdf");
-  }
 
 </script>
 
