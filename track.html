@@ -173,7 +173,7 @@ if (!data) {
     result.innerHTML = "<p>No delivery found with that tracking number.</p>";
     return;
 }
-
+window.currentDelivery = data;
     result.innerHTML = `
   <div class="success-banner">
     ✔ Tracking information found successfully
@@ -296,7 +296,7 @@ View Proof of Delivery Document
 
 <br><br>
 
-<button onclick='downloadPODPDF(${JSON.stringify(data)})'
+<button onclick="downloadPODPDF(window.currentDelivery)"
 style="background:#d9b431;color:#071b33;padding:12px 18px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;">
 📄 Download Proof of Delivery PDF
 </button>
