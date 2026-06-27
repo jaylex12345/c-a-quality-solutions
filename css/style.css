@@ -2432,3 +2432,13 @@ grid-template-columns:1fr;
     font-size: 32px;
   }
 }
+
+
+.trust-badges{
+    margin:25px 0 40px;
+    text-align:center;
+    font-size:18px;
+    font-weight:600;
+    color:#0d3b66;
+    line-height:1.8;
+}

@@ -159,10 +159,12 @@ color:white;
 
       <label>Service Type</label>
       <select name="Service Type" required>
-        <option>Courier Delivery</option>
-        <option>Medical Courier</option>
-        <option>Scheduled Transportation</option>
-        <option>Priority Delivery</option>
+        <option>Standard Courier</option>
+<option>Priority / Same-Day Delivery</option>
+<option>Medical Courier</option>
+<option>Legal Courier</option>
+<option>Property Services</option>
+<option>Dedicated Route / Monthly Contract</option>
       </select>
 
       <label>Pickup Address</label>
@@ -223,7 +225,7 @@ Full payment is required to confirm your booking. Customers may receive a full r
     <div class="footer-box">
       <h3>Contact</h3>
       <p>Phone: <a href="tel:4108785949">(410) 878-5949</a></p>
-      <p>Email: <a href="mailto:james@caqualitysolutions.com">james@caqualitysolutions.com</a></p>
+      <p>Email: <a href="mailto:contact@caqualitysolutions.com">contact@caqualitysolutions.com</a></p>
       <p>Website: <a href="https://caqualitysolutions.com">caqualitysolutions.com</a></p>
     </div>
 
@@ -293,7 +295,39 @@ function calculateDistanceAndPrice() {
 
       const miles = element.distance.value / 1609.344;
       const roundedMiles = miles.toFixed(1);
-      const price = 20 + (miles * 1.5);
+      const serviceType = document.querySelector('[name="Service Type"]').value;
+
+let basePrice = 45;
+let mileRate = 2.25;
+
+if (serviceType === "Priority / Same-Day Delivery") {
+  basePrice = 70;
+  mileRate = 2.50;
+}
+
+if (serviceType === "Medical Courier") {
+  basePrice = 75;
+  mileRate = 2.50;
+}
+
+if (serviceType === "Legal Courier") {
+  basePrice = 65;
+  mileRate = 2.25;
+}
+
+if (serviceType === "Property Services") {
+  basePrice = 65;
+  mileRate = 2.25;
+}
+
+if (serviceType === "Dedicated Route / Monthly Contract") {
+  resultBox.innerText = "Custom quote required. Please submit your request.";
+  priceInput.value = "Custom Quote";
+  return;
+}
+
+
+const price = basePrice + (miles * mileRate);
 
       
 
