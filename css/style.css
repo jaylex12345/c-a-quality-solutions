@@ -2572,3 +2572,19 @@ grid-template-columns:1fr;
   white-space: normal;
   box-sizing: border-box;
 }
+
+.price-card ul{
+    list-style:none;
+    padding:0;
+    margin:20px 0;
+}
+
+.price-card li{
+    list-style:none;
+}
+
+.feature-list p {
+  margin: 10px 0;
+  text-align: center;
+  list-style: none;
+}
