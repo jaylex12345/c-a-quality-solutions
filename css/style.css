@@ -2657,3 +2657,23 @@ grid-template-columns:1fr;
     flex-wrap:wrap;
     margin-top:30px;
 }
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.price-card {
+  background: white;
+  padding: 30px;
+  border-radius: 18px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+}
+
+.price-card .btn {
+  display: inline-block;
+  margin-top: 20px;
+}
