@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatcher Dashboard | C&A Quality Solutions</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f7fb;
+}
+
+header{
+    background:#0b2d52;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+
+nav{
+    margin-top:15px;
+}
+
+nav a{
+    color:white;
+    text-decoration:none;
+    margin:0 12px;
+    font-weight:bold;
+}
+
+.container{
+    width:95%;
+    max-width:1300px;
+    margin:30px auto;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    padding:20px;
+    text-align:center;
+    box-shadow:0 5px 15px rgba(0,0,0,.1);
+}
+
+.card h2{
+    color:#0b2d52;
+    margin-bottom:10px;
+}
+
+.card p{
+    font-size:32px;
+    color:#d9b431;
+    font-weight:bold;
+}
+
+table{
+    width:100%;
+    margin-top:30px;
+    border-collapse:collapse;
+    background:white;
+}
+
+th{
+    background:#0b2d52;
+    color:white;
+    padding:14px;
+}
+
+td{
+    padding:12px;
+    border-bottom:1px solid #ddd;
+    text-align:center;
+}
+
+button{
+    background:#d9b431;
+    color:white;
+    border:none;
+    padding:8px 15px;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#b88d19;
+}
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<img src="images/logo.jpeg" width="110">
+
+<h1>C&A Quality Solutions LLC</h1>
+
+<h3>Dispatcher Dashboard</h3>
+
+<nav>
+
+<a href="admin.html">Admin</a>
+
+<a href="driver-dashboard.html">Drivers</a>
+
+<a href="track.html">Tracking</a>
+
+<a href="index.html">Website</a>
+
+</nav>
+
+</header>
+
+<div class="container">
+
+<div class="cards">
+
+<div class="card">
+<h2>Drivers Online</h2>
+<p id="driversOnline">0</p>
+</div>
+
+<div class="card">
+<h2>Active Jobs</h2>
+<p id="activeJobs">0</p>
+</div>
+
+<div class="card">
+<h2>Completed Today</h2>
+<p id="completedJobs">0</p>
+</div>
+
+<div class="card">
+<h2>Pending Assignments</h2>
+<p id="pendingJobs">0</p>
+</div>
+
+</div>
+
+<h2 style="margin-top:40px;">Today's Deliveries</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Tracking</th>
+
+<th>Customer</th>
+
+<th>Status</th>
+
+<th>Driver</th>
+
+<th>Assign</th>
+
+</tr>
+
+</thead>
+
+<tbody id="deliveryTable">
+
+<tr>
+
+<td>CAQS-000001</td>
+
+<td>Sample Customer</td>
+
+<td>Pending</td>
+
+<td>Unassigned</td>
+
+<td><button>Assign Driver</button></td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+<script>
+
+document.getElementById("driversOnline").innerHTML=3;
+
+document.getElementById("activeJobs").innerHTML=8;
+
+document.getElementById("completedJobs").innerHTML=14;
+
+document.getElementById("pendingJobs").innerHTML=2;
+
+</script>
+
+</body>
+</html>
