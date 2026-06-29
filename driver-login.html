@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Driver Login | C&A Quality Solutions LLC</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<section class="track-page">
+  <div class="track-card">
+    <img src="images/logo.jpeg" style="width:110px;margin-bottom:15px;">
+
+    <h2>Driver Login</h2>
+    <p>Login to view assigned deliveries.</p>
+
+    <input type="text" id="email" placeholder="Driver Email or Phone" style="padding:12px;width:90%;margin:10px;">
+    <input type="password" id="password" placeholder="Password" style="padding:12px;width:90%;margin:10px;">
+
+    <button onclick="driverLogin()" style="background:#d9b431;color:#071b33;padding:12px 25px;border:none;border-radius:8px;font-weight:bold;">
+      Login
+    </button>
+
+    <p id="message" style="margin-top:15px;font-weight:bold;"></p>
+  </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function driverLogin() {
+  const emailOrPhone = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value.trim();
+  const message = document.getElementById("message");
+
+  if (!emailOrPhone || !password) {
+    message.innerText = "Enter email/phone and password.";
+    message.style.color = "red";
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("drivers")
+    .select("*")
+    .or(`email.eq.${emailOrPhone},phone.eq.${emailOrPhone}`)
+    .eq("password", password)
+    .eq("is_active", true)
+    .single();
+
+  if (error || !data) {
+    message.innerText = "Invalid login.";
+    message.style.color = "red";
+    return;
+  }
+
+  localStorage.setItem("driver_id", data.id);
+  localStorage.setItem("driver_name", data.name);
+
+  window.location.href = "driver-dashboard.html";
+}
+</script>
+
+</body>
+</html>
