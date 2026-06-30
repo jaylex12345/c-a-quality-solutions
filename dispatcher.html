@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Dispatcher Live Operations | C&A Quality Solutions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries=places&callback=initAutocomplete" async defer></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries&callback=initMap"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -284,7 +284,7 @@ function openDeliveryMap(locationText){
   window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
 }
 
-initMap();
+
 loadDashboard();
 
 setInterval(loadDashboard, 15000);
