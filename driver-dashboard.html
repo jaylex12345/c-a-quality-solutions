@@ -2,191 +2,188 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Driver Dashboard | C&A Quality Solutions</title>
-
-<style>
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f4f7fb;
-}
-
-header{
-    background:#0b2d52;
-    color:white;
-    padding:20px;
-    text-align:center;
-}
-
-.container{
-    width:95%;
-    max-width:1200px;
-    margin:30px auto;
-}
-
-.card{
-    background:white;
-    border-radius:12px;
-    padding:20px;
-    margin-bottom:20px;
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-}
-
-th{
-    background:#0b2d52;
-    color:white;
-    padding:12px;
-}
-
-td{
-    padding:10px;
-    border-bottom:1px solid #ddd;
-    text-align:center;
-}
-
-button{
-    background:#d9b431;
-    color:white;
-    border:none;
-    padding:10px 18px;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#b88d19;
-}
-
-select,input[type=file]{
-    padding:8px;
-    width:100%;
-}
-</style>
-
+<link rel="stylesheet" href="css/style.css">
 </head>
-
 <body>
 
 <header>
-
-<img src="images/logo.jpeg" width="110">
-
-<h1>C&A Quality Solutions LLC</h1>
-
-<h2>Driver Dashboard</h2>
-
+  <img src="images/logo.jpeg" width="110">
+  <h1>C&A Quality Solutions LLC</h1>
+  <h2>Driver Dashboard</h2>
 </header>
 
 <div class="container">
+  <div class="card">
+    <h3 id="welcome">Welcome Driver</h3>
+    <p>Today's Assigned Deliveries</p>
+  </div>
 
-<div class="card">
+  <div class="card">
+    <table>
+      <thead>
+        <tr>
+          <th>Tracking</th>
+          <th>Customer</th>
+          <th>Status</th>
+          <th>Update</th>
+          <th>Photo</th>
+          <th>Save</th>
+        </tr>
+      </thead>
+      <tbody id="deliveryTable">
+        <tr><td colspan="6">Loading deliveries...</td></tr>
+      </tbody>
+    </table>
+  </div>
 
-<h3>Welcome Driver</h3>
-
-<p>Today's Assigned Deliveries</p>
-
+  <div class="card">
+    <button onclick="location.href='track.html'">Track Deliveries</button>
+    <button onclick="logout()">Logout</button>
+  </div>
 </div>
 
-<div class="card">
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Tracking</th>
-
-<th>Customer</th>
-
-<th>Status</th>
-
-<th>Update</th>
-
-<th>Photo</th>
-
-<th>Save</th>
-
-</tr>
-
-</thead>
-
-<tbody>
-
-<tr>
-
-<td>CAQS-000001</td>
-
-<td>Sample Customer</td>
-
-<td>
-
-<select>
-
-<option>Picked Up</option>
-
-<option>In Transit</option>
-
-<option>Delivered</option>
-
-</select>
-
-</td>
-
-<td>
-
-<button>Update</button>
-
-</td>
-
-<td>
-
-<input type="file">
-
-</td>
-
-<td>
-
-<button>Upload</button>
-
-</td>
-
-</tr>
-
-</tbody>
-
-</table>
-
-</div>
-
-<div class="card">
-
-<button onclick="location.href='track.html'">
-Track Deliveries
-</button>
-
-<button onclick="logout()">
-Logout
-</button>
-
-</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdcwwt.supabase.co";
+ const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-function logout(){
+const driverId = localStorage.getItem("driver_id");
+const driverName = localStorage.getItem("driver_name");
 
-localStorage.clear();
-
-window.location="driver-login.html";
-
+if (!driverId) {
+  window.location.href = "driver-login.html";
 }
 
+document.getElementById("welcome").innerText = "Welcome " + (driverName || "Driver");
+
+async function loadDeliveries() {
+  const table = document.getElementById("deliveryTable");
+
+  const { data, error } = await supabaseClient
+    .from("deliveries")
+    .select("*")
+    .eq("driver_id", driverId)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.log(error);
+    table.innerHTML = `<tr><td colspan="6">Error loading deliveries.</td></tr>`;
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    table.innerHTML = `<tr><td colspan="6">No deliveries assigned yet.</td></tr>`;
+    return;
+  }
+
+  table.innerHTML = "";
+
+  data.forEach(delivery => {
+    table.innerHTML += `
+      <tr>
+        <td>${delivery.tracking_number || ""}</td>
+        <td>${delivery.customer_name || ""}</td>
+        <td>${delivery.status || ""}</td>
+        <td>
+          <select id="status-${delivery.id}">
+            <option ${delivery.status === "Picked Up" ? "selected" : ""}>Picked Up</option>
+            <option ${delivery.status === "In Transit" ? "selected" : ""}>In Transit</option>
+            <option ${delivery.status === "Out for Delivery" ? "selected" : ""}>Out for Delivery</option>
+            <option ${delivery.status === "Delivered" ? "selected" : ""}>Delivered</option>
+          </select>
+          <button onclick="updateStatus('${delivery.id}')">Update</button>
+        </td>
+        <td>
+          <input type="file" id="photo-${delivery.id}">
+        </td>
+        <td>
+          <button onclick="uploadProof('${delivery.id}', '${delivery.tracking_number}')">Upload</button>
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function updateStatus(deliveryId) {
+  const status = document.getElementById("status-" + deliveryId).value;
+
+  const updateData = {
+    status: status
+  };
+
+  if (status === "Delivered") {
+    updateData.delivery_time = new Date().toISOString();
+    updateData.driver_notes = "Delivered by driver";
+    updateData.completed_by = "C&A Quality Solutions LLC";
+  }
+
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .update(updateData)
+    .eq("id", deliveryId);
+
+  if (error) {
+    alert("Status update failed.");
+    console.log(error);
+    return;
+  }
+
+  alert("Status updated.");
+  loadDeliveries();
+}
+
+async function uploadProof(deliveryId, trackingNumber) {
+  const fileInput = document.getElementById("photo-" + deliveryId);
+  const file = fileInput.files[0];
+
+  if (!file) {
+    alert("Choose a proof photo first.");
+    return;
+  }
+
+  const fileName = `${trackingNumber}-${Date.now()}-${file.name}`;
+
+  const { error: uploadError } = await supabaseClient.storage
+    .from("proofs")
+    .upload(fileName, file);
+
+  if (uploadError) {
+    alert("Photo upload failed.");
+    console.log(uploadError);
+    return;
+  }
+
+  const { data } = supabaseClient.storage
+    .from("proofs")
+    .getPublicUrl(fileName);
+
+  const photoUrl = data.publicUrl;
+
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .update({ proof_of_delivery: photoUrl })
+    .eq("id", deliveryId);
+
+  if (error) {
+    alert("Could not save photo URL.");
+    console.log(error);
+    return;
+  }
+
+  alert("Proof of delivery uploaded.");
+  loadDeliveries();
+}
+
+function logout() {
+  localStorage.removeItem("driver_id");
+  localStorage.removeItem("driver_name");
+  window.location.href = "driver-login.html";
+}
+
+loadDeliveries();
 </script>
 
 </body>
