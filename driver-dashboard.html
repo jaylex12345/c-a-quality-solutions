@@ -3,47 +3,94 @@
 <head>
 <meta charset="UTF-8">
 <title>Driver Dashboard | C&A Quality Solutions</title>
-<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<style>
+body{margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1f2937}
+.header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;padding:30px;text-align:center}
+.header img{width:105px;border-radius:10px}
+.header h1{margin:12px 0 5px;font-size:34px}
+.header h2{margin:0;color:#d9b431}
+
+.container{max-width:1200px;margin:30px auto;padding:0 20px}
+.card{background:white;border-radius:16px;padding:25px;margin-bottom:25px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
+.top-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
+.stat{flex:1;min-width:220px;text-align:center}
+.stat h3{margin:0;font-size:15px;color:#6b7280}
+.stat p{font-size:32px;font-weight:bold;color:#d9b431;margin:10px 0 0}
+
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th{background:#061b3a;color:white;padding:14px;text-align:left}
+td{padding:14px;border-bottom:1px solid #e5e7eb}
+select,input[type=file]{padding:8px;width:100%}
+
+.btn{background:#d9b431;color:#061b3a;border:none;border-radius:8px;padding:10px 16px;font-weight:bold;cursor:pointer}
+.btn:hover{background:#b88d19}
+.btn-blue{background:#0b5ed7;color:white}
+.btn-red{background:#b91c1c;color:white}
+
+.empty{text-align:center;padding:30px;color:#6b7280}
+.footer{text-align:center;color:#6b7280;margin:30px}
+</style>
 </head>
+
 <body>
 
-<header>
-  <img src="images/logo.jpeg" width="110">
+<div class="header">
+  <img src="images/logo.jpeg" alt="C&A Logo">
   <h1>C&A Quality Solutions LLC</h1>
   <h2>Driver Dashboard</h2>
-</header>
+</div>
 
 <div class="container">
-  <div class="card">
-    <h3 id="welcome">Welcome Driver</h3>
-    <p>Today's Assigned Deliveries</p>
+
+  <div class="top-row">
+    <div class="card stat">
+      <h3>Driver</h3>
+      <p id="driverName">Driver</p>
+    </div>
+    <div class="card stat">
+      <h3>Assigned Jobs</h3>
+      <p id="assignedCount">0</p>
+    </div>
+    <div class="card stat">
+      <h3>Completed</h3>
+      <p id="completedCount">0</p>
+    </div>
   </div>
 
   <div class="card">
+    <h2>Today’s Assigned Deliveries</h2>
+
     <table>
       <thead>
         <tr>
           <th>Tracking</th>
           <th>Customer</th>
           <th>Status</th>
-          <th>Update</th>
-          <th>Photo</th>
-          <th>Save</th>
+          <th>Update Status</th>
+          <th>Proof Photo</th>
+          <th>Action</th>
         </tr>
       </thead>
       <tbody id="deliveryTable">
-        <tr><td colspan="6">Loading deliveries...</td></tr>
+        <tr><td colspan="6" class="empty">Loading deliveries...</td></tr>
       </tbody>
     </table>
   </div>
 
   <div class="card">
-    <button onclick="location.href='track.html'">Track Deliveries</button>
-    <button onclick="logout()">Logout</button>
+    <button class="btn btn-blue" onclick="location.href='track.html'">Track Delivery</button>
+    <button class="btn btn-red" onclick="logout()">Logout</button>
   </div>
+
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<div class="footer">
+  Licensed • Insured • Bonded<br>
+  Maryland • DC • Virginia<br>
+  Same-Day Courier Service
+</div>
 
 <script>
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
@@ -54,11 +101,9 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const driverId = localStorage.getItem("driver_id");
 const driverName = localStorage.getItem("driver_name");
 
-if (!driverId) {
-  window.location.href = "driver-login.html";
-}
+if (!driverId) window.location.href = "driver-login.html";
 
-document.getElementById("welcome").innerText = "Welcome " + (driverName || "Driver");
+document.getElementById("driverName").innerText = driverName || "Driver";
 
 async function loadDeliveries() {
   const table = document.getElementById("deliveryTable");
@@ -70,50 +115,50 @@ async function loadDeliveries() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.log(error);
-    table.innerHTML = `<tr><td colspan="6">Error loading deliveries.</td></tr>`;
+    console.log("SUPABASE ERROR:", error);
+    table.innerHTML = `<tr><td colspan="6" class="empty">${error.message}</td></tr>`;
     return;
   }
 
-  if (!data || data.length === 0) {
-    table.innerHTML = `<tr><td colspan="6">No deliveries assigned yet.</td></tr>`;
+  document.getElementById("assignedCount").innerText = data.length;
+  document.getElementById("completedCount").innerText =
+    data.filter(d => d.status === "Delivered").length;
+
+  if (!data.length) {
+    table.innerHTML = `<tr><td colspan="6" class="empty">No deliveries assigned yet.</td></tr>`;
     return;
   }
 
   table.innerHTML = "";
 
-  data.forEach(delivery => {
+  data.forEach(d => {
     table.innerHTML += `
       <tr>
-        <td>${delivery.tracking_number || ""}</td>
-        <td>${delivery.customer_name || ""}</td>
-        <td>${delivery.status || ""}</td>
+        <td><strong>${d.tracking_number || ""}</strong></td>
+        <td>${d.customer_name || ""}</td>
+        <td>${d.status || ""}</td>
         <td>
-          <select id="status-${delivery.id}">
-            <option ${delivery.status === "Picked Up" ? "selected" : ""}>Picked Up</option>
-            <option ${delivery.status === "In Transit" ? "selected" : ""}>In Transit</option>
-            <option ${delivery.status === "Out for Delivery" ? "selected" : ""}>Out for Delivery</option>
-            <option ${delivery.status === "Delivered" ? "selected" : ""}>Delivered</option>
+          <select id="status-${d.id}">
+            <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
+            <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+            <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
+            <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
           </select>
-          <button onclick="updateStatus('${delivery.id}')">Update</button>
         </td>
+        <td><input type="file" id="photo-${d.id}"></td>
         <td>
-          <input type="file" id="photo-${delivery.id}">
-        </td>
-        <td>
-          <button onclick="uploadProof('${delivery.id}', '${delivery.tracking_number}')">Upload</button>
+          <button class="btn" onclick="updateStatus('${d.id}')">Update</button>
+          <button class="btn btn-blue" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
         </td>
       </tr>
     `;
   });
 }
 
-async function updateStatus(deliveryId) {
-  const status = document.getElementById("status-" + deliveryId).value;
+async function updateStatus(id) {
+  const status = document.getElementById("status-" + id).value;
 
-  const updateData = {
-    status: status
-  };
+  const updateData = { status };
 
   if (status === "Delivered") {
     updateData.delivery_time = new Date().toISOString();
@@ -124,57 +169,36 @@ async function updateStatus(deliveryId) {
   const { error } = await supabaseClient
     .from("deliveries")
     .update(updateData)
-    .eq("id", deliveryId);
+    .eq("id", id);
 
-  if (error) {
-    alert("Status update failed.");
-    console.log(error);
-    return;
-  }
+  if (error) return alert(error.message);
 
   alert("Status updated.");
   loadDeliveries();
 }
 
-async function uploadProof(deliveryId, trackingNumber) {
-  const fileInput = document.getElementById("photo-" + deliveryId);
-  const file = fileInput.files[0];
+async function uploadProof(id, tracking) {
+  const file = document.getElementById("photo-" + id).files[0];
+  if (!file) return alert("Choose a photo first.");
 
-  if (!file) {
-    alert("Choose a proof photo first.");
-    return;
-  }
-
-  const fileName = `${trackingNumber}-${Date.now()}-${file.name}`;
+  const fileName = `${tracking}-${Date.now()}-${file.name}`;
 
   const { error: uploadError } = await supabaseClient.storage
     .from("proofs")
     .upload(fileName, file);
 
-  if (uploadError) {
-    alert("Photo upload failed.");
-    console.log(uploadError);
-    return;
-  }
+  if (uploadError) return alert(uploadError.message);
 
-  const { data } = supabaseClient.storage
-    .from("proofs")
-    .getPublicUrl(fileName);
-
-  const photoUrl = data.publicUrl;
+  const { data } = supabaseClient.storage.from("proofs").getPublicUrl(fileName);
 
   const { error } = await supabaseClient
     .from("deliveries")
-    .update({ proof_of_delivery: photoUrl })
-    .eq("id", deliveryId);
+    .update({ proof_of_delivery: data.publicUrl })
+    .eq("id", id);
 
-  if (error) {
-    alert("Could not save photo URL.");
-    console.log(error);
-    return;
-  }
+  if (error) return alert(error.message);
 
-  alert("Proof of delivery uploaded.");
+  alert("Proof uploaded.");
   loadDeliveries();
 }
 
