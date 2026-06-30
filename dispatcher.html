@@ -266,14 +266,13 @@ async function assignDriver(deliveryId) {
 
   if (!selectedDriverId) {
     const { error } = await supabaseClient
-      .from("deliveries")
-      .update({
-        driver_id: null,
-        driver_name: null,
-        assignment_status: "Unassigned",
-        status: "Pending"
-      })
-      .eq("id", deliveryId);
+  .from("deliveries")
+  .update({
+    driver_id: null,
+    assignment_status: "Unassigned",
+    status: "Pending"
+  })
+  .eq("id", deliveryId);
 
     if (error) return alert(error.message);
 
@@ -290,14 +289,13 @@ async function assignDriver(deliveryId) {
   }
 
   const { error } = await supabaseClient
-    .from("deliveries")
-    .update({
-      driver_id: driver.id,
-      driver_name: driver.name,
-      assignment_status: "Assigned",
-      status: "Out for Delivery"
-    })
-    .eq("id", deliveryId);
+  .from("deliveries")
+  .update({
+    driver_id: driver.id,
+    assignment_status: "Assigned",
+    status: "Out for Delivery"
+  })
+  .eq("id", deliveryId);
 
   if (error) {
     console.error("Assignment error:", error);
