@@ -2,204 +2,278 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dispatcher Dashboard | C&A Quality Solutions</title>
+<title>Dispatcher Console | C&A Quality Solutions</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f4f7fb;
-}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+.header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;padding:26px;text-align:center}
+.header img{width:85px;border-radius:14px;background:white;padding:6px}
+.header h1{margin:10px 0 4px;font-size:31px}
+.header h2{margin:0;color:#d9b431}
 
-header{
-    background:#0b2d52;
-    color:white;
-    padding:20px;
-    text-align:center;
-}
+.nav{background:#071b33;padding:12px;text-align:center}
+.nav button{margin:5px;padding:10px 16px;border:0;border-radius:8px;background:#d9b431;color:#061b3a;font-weight:bold;cursor:pointer}
 
-nav{
-    margin-top:15px;
-}
+.container{max-width:1350px;margin:25px auto;padding:0 18px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{background:white;border-radius:18px;padding:22px;box-shadow:0 8px 25px rgba(0,0,0,.08);margin-bottom:22px}
+.card h3{margin:0 0 8px;color:#6b7280;font-size:15px}
+.big{font-size:30px;font-weight:bold;color:#d9b431}
 
-nav a{
-    color:white;
-    text-decoration:none;
-    margin:0 12px;
-    font-weight:bold;
-}
-
-.container{
-    width:95%;
-    max-width:1300px;
-    margin:30px auto;
-}
-
-.cards{
-    display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:20px;
-}
-
-.card{
-    background:white;
-    border-radius:12px;
-    padding:20px;
-    text-align:center;
-    box-shadow:0 5px 15px rgba(0,0,0,.1);
-}
-
-.card h2{
-    color:#0b2d52;
-    margin-bottom:10px;
-}
-
-.card p{
-    font-size:32px;
-    color:#d9b431;
-    font-weight:bold;
-}
-
-table{
-    width:100%;
-    margin-top:30px;
-    border-collapse:collapse;
-    background:white;
-}
-
-th{
-    background:#0b2d52;
-    color:white;
-    padding:14px;
-}
-
-td{
-    padding:12px;
-    border-bottom:1px solid #ddd;
-    text-align:center;
-}
-
-button{
-    background:#d9b431;
-    color:white;
-    border:none;
-    padding:8px 15px;
-    border-radius:6px;
-    cursor:pointer;
-}
-
-button:hover{
-    background:#b88d19;
-}
+.main{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+table{width:100%;border-collapse:collapse}
+th{background:#061b3a;color:white;padding:14px;text-align:left}
+td{padding:13px;border-bottom:1px solid #e5e7eb}
+select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
+.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#d9b431;color:#061b3a;margin:3px}
+.btn-blue{background:#0b5ed7;color:white}
+.btn-green{background:#16a34a;color:white}
+.btn-red{background:#b91c1c;color:white}
+.badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:13px}
+.pending{background:#fee2e2;color:#991b1b}
+.picked{background:#dbeafe;color:#1d4ed8}
+.transit{background:#fef3c7;color:#92400e}
+.out{background:#ede9fe;color:#6d28d9}
+.delivered{background:#dcfce7;color:#166534}
+.empty{text-align:center;color:#6b7280;padding:30px}
+.driver-card{border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px}
+.online{color:#16a34a;font-weight:bold}
+.footer{text-align:center;margin:30px;color:#6b7280}
+@media(max-width:900px){.grid,.main{grid-template-columns:1fr}table{font-size:13px}}
 </style>
-
 </head>
 
 <body>
 
-<header>
+<div class="header">
+  <img src="images/logo.jpeg">
+  <h1>C&A Quality Solutions LLC</h1>
+  <h2>Dispatcher Operations Console</h2>
+</div>
 
-<img src="images/logo.jpeg" width="110">
-
-<h1>C&A Quality Solutions LLC</h1>
-
-<h3>Dispatcher Dashboard</h3>
-
-<nav>
-
-<a href="admin.html">Admin</a>
-
-<a href="driver-dashboard.html">Drivers</a>
-
-<a href="track.html">Tracking</a>
-
-<a href="index.html">Website</a>
-
-</nav>
-
-</header>
+<div class="nav">
+  <button onclick="loadDashboard()">Refresh</button>
+  <button onclick="location.href='admin.html'">Admin</button>
+  <button onclick="location.href='driver-dashboard.html'">Driver View</button>
+  <button onclick="location.href='track.html'">Tracking</button>
+</div>
 
 <div class="container">
 
-<div class="cards">
+  <div class="grid">
+    <div class="card">
+      <h3>Total Deliveries</h3>
+      <div class="big" id="totalJobs">0</div>
+    </div>
+    <div class="card">
+      <h3>Unassigned</h3>
+      <div class="big" id="unassignedJobs">0</div>
+    </div>
+    <div class="card">
+      <h3>Active Drivers</h3>
+      <div class="big" id="activeDrivers">0</div>
+    </div>
+    <div class="card">
+      <h3>Completed</h3>
+      <div class="big" id="completedJobs">0</div>
+    </div>
+  </div>
 
-<div class="card">
-<h2>Drivers Online</h2>
-<p id="driversOnline">0</p>
+  <div class="main">
+
+    <div class="card">
+      <h2>📦 Delivery Assignment Board</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tracking</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Driver</th>
+            <th>Assign</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="deliveryTable">
+          <tr><td colspan="6" class="empty">Loading deliveries...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>🚚 Drivers</h2>
+        <div id="driversList">Loading drivers...</div>
+      </div>
+
+      <div class="card">
+        <h2>📍 Dispatcher Tools</h2>
+        <button class="btn btn-blue" onclick="location.href='admin.html'">➕ Add Delivery</button>
+        <button class="btn btn-green" onclick="loadDashboard()">🔄 Refresh Board</button>
+        <button class="btn" onclick="location.href='track.html'">🔎 Track Package</button>
+      </div>
+    </div>
+
+  </div>
 </div>
 
-<div class="card">
-<h2>Active Jobs</h2>
-<p id="activeJobs">0</p>
-</div>
-
-<div class="card">
-<h2>Completed Today</h2>
-<p id="completedJobs">0</p>
-</div>
-
-<div class="card">
-<h2>Pending Assignments</h2>
-<p id="pendingJobs">0</p>
-</div>
-
-</div>
-
-<h2 style="margin-top:40px;">Today's Deliveries</h2>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Tracking</th>
-
-<th>Customer</th>
-
-<th>Status</th>
-
-<th>Driver</th>
-
-<th>Assign</th>
-
-</tr>
-
-</thead>
-
-<tbody id="deliveryTable">
-
-<tr>
-
-<td>CAQS-000001</td>
-
-<td>Sample Customer</td>
-
-<td>Pending</td>
-
-<td>Unassigned</td>
-
-<td><button>Assign Driver</button></td>
-
-</tr>
-
-</tbody>
-
-</table>
-
+<div class="footer">
+  C&A Quality Solutions LLC<br>
+  Licensed • Insured • Bonded<br>
+  Maryland • DC • Virginia • Same-Day Courier Service
 </div>
 
 <script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+  const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-document.getElementById("driversOnline").innerHTML=3;
+let drivers = [];
 
-document.getElementById("activeJobs").innerHTML=8;
+function badge(status){
+  if(status==="Delivered") return `<span class="badge delivered">Delivered</span>`;
+  if(status==="In Transit") return `<span class="badge transit">In Transit</span>`;
+  if(status==="Out for Delivery") return `<span class="badge out">Out for Delivery</span>`;
+  if(status==="Picked Up") return `<span class="badge picked">Picked Up</span>`;
+  return `<span class="badge pending">${status || "Pending"}</span>`;
+}
 
-document.getElementById("completedJobs").innerHTML=14;
+async function loadDashboard(){
+  await loadDrivers();
+  await loadDeliveries();
+}
 
-document.getElementById("pendingJobs").innerHTML=2;
+async function loadDrivers(){
+  const { data, error } = await supabaseClient
+    .from("drivers")
+    .select("*")
+    .eq("is_active", true)
+    .order("name", { ascending:true });
 
+  if(error){
+    console.log(error);
+    document.getElementById("driversList").innerHTML = error.message;
+    return;
+  }
+
+  drivers = data || [];
+  document.getElementById("activeDrivers").innerText = drivers.length;
+
+  const box = document.getElementById("driversList");
+
+  if(!drivers.length){
+    box.innerHTML = "No active drivers.";
+    return;
+  }
+
+  box.innerHTML = "";
+
+  drivers.forEach(d => {
+    const gps = d.latitude && d.longitude
+      ? `<button class="btn btn-blue" onclick="openDriverMap(${d.latitude},${d.longitude})">Map</button>`
+      : "";
+
+    box.innerHTML += `
+      <div class="driver-card">
+        <strong>${d.name}</strong><br>
+        ${d.phone || ""}<br>
+        <span class="online">● ${d.status || "Available"}</span><br>
+        Last Seen: ${d.last_seen ? new Date(d.last_seen).toLocaleString() : "N/A"}<br>
+        ${gps}
+      </div>
+    `;
+  });
+}
+
+async function loadDeliveries(){
+  const table = document.getElementById("deliveryTable");
+
+  const { data, error } = await supabaseClient
+    .from("deliveries")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if(error){
+    console.log(error);
+    table.innerHTML = `<tr><td colspan="6" class="empty">${error.message}</td></tr>`;
+    return;
+  }
+
+  const deliveries = data || [];
+
+  document.getElementById("totalJobs").innerText = deliveries.length;
+  document.getElementById("unassignedJobs").innerText =
+    deliveries.filter(d => !d.driver_id).length;
+  document.getElementById("completedJobs").innerText =
+    deliveries.filter(d => d.status === "Delivered").length;
+
+  if(!deliveries.length){
+    table.innerHTML = `<tr><td colspan="6" class="empty">No deliveries found.</td></tr>`;
+    return;
+  }
+
+  table.innerHTML = "";
+
+  deliveries.forEach(d => {
+    const currentDriver = drivers.find(x => x.id === d.driver_id);
+
+    let driverOptions = `<option value="">Unassigned</option>`;
+    drivers.forEach(driver => {
+      driverOptions += `
+        <option value="${driver.id}" ${d.driver_id === driver.id ? "selected" : ""}>
+          ${driver.name}
+        </option>
+      `;
+    });
+
+    table.innerHTML += `
+      <tr>
+        <td><strong>${d.tracking_number || ""}</strong></td>
+        <td>${d.customer_name || ""}</td>
+        <td>${badge(d.status)}</td>
+        <td>${currentDriver ? currentDriver.name : "Unassigned"}</td>
+        <td>
+          <select id="driver-${d.id}">
+            ${driverOptions}
+          </select>
+        </td>
+        <td>
+          <button class="btn" onclick="assignDriver('${d.id}')">Assign</button>
+          ${d.delivery_location ? `<button class="btn btn-green" onclick="openDeliveryMap('${d.delivery_location}')">Map</button>` : ""}
+        </td>
+      </tr>
+    `;
+  });
+}
+
+async function assignDriver(deliveryId){
+  const selectedDriverId = document.getElementById("driver-" + deliveryId).value || null;
+
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .update({ driver_id: selectedDriverId })
+    .eq("id", deliveryId);
+
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  alert("Driver assignment updated.");
+  loadDashboard();
+}
+
+function openDriverMap(lat,lng){
+  window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+}
+
+function openDeliveryMap(locationText){
+  window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
+}
+
+loadDashboard();
 </script>
 
 </body>
