@@ -265,41 +265,35 @@ async function assignDriver(deliveryId) {
   const selectedDriverId = document.getElementById("driver-" + deliveryId).value;
 
   if (!selectedDriverId) {
-    const { error } = await supabaseClient
-  .from("deliveries")
-  .update({
-    driver_id: null,
-    assignment_status: "Unassigned",
-    status: "Pending"
-  })
-  .eq("id", deliveryId);
-
-    if (error) return alert(error.message);
-
-    alert("Delivery unassigned.");
-    loadDashboard();
+    alert("Select James Kamara first.");
     return;
   }
 
   const driver = drivers.find(d => d.id === selectedDriverId);
 
   if (!driver) {
-    alert("Driver not found. Refresh the page and try again.");
+    alert("Driver not found.");
     return;
   }
 
-  const { error } = await supabaseClient
-  .from("deliveries")
-  .update({
-    driver_id: driver.id,
-    assignment_status: "Assigned",
-    status: "Out for Delivery"
-  })
-  .eq("id", deliveryId);
+  const { data, error } = await supabaseClient
+    .from("deliveries")
+    .update({
+      driver_id: driver.id,
+      assignment_status: "Assigned",
+      status: "Out for Delivery"
+    })
+    .eq("id", deliveryId)
+    .select();
 
   if (error) {
-    console.error("Assignment error:", error);
+    console.error(error);
     alert(error.message);
+    return;
+  }
+
+  if (!data || data.length === 0) {
+    alert("No row updated. RLS or wrong delivery ID problem.");
     return;
   }
 
