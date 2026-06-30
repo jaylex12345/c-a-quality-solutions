@@ -46,10 +46,12 @@ async function driverLogin() {
   const { data, error } = await supabaseClient
   .from("drivers")
   .select("*")
-  .or(`email.eq.${emailOrPhone},phone.eq.${emailOrPhone}`)
+  .eq("phone", emailOrPhone)
   .eq("password", password)
-  .eq("is_active", true)
   .limit(1);
+
+console.log("DATA:", data);
+console.log("ERROR:", error);
 
 if (error || !data || data.length === 0) {
   message.innerText = "Invalid login.";
