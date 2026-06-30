@@ -164,6 +164,7 @@ async function loadDeliveries(){
     .from("deliveries")
     .select("*")
     .eq("driver_id", driverId)
+.eq("assignment_status", "Assigned")
     .order("created_at", { ascending:false });
 
   if(error){

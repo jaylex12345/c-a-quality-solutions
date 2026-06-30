@@ -261,31 +261,53 @@ async function loadDeliveries(){
   });
 }
 
-async function assignDriver(deliveryId){
-  const selectedDriverId = document.getElementById("driver-" + deliveryId).value || null;
+async function assignDriver(deliveryId) {
+  const selectedDriverId = document.getElementById("driver-" + deliveryId).value;
+
+  if (!selectedDriverId) {
+    const { error } = await supabaseClient
+      .from("deliveries")
+      .update({
+        driver_id: null,
+        driver_name: null,
+        assignment_status: "Unassigned",
+        status: "Pending"
+      })
+      .eq("id", deliveryId);
+
+    if (error) return alert(error.message);
+
+    alert("Delivery unassigned.");
+    loadDashboard();
+    return;
+  }
+
+  const driver = drivers.find(d => d.id === selectedDriverId);
+
+  if (!driver) {
+    alert("Driver not found. Refresh the page and try again.");
+    return;
+  }
 
   const { error } = await supabaseClient
     .from("deliveries")
-    .update({ driver_id: selectedDriverId })
+    .update({
+      driver_id: driver.id,
+      driver_name: driver.name,
+      assignment_status: "Assigned",
+      status: "Out for Delivery"
+    })
     .eq("id", deliveryId);
 
-  if(error) return alert(error.message);
+  if (error) {
+    console.error("Assignment error:", error);
+    alert(error.message);
+    return;
+  }
 
   alert("Driver assigned successfully.");
   loadDashboard();
 }
-
-function centerDriver(lat,lng){
-  map.setCenter({ lat:Number(lat), lng:Number(lng) });
-  map.setZoom(14);
-}
-
-function openDeliveryMap(locationText){
-  window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
-}
-
-
-loadDashboard();
 
 setInterval(loadDashboard, 15000);
 </script>
