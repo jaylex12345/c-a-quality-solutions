@@ -238,11 +238,13 @@ async function loadDeliveries(){
   table.innerHTML = "";
 
   deliveries.forEach(d => {
-    const currentDriver = drivers.find(x => x.id === d.driver_id);
+    const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
 
     let options = `<option value="">Unassigned</option>`;
     drivers.forEach(driver => {
-      options += `<option value="${driver.id}" ${d.driver_id===driver.id ? "selected" : ""}>${driver.name}</option>`;
+      options += `<option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>
+  ${driver.name}
+</option>`;
     });
 
     table.innerHTML += `
@@ -277,14 +279,14 @@ async function assignDriver(deliveryId) {
   }
 
   const { data, error } = await supabaseClient
-    .from("deliveries")
-    .update({
-      driver_id: driver.id,
-      assignment_status: "Assigned",
-      status: "Out for Delivery"
-    })
-    .eq("id", deliveryId)
-    .select();
+  .from("deliveries")
+  .update({
+    driver_id: driver.id,
+    assignment_status: "Assigned",
+    status: "Out for Delivery"
+  })
+  .eq("id", deliveryId)
+  .select();
 
   if (error) {
     console.error(error);
