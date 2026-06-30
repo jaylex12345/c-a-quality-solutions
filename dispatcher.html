@@ -2,46 +2,36 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Dispatcher Console | C&A Quality Solutions</title>
+<title>Dispatcher Live Operations | C&A Quality Solutions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries=places&callback=initAutocomplete" async defer></script>
 
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
-.header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;padding:26px;text-align:center}
-.header img{width:85px;border-radius:14px;background:white;padding:6px}
-.header h1{margin:10px 0 4px;font-size:31px}
-.header h2{margin:0;color:#d9b431}
-
-.nav{background:#071b33;padding:12px;text-align:center}
-.nav button{margin:5px;padding:10px 16px;border:0;border-radius:8px;background:#d9b431;color:#061b3a;font-weight:bold;cursor:pointer}
-
-.container{max-width:1350px;margin:25px auto;padding:0 18px}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-.card{background:white;border-radius:18px;padding:22px;box-shadow:0 8px 25px rgba(0,0,0,.08);margin-bottom:22px}
-.card h3{margin:0 0 8px;color:#6b7280;font-size:15px}
+.header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;text-align:center;padding:24px}
+.header img{width:80px;border-radius:14px;background:white;padding:6px}
+.header h1{margin:10px 0 3px}.header h2{margin:0;color:#d9b431}
+.nav{background:#071b33;text-align:center;padding:12px}
+.nav button,.btn{background:#d9b431;color:#061b3a;border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;margin:3px}
+.btn-green{background:#16a34a;color:white}.btn-blue{background:#0b5ed7;color:white}
+.container{max-width:1400px;margin:25px auto;padding:0 18px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.card{background:white;border-radius:18px;padding:20px;margin-bottom:20px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
 .big{font-size:30px;font-weight:bold;color:#d9b431}
-
-.main{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+.main{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+#map{width:100%;height:420px;border-radius:16px}
 table{width:100%;border-collapse:collapse}
-th{background:#061b3a;color:white;padding:14px;text-align:left}
-td{padding:13px;border-bottom:1px solid #e5e7eb}
-select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
-.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#d9b431;color:#061b3a;margin:3px}
-.btn-blue{background:#0b5ed7;color:white}
-.btn-green{background:#16a34a;color:white}
-.btn-red{background:#b91c1c;color:white}
+th{background:#061b3a;color:white;padding:13px;text-align:left}
+td{padding:12px;border-bottom:1px solid #e5e7eb}
+select{padding:8px;border-radius:8px;width:100%}
 .badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:13px}
-.pending{background:#fee2e2;color:#991b1b}
-.picked{background:#dbeafe;color:#1d4ed8}
-.transit{background:#fef3c7;color:#92400e}
-.out{background:#ede9fe;color:#6d28d9}
-.delivered{background:#dcfce7;color:#166534}
-.empty{text-align:center;color:#6b7280;padding:30px}
-.driver-card{border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin-bottom:12px}
+.delivered{background:#dcfce7;color:#166534}.pending{background:#fee2e2;color:#991b1b}
+.transit{background:#fef3c7;color:#92400e}.picked{background:#dbeafe;color:#1d4ed8}.out{background:#ede9fe;color:#6d28d9}
+.driver-card{border:1px solid #e5e7eb;border-radius:12px;padding:13px;margin-bottom:10px}
 .online{color:#16a34a;font-weight:bold}
-.footer{text-align:center;margin:30px;color:#6b7280}
-@media(max-width:900px){.grid,.main{grid-template-columns:1fr}table{font-size:13px}}
+.footer{text-align:center;color:#6b7280;margin:25px}
+@media(max-width:950px){.grid,.main{grid-template-columns:1fr}}
 </style>
 </head>
 
@@ -50,11 +40,11 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
 <div class="header">
   <img src="images/logo.jpeg">
   <h1>C&A Quality Solutions LLC</h1>
-  <h2>Dispatcher Operations Console</h2>
+  <h2>Live Dispatcher Operations Console</h2>
 </div>
 
 <div class="nav">
-  <button onclick="loadDashboard()">Refresh</button>
+  <button onclick="loadDashboard()">Refresh Board</button>
   <button onclick="location.href='admin.html'">Admin</button>
   <button onclick="location.href='driver-dashboard.html'">Driver View</button>
   <button onclick="location.href='track.html'">Tracking</button>
@@ -63,26 +53,18 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
 <div class="container">
 
   <div class="grid">
-    <div class="card">
-      <h3>Total Deliveries</h3>
-      <div class="big" id="totalJobs">0</div>
-    </div>
-    <div class="card">
-      <h3>Unassigned</h3>
-      <div class="big" id="unassignedJobs">0</div>
-    </div>
-    <div class="card">
-      <h3>Active Drivers</h3>
-      <div class="big" id="activeDrivers">0</div>
-    </div>
-    <div class="card">
-      <h3>Completed</h3>
-      <div class="big" id="completedJobs">0</div>
-    </div>
+    <div class="card"><h3>Total Deliveries</h3><div class="big" id="totalJobs">0</div></div>
+    <div class="card"><h3>Unassigned</h3><div class="big" id="unassignedJobs">0</div></div>
+    <div class="card"><h3>Active Drivers</h3><div class="big" id="activeDrivers">0</div></div>
+    <div class="card"><h3>Completed</h3><div class="big" id="completedJobs">0</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🗺️ Live Driver GPS Map</h2>
+    <div id="map"></div>
   </div>
 
   <div class="main">
-
     <div class="card">
       <h2>📦 Delivery Assignment Board</h2>
       <table>
@@ -97,32 +79,31 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
           </tr>
         </thead>
         <tbody id="deliveryTable">
-          <tr><td colspan="6" class="empty">Loading deliveries...</td></tr>
+          <tr><td colspan="6">Loading deliveries...</td></tr>
         </tbody>
       </table>
     </div>
 
     <div>
       <div class="card">
-        <h2>🚚 Drivers</h2>
+        <h2>🚚 Drivers Online</h2>
         <div id="driversList">Loading drivers...</div>
       </div>
 
       <div class="card">
         <h2>📍 Dispatcher Tools</h2>
-        <button class="btn btn-blue" onclick="location.href='admin.html'">➕ Add Delivery</button>
-        <button class="btn btn-green" onclick="loadDashboard()">🔄 Refresh Board</button>
-        <button class="btn" onclick="location.href='track.html'">🔎 Track Package</button>
+        <button class="btn btn-blue" onclick="location.href='admin.html'">+ Add Delivery</button>
+        <button class="btn btn-green" onclick="loadDashboard()">Refresh</button>
+        <button class="btn" onclick="location.href='track.html'">Track Package</button>
       </div>
     </div>
-
   </div>
 </div>
 
 <div class="footer">
-  C&A Quality Solutions LLC<br>
-  Licensed • Insured • Bonded<br>
-  Maryland • DC • Virginia • Same-Day Courier Service
+C&A Quality Solutions LLC<br>
+Licensed • Insured • Bonded<br>
+Maryland • DC • Virginia
 </div>
 
 <script>
@@ -131,6 +112,53 @@ const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 let drivers = [];
+let map;
+let markers = [];
+
+function initMap(){
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 39.2904, lng: -76.6122 },
+    zoom: 9
+  });
+}
+
+function clearMarkers(){
+  markers.forEach(m => m.setMap(null));
+  markers = [];
+}
+
+function addDriverMarkers(){
+  clearMarkers();
+
+  drivers.forEach(driver => {
+    if(driver.latitude && driver.longitude){
+      const marker = new google.maps.Marker({
+        position: {
+          lat: Number(driver.latitude),
+          lng: Number(driver.longitude)
+        },
+        map,
+        title: driver.name || "Driver"
+      });
+
+      const info = new google.maps.InfoWindow({
+        content: `
+          <strong>${driver.name}</strong><br>
+          Phone: ${driver.phone || ""}<br>
+          Status: ${driver.status || "Available"}<br>
+          Last Seen: ${driver.last_seen ? new Date(driver.last_seen).toLocaleString() : "N/A"}
+        `
+      });
+
+      marker.addListener("click", () => info.open(map, marker));
+      markers.push(marker);
+    }
+  });
+
+  if(markers.length){
+    map.setCenter(markers[0].getPosition());
+  }
+}
 
 function badge(status){
   if(status==="Delivered") return `<span class="badge delivered">Delivered</span>`;
@@ -153,7 +181,6 @@ async function loadDrivers(){
     .order("name", { ascending:true });
 
   if(error){
-    console.log(error);
     document.getElementById("driversList").innerHTML = error.message;
     return;
   }
@@ -162,29 +189,26 @@ async function loadDrivers(){
   document.getElementById("activeDrivers").innerText = drivers.length;
 
   const box = document.getElementById("driversList");
+  box.innerHTML = "";
 
   if(!drivers.length){
     box.innerHTML = "No active drivers.";
     return;
   }
 
-  box.innerHTML = "";
-
   drivers.forEach(d => {
-    const gps = d.latitude && d.longitude
-      ? `<button class="btn btn-blue" onclick="openDriverMap(${d.latitude},${d.longitude})">Map</button>`
-      : "";
-
     box.innerHTML += `
       <div class="driver-card">
         <strong>${d.name}</strong><br>
         ${d.phone || ""}<br>
         <span class="online">● ${d.status || "Available"}</span><br>
         Last Seen: ${d.last_seen ? new Date(d.last_seen).toLocaleString() : "N/A"}<br>
-        ${gps}
+        ${d.latitude && d.longitude ? `<button class="btn btn-blue" onclick="centerDriver(${d.latitude},${d.longitude})">View GPS</button>` : "No GPS yet"}
       </div>
     `;
   });
+
+  addDriverMarkers();
 }
 
 async function loadDeliveries(){
@@ -196,21 +220,18 @@ async function loadDeliveries(){
     .order("created_at", { ascending:false });
 
   if(error){
-    console.log(error);
-    table.innerHTML = `<tr><td colspan="6" class="empty">${error.message}</td></tr>`;
+    table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
     return;
   }
 
   const deliveries = data || [];
 
   document.getElementById("totalJobs").innerText = deliveries.length;
-  document.getElementById("unassignedJobs").innerText =
-    deliveries.filter(d => !d.driver_id).length;
-  document.getElementById("completedJobs").innerText =
-    deliveries.filter(d => d.status === "Delivered").length;
+  document.getElementById("unassignedJobs").innerText = deliveries.filter(d => !d.driver_id).length;
+  document.getElementById("completedJobs").innerText = deliveries.filter(d => d.status === "Delivered").length;
 
   if(!deliveries.length){
-    table.innerHTML = `<tr><td colspan="6" class="empty">No deliveries found.</td></tr>`;
+    table.innerHTML = `<tr><td colspan="6">No deliveries found.</td></tr>`;
     return;
   }
 
@@ -219,13 +240,9 @@ async function loadDeliveries(){
   deliveries.forEach(d => {
     const currentDriver = drivers.find(x => x.id === d.driver_id);
 
-    let driverOptions = `<option value="">Unassigned</option>`;
+    let options = `<option value="">Unassigned</option>`;
     drivers.forEach(driver => {
-      driverOptions += `
-        <option value="${driver.id}" ${d.driver_id === driver.id ? "selected" : ""}>
-          ${driver.name}
-        </option>
-      `;
+      options += `<option value="${driver.id}" ${d.driver_id===driver.id ? "selected" : ""}>${driver.name}</option>`;
     });
 
     table.innerHTML += `
@@ -234,11 +251,7 @@ async function loadDeliveries(){
         <td>${d.customer_name || ""}</td>
         <td>${badge(d.status)}</td>
         <td>${currentDriver ? currentDriver.name : "Unassigned"}</td>
-        <td>
-          <select id="driver-${d.id}">
-            ${driverOptions}
-          </select>
-        </td>
+        <td><select id="driver-${d.id}">${options}</select></td>
         <td>
           <button class="btn" onclick="assignDriver('${d.id}')">Assign</button>
           ${d.delivery_location ? `<button class="btn btn-green" onclick="openDeliveryMap('${d.delivery_location}')">Map</button>` : ""}
@@ -256,24 +269,25 @@ async function assignDriver(deliveryId){
     .update({ driver_id: selectedDriverId })
     .eq("id", deliveryId);
 
-  if(error){
-    alert(error.message);
-    return;
-  }
+  if(error) return alert(error.message);
 
-  alert("Driver assignment updated.");
+  alert("Driver assigned successfully.");
   loadDashboard();
 }
 
-function openDriverMap(lat,lng){
-  window.open(`https://www.google.com/maps?q=${lat},${lng}`, "_blank");
+function centerDriver(lat,lng){
+  map.setCenter({ lat:Number(lat), lng:Number(lng) });
+  map.setZoom(14);
 }
 
 function openDeliveryMap(locationText){
   window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
 }
 
+initMap();
 loadDashboard();
+
+setInterval(loadDashboard, 15000);
 </script>
 
 </body>
