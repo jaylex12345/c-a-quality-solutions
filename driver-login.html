@@ -44,23 +44,25 @@ async function driverLogin() {
   }
 
   const { data, error } = await supabaseClient
-    .from("drivers")
-    .select("*")
-    .or(`email.eq.${emailOrPhone},phone.eq.${emailOrPhone}`)
-    .eq("password", password)
-    .eq("is_active", true)
-    .single();
+  .from("drivers")
+  .select("*")
+  .or(`email.eq.${emailOrPhone},phone.eq.${emailOrPhone}`)
+  .eq("password", password)
+  .eq("is_active", true)
+  .limit(1);
 
-  if (error || !data) {
-    message.innerText = "Invalid login.";
-    message.style.color = "red";
-    return;
-  }
+if (error || !data || data.length === 0) {
+  message.innerText = "Invalid login.";
+  message.style.color = "red";
+  return;
+}
 
-  localStorage.setItem("driver_id", data.id);
-  localStorage.setItem("driver_name", data.name);
+const driver = data[0];
 
-  window.location.href = "driver-dashboard.html";
+localStorage.setItem("driver_id", driver.id);
+localStorage.setItem("driver_name", driver.name);
+
+window.location.href = "driver-dashboard.html";
 }
 </script>
 
