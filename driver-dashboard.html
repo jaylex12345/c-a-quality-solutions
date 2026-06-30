@@ -2,141 +2,194 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Driver Dashboard | C&A Quality Solutions</title>
+<title>Driver Dashboard V2 | C&A Quality Solutions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-body{margin:0;background:#f4f7fb;font-family:Arial,sans-serif;color:#1f2937}
-.header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;padding:30px;text-align:center}
-.header img{width:105px;border-radius:10px}
-.header h1{margin:12px 0 5px;font-size:34px}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+.header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;padding:28px;text-align:center}
+.header img{width:90px;border-radius:14px;background:white;padding:6px}
+.header h1{margin:10px 0 4px;font-size:32px}
 .header h2{margin:0;color:#d9b431}
 
-.container{max-width:1200px;margin:30px auto;padding:0 20px}
-.card{background:white;border-radius:16px;padding:25px;margin-bottom:25px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
-.top-row{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
-.stat{flex:1;min-width:220px;text-align:center}
-.stat h3{margin:0;font-size:15px;color:#6b7280}
-.stat p{font-size:32px;font-weight:bold;color:#d9b431;margin:10px 0 0}
+.nav{background:#071b33;padding:12px;text-align:center}
+.nav button{margin:5px;padding:10px 16px;border:0;border-radius:8px;background:#d9b431;color:#061b3a;font-weight:bold;cursor:pointer}
 
-table{width:100%;border-collapse:collapse;margin-top:10px}
+.container{max-width:1300px;margin:25px auto;padding:0 18px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.card{background:white;border-radius:18px;padding:22px;box-shadow:0 8px 25px rgba(0,0,0,.08);margin-bottom:22px}
+.card h3{margin:0 0 8px;color:#6b7280;font-size:15px}
+.big{font-size:30px;font-weight:bold;color:#d9b431}
+.status-online{color:#16a34a;font-weight:bold}
+
+.main{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+table{width:100%;border-collapse:collapse}
 th{background:#061b3a;color:white;padding:14px;text-align:left}
 td{padding:14px;border-bottom:1px solid #e5e7eb}
-select,input[type=file]{padding:8px;width:100%}
+.badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:13px}
+.picked{background:#dbeafe;color:#1d4ed8}
+.transit{background:#fef3c7;color:#92400e}
+.out{background:#ede9fe;color:#6d28d9}
+.delivered{background:#dcfce7;color:#166534}
+.pending{background:#fee2e2;color:#991b1b}
 
-.btn{background:#d9b431;color:#061b3a;border:none;border-radius:8px;padding:10px 16px;font-weight:bold;cursor:pointer}
-.btn:hover{background:#b88d19}
+.btn{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#d9b431;color:#061b3a;margin:3px}
 .btn-blue{background:#0b5ed7;color:white}
+.btn-green{background:#16a34a;color:white}
 .btn-red{background:#b91c1c;color:white}
-
-.empty{text-align:center;padding:30px;color:#6b7280}
-.footer{text-align:center;color:#6b7280;margin:30px}
+select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
+.empty{text-align:center;color:#6b7280;padding:30px}
+.notice li{margin:10px 0}
+.footer{text-align:center;margin:30px;color:#6b7280}
+@media(max-width:900px){.grid,.main{grid-template-columns:1fr}table{font-size:13px}}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-  <img src="images/logo.jpeg" alt="C&A Logo">
+  <img src="images/logo.jpeg">
   <h1>C&A Quality Solutions LLC</h1>
-  <h2>Driver Dashboard</h2>
+  <h2>Driver Operations Dashboard</h2>
+</div>
+
+<div class="nav">
+  <button onclick="loadDeliveries()">Refresh Jobs</button>
+  <button onclick="sendGPS()">Send GPS Location</button>
+  <button onclick="location.href='track.html'">Customer Tracking</button>
+  <button onclick="logout()">Logout</button>
 </div>
 
 <div class="container">
 
-  <div class="top-row">
-    <div class="card stat">
+  <div class="grid">
+    <div class="card">
       <h3>Driver</h3>
-      <p id="driverName">Driver</p>
+      <div class="big" id="driverName">Driver</div>
+      <p class="status-online">● Online</p>
     </div>
-    <div class="card stat">
+
+    <div class="card">
       <h3>Assigned Jobs</h3>
-      <p id="assignedCount">0</p>
+      <div class="big" id="assignedCount">0</div>
+      <p>Today’s deliveries</p>
     </div>
-    <div class="card stat">
+
+    <div class="card">
       <h3>Completed</h3>
-      <p id="completedCount">0</p>
+      <div class="big" id="completedCount">0</div>
+      <p id="completionRate">0% completed</p>
+    </div>
+
+    <div class="card">
+      <h3>GPS Status</h3>
+      <div class="big" id="gpsStatus">Ready</div>
+      <p>Live location update</p>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Today’s Assigned Deliveries</h2>
+  <div class="main">
 
-    <table>
-      <thead>
-        <tr>
-          <th>Tracking</th>
-          <th>Customer</th>
-          <th>Status</th>
-          <th>Update Status</th>
-          <th>Proof Photo</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="deliveryTable">
-        <tr><td colspan="6" class="empty">Loading deliveries...</td></tr>
-      </tbody>
-    </table>
+    <div class="card">
+      <h2>📦 Assigned Deliveries</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tracking</th>
+            <th>Customer</th>
+            <th>Status</th>
+            <th>Update</th>
+            <th>Proof</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="deliveryTable">
+          <tr><td colspan="6" class="empty">Loading deliveries...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>🗺️ Driver Tools</h2>
+        <button class="btn btn-green" onclick="sendGPS()">📍 Send Current GPS</button>
+        <button class="btn btn-blue" onclick="loadDeliveries()">🔄 Refresh Jobs</button>
+        <button class="btn" onclick="location.href='track.html'">🔎 Track Package</button>
+      </div>
+
+      <div class="card notice">
+        <h2>📢 Company Notices</h2>
+        <ul>
+          <li>Upload proof photo before marking delivered.</li>
+          <li>Keep GPS enabled during active deliveries.</li>
+          <li>Call dispatcher if package cannot be delivered.</li>
+          <li>Professional service every time.</li>
+        </ul>
+      </div>
+    </div>
+
   </div>
-
-  <div class="card">
-    <button class="btn btn-blue" onclick="location.href='track.html'">Track Delivery</button>
-    <button class="btn btn-red" onclick="logout()">Logout</button>
-  </div>
-
 </div>
 
 <div class="footer">
+  C&A Quality Solutions LLC<br>
   Licensed • Insured • Bonded<br>
-  Maryland • DC • Virginia<br>
-  Same-Day Courier Service
+  Maryland • DC • Virginia • Same-Day Courier Service
 </div>
 
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
-  const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
-
+const supabaseUrl = "PASTE_WORKING_SUPABASE_URL_HERE";
+const supabaseKey = "PASTE_WORKING_SUPABASE_KEY_HERE";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 const driverId = localStorage.getItem("driver_id");
 const driverName = localStorage.getItem("driver_name");
 
 if (!driverId) window.location.href = "driver-login.html";
-
 document.getElementById("driverName").innerText = driverName || "Driver";
 
-async function loadDeliveries() {
+function badge(status){
+  if(status==="Delivered") return `<span class="badge delivered">Delivered</span>`;
+  if(status==="In Transit") return `<span class="badge transit">In Transit</span>`;
+  if(status==="Out for Delivery") return `<span class="badge out">Out for Delivery</span>`;
+  if(status==="Picked Up") return `<span class="badge picked">Picked Up</span>`;
+  return `<span class="badge pending">${status || "Pending"}</span>`;
+}
+
+async function loadDeliveries(){
   const table = document.getElementById("deliveryTable");
 
   const { data, error } = await supabaseClient
     .from("deliveries")
     .select("*")
     .eq("driver_id", driverId)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending:false });
 
-  if (error) {
-    console.log("SUPABASE ERROR:", error);
+  if(error){
+    console.log(error);
     table.innerHTML = `<tr><td colspan="6" class="empty">${error.message}</td></tr>`;
     return;
   }
 
   document.getElementById("assignedCount").innerText = data.length;
-  document.getElementById("completedCount").innerText =
-    data.filter(d => d.status === "Delivered").length;
+  const completed = data.filter(d => d.status === "Delivered").length;
+  document.getElementById("completedCount").innerText = completed;
+  document.getElementById("completionRate").innerText =
+    data.length ? Math.round((completed / data.length) * 100) + "% completed" : "0% completed";
 
-  if (!data.length) {
+  if(!data.length){
     table.innerHTML = `<tr><td colspan="6" class="empty">No deliveries assigned yet.</td></tr>`;
     return;
   }
 
   table.innerHTML = "";
-
   data.forEach(d => {
     table.innerHTML += `
       <tr>
         <td><strong>${d.tracking_number || ""}</strong></td>
         <td>${d.customer_name || ""}</td>
-        <td>${d.status || ""}</td>
+        <td>${badge(d.status)}</td>
         <td>
           <select id="status-${d.id}">
             <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
@@ -145,22 +198,22 @@ async function loadDeliveries() {
             <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
           </select>
         </td>
-        <td><input type="file" id="photo-${d.id}"></td>
+        <td><input type="file" id="photo-${d.id}" accept="image/*"></td>
         <td>
           <button class="btn" onclick="updateStatus('${d.id}')">Update</button>
           <button class="btn btn-blue" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
+          ${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
         </td>
       </tr>
     `;
   });
 }
 
-async function updateStatus(id) {
+async function updateStatus(id){
   const status = document.getElementById("status-" + id).value;
-
   const updateData = { status };
 
-  if (status === "Delivered") {
+  if(status === "Delivered"){
     updateData.delivery_time = new Date().toISOString();
     updateData.driver_notes = "Delivered by driver";
     updateData.completed_by = "C&A Quality Solutions LLC";
@@ -171,15 +224,14 @@ async function updateStatus(id) {
     .update(updateData)
     .eq("id", id);
 
-  if (error) return alert(error.message);
-
-  alert("Status updated.");
+  if(error) return alert(error.message);
+  alert("Delivery status updated.");
   loadDeliveries();
 }
 
-async function uploadProof(id, tracking) {
+async function uploadProof(id, tracking){
   const file = document.getElementById("photo-" + id).files[0];
-  if (!file) return alert("Choose a photo first.");
+  if(!file) return alert("Choose a photo first.");
 
   const fileName = `${tracking}-${Date.now()}-${file.name}`;
 
@@ -187,7 +239,7 @@ async function uploadProof(id, tracking) {
     .from("proofs")
     .upload(fileName, file);
 
-  if (uploadError) return alert(uploadError.message);
+  if(uploadError) return alert(uploadError.message);
 
   const { data } = supabaseClient.storage.from("proofs").getPublicUrl(fileName);
 
@@ -196,13 +248,46 @@ async function uploadProof(id, tracking) {
     .update({ proof_of_delivery: data.publicUrl })
     .eq("id", id);
 
-  if (error) return alert(error.message);
+  if(error) return alert(error.message);
 
-  alert("Proof uploaded.");
+  alert("Proof photo uploaded.");
   loadDeliveries();
 }
 
-function logout() {
+function sendGPS(){
+  if(!navigator.geolocation){
+    alert("GPS not supported.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async position => {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+
+    const { error } = await supabaseClient
+      .from("drivers")
+      .update({
+        latitude: lat,
+        longitude: lng,
+        last_seen: new Date().toISOString(),
+        status: "Online"
+      })
+      .eq("id", driverId);
+
+    if(error) return alert(error.message);
+
+    document.getElementById("gpsStatus").innerText = "Sent";
+    alert("GPS location sent.");
+  }, () => {
+    alert("Allow location access to send GPS.");
+  });
+}
+
+function openMap(locationText){
+  window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
+}
+
+function logout(){
   localStorage.removeItem("driver_id");
   localStorage.removeItem("driver_name");
   window.location.href = "driver-login.html";
