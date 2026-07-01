@@ -169,6 +169,24 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
 </div>
 
 
+
+
+<script>
+function logout(){
+  localStorage.clear();
+  window.location.href = "login.html";
+}
+
+document.getElementById("todayDeliveries").innerText = "18";
+document.getElementById("activeDrivers").innerText = "4";
+document.getElementById("pendingJobs").innerText = "6";
+document.getElementById("completedToday").innerText = "12";
+
+function addDelivery(){
+  alert("Next step: connect this form back to your Supabase save function.");
+}
+
+
 async function addDriver() {
   const name = document.getElementById("driverName").value.trim();
   const phone = document.getElementById("driverPhone").value.trim();
@@ -207,20 +225,7 @@ async function addDriver() {
 }
 
 
-<script>
-function logout(){
-  localStorage.clear();
-  window.location.href = "login.html";
-}
 
-document.getElementById("todayDeliveries").innerText = "18";
-document.getElementById("activeDrivers").innerText = "4";
-document.getElementById("pendingJobs").innerText = "6";
-document.getElementById("completedToday").innerText = "12";
-
-function addDelivery(){
-  alert("Next step: connect this form back to your Supabase save function.");
-}
 </script>
 
 </body>
