@@ -92,6 +92,20 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
       </div>
     </div>
 
+      <div class="card">
+  <h2>➕ Add New Driver</h2>
+
+  <input id="driverName" placeholder="Driver Full Name">
+  <input id="driverPhone" placeholder="Phone Number">
+  <input id="driverEmail" placeholder="Email Address">
+  <input id="driverPassword" placeholder="Password">
+
+  <button onclick="addDriver()" class="btn">Add Driver</button>
+
+  <p id="driverMessage"></p>
+</div>
+
+
     <div class="section">
       <h2>Recent Deliveries</h2>
       <table>
@@ -153,6 +167,47 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
   </main>
 
 </div>
+
+
+async function addDriver() {
+  const name = document.getElementById("driverName").value.trim();
+  const phone = document.getElementById("driverPhone").value.trim();
+  const email = document.getElementById("driverEmail").value.trim();
+  const password = document.getElementById("driverPassword").value.trim();
+  const msg = document.getElementById("driverMessage");
+
+  if (!name || !phone || !email || !password) {
+    msg.innerText = "Please fill all driver fields.";
+    msg.style.color = "red";
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("drivers")
+    .insert({
+      name: name,
+      phone: phone,
+      email: email,
+      password: password,
+      is_active: true,
+      status: "Available"
+    });
+
+  if (error) {
+    msg.innerText = error.message;
+    msg.style.color = "red";
+    return;
+  }
+
+  msg.innerText = "Driver added successfully.";
+  msg.style.color = "green";
+
+  document.getElementById("driverName").value = "";
+  document.getElementById("driverPhone").value = "";
+  document.getElementById("driverEmail").value = "";
+  document.getElementById("driverPassword").value = "";
+}
+
 
 <script>
 function logout(){
