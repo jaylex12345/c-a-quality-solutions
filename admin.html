@@ -29,6 +29,9 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
 .status-online{color:green;font-weight:bold;}
 .status-offline{color:red;font-weight:bold;}
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 </head>
 
 <body>
@@ -92,7 +95,7 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
       </div>
     </div>
 
-      <div class="card">
+      <div class="section">
   <h2>➕ Add New Driver</h2>
 
   <input id="driverName" placeholder="Driver Full Name">
@@ -100,7 +103,8 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
   <input id="driverEmail" placeholder="Email Address">
   <input id="driverPassword" placeholder="Password">
 
-  <button onclick="addDriver()" class="btn">Add Driver</button>
+  <button onclick="addDriver()" class="btn">➕ Add Driver</button>
+</div>
 
   <p id="driverMessage"></p>
 </div>
@@ -118,24 +122,13 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
             <th>Action</th>
           </tr>
         </thead>
-        <tbody id="recentDeliveries">
-          <tr>
-            <td>CAQS-000001</td>
-            <td>Sample Customer</td>
-            <td>Unassigned</td>
-            <td>Pending</td>
-            <td><a class="btn" href="dispatcher.html">Assign</a></td>
-          </tr>
-        </tbody>
+      
       </table>
     </div>
 
     <div class="section">
       <h2>Drivers Online</h2>
-      <p><span class="status-online">●</span> James — Online</p>
-      <p><span class="status-online">●</span> Alexis — Online</p>
-      <p><span class="status-offline">●</span> Driver 3 — Offline</p>
-    </div>
+      <div id="driversOnline"></div>
 
     <div class="section" id="newDelivery">
       <h2>Add New Delivery</h2>
@@ -172,6 +165,13 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
 
 
 <script>
+
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+  const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+
+  const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+
 function logout(){
   localStorage.clear();
   window.location.href = "login.html";
