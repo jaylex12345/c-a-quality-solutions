@@ -174,33 +174,31 @@ async function addDriver() {
   const phone = document.getElementById("driverPhone").value.trim();
   const email = document.getElementById("driverEmail").value.trim();
   const password = document.getElementById("driverPassword").value.trim();
-  const msg = document.getElementById("driverMessage");
 
   if (!name || !phone || !email || !password) {
-    msg.innerText = "Please fill all driver fields.";
-    msg.style.color = "red";
+    alert("Fill all driver fields.");
     return;
   }
 
-  const { error } = await supabaseClient
+  const { data, error } = await supabaseClient
     .from("drivers")
-    .insert({
+    .insert([{
       name: name,
       phone: phone,
       email: email,
       password: password,
       is_active: true,
       status: "Available"
-    });
+    }])
+    .select();
 
   if (error) {
-    msg.innerText = error.message;
-    msg.style.color = "red";
+    console.error(error);
+    alert(error.message);
     return;
   }
 
-  msg.innerText = "Driver added successfully.";
-  msg.style.color = "green";
+  alert("Driver added successfully.");
 
   document.getElementById("driverName").value = "";
   document.getElementById("driverPhone").value = "";
