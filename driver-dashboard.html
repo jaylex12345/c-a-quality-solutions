@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Driver Dashboard V2 | C&A Quality Solutions</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#061b3a">
+<link rel="manifest" href="manifest.json">
+<title>Driver Dashboard V3.5 | C&A Quality Solutions</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
@@ -14,7 +17,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
 .header h2{margin:0;color:#d9b431}
 
 .nav{background:#071b33;padding:12px;text-align:center}
-.nav button{margin:5px;padding:10px 16px;border:0;border-radius:8px;background:#d9b431;color:#061b3a;font-weight:bold;cursor:pointer}
+.nav button{margin:5px;padding:10px 16px;border:0;border-radius:8px;background:#d9b431;color:#061b3a;font-weight:bold;cursor:pointer;min-height:48px}
 
 .container{max-width:1300px;margin:25px auto;padding:0 18px}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
@@ -24,9 +27,12 @@ body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
 .status-online{color:#16a34a;font-weight:bold}
 
 .main{display:grid;grid-template-columns:2fr 1fr;gap:22px}
+.delivery-desktop{display:block}
+.delivery-mobile{display:none}
 table{width:100%;border-collapse:collapse}
 th{background:#061b3a;color:white;padding:14px;text-align:left}
 td{padding:14px;border-bottom:1px solid #e5e7eb}
+th,td{vertical-align:top}
 .badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:13px}
 .picked{background:#dbeafe;color:#1d4ed8}
 .transit{background:#fef3c7;color:#92400e}
@@ -41,16 +47,44 @@ td{padding:14px;border-bottom:1px solid #e5e7eb}
 .proof-preview{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
 .proof-preview img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid #cbd5e1;background:#fff}
 .proof-link{color:#0b5ed7;font-weight:bold;text-decoration:none}
+.job-list{display:grid;gap:16px}
+.job-card{background:white;border-radius:18px;padding:18px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
+.job-card-header{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.job-card-title{font-size:18px;font-weight:bold;color:#061b3a;word-break:break-word}
+.job-card-meta{display:grid;gap:10px;margin-top:14px}
+.job-row{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.job-label{color:#6b7280;font-size:13px}
+.job-value{font-weight:bold;word-break:break-word}
+.job-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.job-actions .btn,.job-actions select,.job-actions input{width:100%;min-height:48px;font-size:16px}
+.job-actions .btn{margin:0}
+.job-actions .full{grid-column:1 / -1}
+.camera-input{padding:12px 10px}
+.proof-block{display:grid;gap:8px}
+.proof-block img{width:100%;max-width:160px;height:160px;object-fit:cover;border-radius:14px;border:1px solid #cbd5e1;background:white}
+.proof-empty{color:#6b7280;font-size:14px}
 
 .btn{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#d9b431;color:#061b3a;margin:3px}
 .btn-blue{background:#0b5ed7;color:white}
 .btn-green{background:#16a34a;color:white}
 .btn-red{background:#b91c1c;color:white}
-select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
+select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;min-height:44px}
 .empty{text-align:center;color:#6b7280;padding:30px}
 .notice li{margin:10px 0}
 .footer{text-align:center;margin:30px;color:#6b7280}
-@media(max-width:900px){.grid,.main{grid-template-columns:1fr}table{font-size:13px}}
+@media(max-width:900px){
+  .grid,.main{grid-template-columns:1fr}
+  .container{margin:14px auto;padding:0 12px}
+  .header{padding:22px 16px}
+  .header h1{font-size:26px}
+  .header h2{font-size:16px}
+  .nav{padding:10px}
+  .nav button{width:calc(50% - 10px);margin:5px 4px;font-size:16px;padding:14px 16px}
+  .delivery-desktop{display:none}
+  .delivery-mobile{display:block}
+  .card{padding:18px;border-radius:16px}
+  .btn{padding:14px 16px;font-size:16px;min-height:48px}
+}
 </style>
 </head>
 
@@ -101,21 +135,24 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
 
     <div class="card">
       <h2>📦 Assigned Deliveries</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Tracking</th>
-            <th>Customer</th>
-            <th>Status</th>
-            <th>Assignment Status</th>
-            <th>Proof</th>
-            <th>Controls</th>
-          </tr>
-        </thead>
-        <tbody id="deliveryTable">
-          <tr><td colspan="6" class="empty">Loading deliveries...</td></tr>
-        </tbody>
-      </table>
+      <div class="delivery-desktop">
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Assignment Status</th>
+              <th>Proof</th>
+              <th>Controls</th>
+            </tr>
+          </thead>
+          <tbody id="deliveryTable">
+            <tr><td colspan="6" class="empty">Loading deliveries...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="delivery-mobile" id="mobileDeliveryList" aria-live="polite"></div>
     </div>
 
     <div>
@@ -175,8 +212,163 @@ function assignmentBadge(status){
   return `<span class="assignment-badge pending">Unassigned</span>`;
 }
 
+function isMobileLayout(){
+  return window.matchMedia("(max-width: 900px)").matches;
+}
+
+function proofMarkup(proofUrl){
+  if(!proofUrl) return `<span class="proof-empty">No proof uploaded yet.</span>`;
+
+  return `
+    <div class="proof-preview proof-block">
+      <a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a>
+      <a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a>
+    </div>
+  `;
+}
+
+function renderDesktopControls(d, assignmentStatus, isDelivered){
+  if(isDelivered){
+    return `${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}`;
+  }
+
+  return `
+    <select id="status-${d.id}">
+      <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
+      <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+      <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
+      <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
+    </select>
+    <input type="file" id="photo-${d.id}" accept="image/*" capture="environment" class="camera-input">
+    <button class="btn" onclick="updateStatus('${d.id}')">Update</button>
+    <button class="btn btn-blue" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
+    ${assignmentStatus === "Pending Acceptance" ? `<button class="btn btn-green" onclick="acceptDelivery('${d.id}')">Accept</button><button class="btn btn-red" onclick="rejectDelivery('${d.id}')">Reject</button>` : ""}
+    ${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
+  `;
+}
+
+function renderMobileControls(d, assignmentStatus, isDelivered){
+  if(isDelivered){
+    return `
+      <div class="job-actions">
+        ${d.delivery_location ? `<button class="btn btn-green full" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
+      </div>
+    `;
+  }
+
+  return `
+    <div class="job-actions">
+      <select id="status-${d.id}" class="full">
+        <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
+        <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+        <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
+        <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
+      </select>
+      <input type="file" id="photo-${d.id}" accept="image/*" capture="environment" class="camera-input full">
+      <button class="btn full" onclick="updateStatus('${d.id}')">Update</button>
+      <button class="btn btn-blue full" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
+      ${assignmentStatus === "Pending Acceptance" ? `<button class="btn btn-green" onclick="acceptDelivery('${d.id}')">Accept</button><button class="btn btn-red" onclick="rejectDelivery('${d.id}')">Reject</button>` : ""}
+      ${d.delivery_location ? `<button class="btn btn-green full" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
+    </div>
+  `;
+}
+
+function renderDesktopRow(d){
+  const assignmentStatus = d.assignment_status || "Assigned";
+  const isDelivered = d.status === "Delivered";
+  const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
+
+  return `
+    <tr>
+      <td><strong>${d.tracking_number || ""}</strong></td>
+      <td>${d.customer_name || ""}</td>
+      <td>${isDelivered ? `<span class="badge delivered">Delivered</span>` : badge(d.status)}</td>
+      <td>${isDelivered ? "" : assignmentBadge(assignmentStatus)}</td>
+      <td>${proofMarkup(proofUrl)}</td>
+      <td>${renderDesktopControls(d, assignmentStatus, isDelivered)}</td>
+    </tr>
+  `;
+}
+
+function renderMobileCard(d){
+  const assignmentStatus = d.assignment_status || "Assigned";
+  const isDelivered = d.status === "Delivered";
+  const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
+
+  return `
+    <article class="job-card">
+      <div class="job-card-header">
+        <div>
+          <div class="job-card-title">${d.tracking_number || "Delivery"}</div>
+          <div class="job-label">${d.customer_name || "Customer"}</div>
+        </div>
+        <div>${isDelivered ? `<span class="badge delivered">Delivered</span>` : badge(d.status)}</div>
+      </div>
+
+      <div class="job-card-meta">
+        <div>
+          <div class="job-label">Proof</div>
+          <div>${proofMarkup(proofUrl)}</div>
+        </div>
+
+        ${isDelivered ? `
+          <div class="job-actions">
+            ${d.delivery_location ? `<button class="btn btn-green full" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
+          </div>
+        ` : `
+          <div class="job-row">
+            <div>
+              <div class="job-label">Assignment</div>
+              <div class="job-value">${assignmentBadge(assignmentStatus)}</div>
+            </div>
+          </div>
+          <div class="job-actions">
+            <select id="status-${d.id}" class="full">
+              <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
+              <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+              <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
+              <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
+            </select>
+            <input type="file" id="photo-${d.id}" accept="image/*" capture="environment" class="camera-input full">
+            <button class="btn full" onclick="updateStatus('${d.id}')">Update</button>
+            <button class="btn btn-blue full" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
+            ${assignmentStatus === "Pending Acceptance" ? `<button class="btn btn-green" onclick="acceptDelivery('${d.id}')">Accept</button><button class="btn btn-red" onclick="rejectDelivery('${d.id}')">Reject</button>` : ""}
+          </div>
+        `}
+      </div>
+    </article>
+  `;
+}
+
+function renderDeliveries(deliveries){
+  const table = document.getElementById("deliveryTable");
+  const mobileList = document.getElementById("mobileDeliveryList");
+
+  if(isMobileLayout()){
+    if(mobileList){
+      mobileList.innerHTML = deliveries.length
+        ? `<div class="job-list">${deliveries.map(renderMobileCard).join("")}</div>`
+        : `<div class="empty">No deliveries assigned yet.</div>`;
+    }
+    if(table){
+      table.innerHTML = `<tr><td colspan="6" class="empty">Use mobile cards below.</td></tr>`;
+    }
+    return;
+  }
+
+  if(table){
+    table.innerHTML = deliveries.length
+      ? deliveries.map(renderDesktopRow).join("")
+      : `<tr><td colspan="6" class="empty">No deliveries assigned yet.</td></tr>`;
+  }
+  if(mobileList){
+    mobileList.innerHTML = "";
+  }
+}
+
 async function loadDeliveries(){
   const table = document.getElementById("deliveryTable");
+  const mobileList = document.getElementById("mobileDeliveryList");
 
   const { data, error } = await supabaseClient
     .from("deliveries")
@@ -187,57 +379,20 @@ async function loadDeliveries(){
 
   if(error){
     console.log(error);
-    table.innerHTML = `<tr><td colspan="6" class="empty">${error.message}</td></tr>`;
+    const errorMarkup = `<div class="empty">${error.message}</div>`;
+    if(table) table.innerHTML = `<tr><td colspan="6" class="empty">${error.message}</td></tr>`;
+    if(mobileList) mobileList.innerHTML = errorMarkup;
     return;
   }
 
-  document.getElementById("assignedCount").innerText = data.length;
-  const completed = data.filter(d => d.status === "Delivered").length;
+  const deliveries = data || [];
+  document.getElementById("assignedCount").innerText = deliveries.length;
+  const completed = deliveries.filter(d => d.status === "Delivered").length;
   document.getElementById("completedCount").innerText = completed;
   document.getElementById("completionRate").innerText =
-    data.length ? Math.round((completed / data.length) * 100) + "% completed" : "0% completed";
+    deliveries.length ? Math.round((completed / deliveries.length) * 100) + "% completed" : "0% completed";
 
-  if(!data.length){
-    table.innerHTML = `<tr><td colspan="6" class="empty">No deliveries assigned yet.</td></tr>`;
-    return;
-  }
-
-  table.innerHTML = "";
-  data.forEach(d => {
-    const assignmentStatus = d.assignment_status || "Assigned";
-    const isDelivered = d.status === "Delivered";
-    const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
-
-    const proofHtml = proofUrl
-      ? `<div class="proof-preview"><a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a><a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a></div>`
-      : `<span class="empty">No proof</span>`;
-
-    const controlsHtml = isDelivered
-      ? `${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}`
-      : `
-        <select id="status-${d.id}">
-          <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
-          <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
-          <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
-          <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
-        </select>
-        <input type="file" id="photo-${d.id}" accept="image/*">
-        <button class="btn" onclick="updateStatus('${d.id}')">Update</button>
-        <button class="btn btn-blue" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
-        ${assignmentStatus === "Pending Acceptance" ? `<button class="btn btn-green" onclick="acceptDelivery('${d.id}')">Accept</button><button class="btn btn-red" onclick="rejectDelivery('${d.id}')">Reject</button>` : ""}
-        ${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
-      `;
-    table.innerHTML += `
-      <tr>
-        <td><strong>${d.tracking_number || ""}</strong></td>
-        <td>${d.customer_name || ""}</td>
-        <td>${isDelivered ? `<span class="badge delivered">Delivered</span>` : badge(d.status)}</td>
-        <td>${isDelivered ? `<span class="assignment-badge accepted-badge">Completed</span>` : assignmentBadge(assignmentStatus)}</td>
-        <td>${proofHtml}</td>
-        <td>${controlsHtml}</td>
-      </tr>
-    `;
-  });
+  renderDeliveries(deliveries);
 }
 
 async function acceptDelivery(id){
@@ -357,6 +512,16 @@ function logout(){
   localStorage.removeItem("driver_name");
   window.location.href = "driver-login.html";
 }
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
+}
+
+window.addEventListener("resize", () => {
+  loadDeliveries();
+});
 
 loadDeliveries();
 </script>
