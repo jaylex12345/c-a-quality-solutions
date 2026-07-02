@@ -177,10 +177,47 @@ function logout(){
   window.location.href = "login.html";
 }
 
-document.getElementById("todayDeliveries").innerText = "18";
-document.getElementById("activeDrivers").innerText = "4";
-document.getElementById("pendingJobs").innerText = "6";
-document.getElementById("completedToday").innerText = "12";
+async function loadAdminStats() {
+  const { data: deliveries, error: deliveryError } = await supabaseClient
+    .from("deliveries")
+    .select("*");
+
+  const { data: drivers, error: driverError } = await supabaseClient
+    .from("drivers")
+    .select("*");
+
+  if (deliveryError || driverError) {
+    console.error(deliveryError || driverError);
+    return;
+  }
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const todayDeliveries = deliveries.filter(d =>
+    d.created_at && d.created_at.slice(0, 10) === today
+  ).length;
+
+  const activeDrivers = drivers.filter(d =>
+    d.is_active === true
+  ).length;
+
+  const pendingJobs = deliveries.filter(d =>
+    d.status === "Pending"
+  ).length;
+
+  const completedToday = deliveries.filter(d =>
+    d.status === "Delivered" &&
+    d.created_at &&
+    d.created_at.slice(0, 10) === today
+  ).length;
+
+  document.getElementById("todayDeliveries").innerText = todayDeliveries;
+  document.getElementById("activeDrivers").innerText = activeDrivers;
+  document.getElementById("pendingJobs").innerText = pendingJobs;
+  document.getElementById("completedToday").innerText = completedToday;
+}
+
+loadAdminStats();
 
 function addDelivery(){
   alert("Next step: connect this form back to your Supabase save function.");
