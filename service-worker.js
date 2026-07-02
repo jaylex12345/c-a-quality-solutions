@@ -1,9 +1,9 @@
 const CACHE_NAME = "c-a-driver-dashboard-v35";
 const APP_SHELL = [
   "./",
-  "./driver-dashboard.html",
-  "./manifest.json",
-  "./images/logo.jpeg"
+  "/driver/dashboard.html",
+  "/manifest.json",
+  "/assets/images/logo.jpeg"
 ];
 
 self.addEventListener("install", event => {
@@ -35,7 +35,7 @@ self.addEventListener("fetch", event => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("./driver-dashboard.html"))
+      fetch(event.request).catch(() => caches.match("/driver/dashboard.html"))
     );
     return;
   }
