@@ -1,87 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin Login</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body{
-font-family:Arial;
-background:#f4f7fb;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-}
-
-.card{
-background:white;
-padding:30px;
-width:350px;
-border-radius:12px;
-box-shadow:0 10px 30px rgba(0,0,0,.1);
-}
-
-input{
-width:100%;
-padding:12px;
-margin-bottom:15px;
-}
-
-button{
-width:100%;
-padding:12px;
-background:#0b2d52;
-color:white;
-border:none;
-cursor:pointer;
-}
-</style>
+	<meta http-equiv="refresh" content="0; url=/admin/login.html">
 </head>
-
 <body>
-
-<div class="card">
-<h2>C&A Admin Login</h2>
-
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
-
-<p id="msg"></p>
-</div>
-
-<script>
-
-const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
-const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
-
-const supabaseClient=supabase.createClient(
-supabaseUrl,
-supabaseKey
-);
-
-async function login(){
-
-const email=document.getElementById('email').value;
-const password=document.getElementById('password').value;
-
-const {error}=await supabaseClient.auth.signInWithPassword({
-email,
-password
-});
-
-if(error){
-document.getElementById('msg').innerText=error.message;
-return;
-}
-
-localStorage.setItem('role', 'admin');
-
-window.location.href='/admin/dashboard.html';
-}
-
-</script>
-
+	<script>window.location.href="/admin/login.html";</script>
 </body>
 </html>
