@@ -46,7 +46,7 @@ async function driverLogin() {
   const { data, error } = await supabaseClient
   .from("drivers")
   .select("*")
-  .eq("phone", emailOrPhone)
+  .eq("email", emailOrPhone)
   .eq("password", password)
   .limit(1);
 
