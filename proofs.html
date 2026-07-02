@@ -78,6 +78,11 @@ const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+const currentRole = localStorage.getItem("role");
+if(currentRole !== "admin"){
+  window.location.href = "login.html";
+}
+
 function formatDateTime(value){
   return value ? new Date(value).toLocaleString() : "";
 }

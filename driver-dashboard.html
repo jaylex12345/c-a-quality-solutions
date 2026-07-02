@@ -11,6 +11,12 @@
 <style>
 *{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+.dark-mode body{background:#071b33;color:#e5eefc}
+.dark-mode .card,.dark-mode .job-card{background:#0b2d52;color:#e5eefc}
+.dark-mode .card h3,.dark-mode .job-label,.dark-mode .job-value,.dark-mode .job-card-title{color:#e5eefc}
+.dark-mode .proof-empty,.dark-mode .empty{color:#cbd5e1}
+.offline-banner{display:none;background:#fee2e2;color:#991b1b;padding:12px 16px;text-align:center;font-weight:bold}
+.offline-banner.show{display:block}
 .header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;padding:28px;text-align:center}
 .header img{width:90px;border-radius:14px;background:white;padding:6px}
 .header h1{margin:10px 0 4px;font-size:32px}
@@ -59,6 +65,9 @@ th,td{vertical-align:top}
 .job-actions .btn,.job-actions select,.job-actions input{width:100%;min-height:48px;font-size:16px}
 .job-actions .btn{margin:0}
 .job-actions .full{grid-column:1 / -1}
+.tool-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.tool-grid .btn{width:100%;margin:0;min-height:50px}
+.muted{color:#6b7280}
 .camera-input{padding:12px 10px}
 .proof-block{display:grid;gap:8px}
 .proof-block img{width:100%;max-width:160px;height:160px;object-fit:cover;border-radius:14px;border:1px solid #cbd5e1;background:white}
@@ -68,6 +77,7 @@ th,td{vertical-align:top}
 .btn-blue{background:#0b5ed7;color:white}
 .btn-green{background:#16a34a;color:white}
 .btn-red{background:#b91c1c;color:white}
+.btn-dark{background:#061b3a;color:white}
 select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;min-height:44px}
 .empty{text-align:center;color:#6b7280;padding:30px}
 .notice li{margin:10px 0}
@@ -90,6 +100,8 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
 
 <body>
 
+<div id="offlineBanner" class="offline-banner">Offline mode active. Changes will sync when the connection returns.</div>
+
 <div class="header">
   <img src="images/logo.jpeg">
   <h1>C&A Quality Solutions LLC</h1>
@@ -107,9 +119,10 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
 
   <div class="grid">
     <div class="card">
-      <h3>Driver</h3>
+      <h3>Profile</h3>
       <div class="big" id="driverName">Driver</div>
-      <p class="status-online">● Online</p>
+      <p class="status-online" id="connectionStatus">● Online</p>
+      <p id="driverProfileSummary" class="muted">Loading profile...</p>
     </div>
 
     <div class="card">
@@ -125,9 +138,25 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
     </div>
 
     <div class="card">
+      <h3>Earnings</h3>
+      <div class="big" id="earningsTotal">$0</div>
+      <p id="deliveryHistoryCount">0 deliveries completed</p>
+    </div>
+
+    <div class="card">
       <h3>GPS Status</h3>
       <div class="big" id="gpsStatus">Ready</div>
       <p>Live location update</p>
+    </div>
+
+    <div class="card">
+      <h3>Tools</h3>
+      <div class="tool-grid">
+        <button class="btn btn-blue" onclick="toggleDarkMode()">Dark Mode</button>
+        <button class="btn btn-green" onclick="sendGPS()">Send GPS</button>
+        <button class="btn" onclick="openDriverSettings()">Settings</button>
+        <button class="btn btn-blue" onclick="openDriverProfile()">Profile</button>
+      </div>
     </div>
   </div>
 
@@ -161,6 +190,8 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
         <button class="btn btn-green" onclick="sendGPS()">📍 Send Current GPS</button>
         <button class="btn btn-blue" onclick="loadDeliveries()">🔄 Refresh Jobs</button>
         <button class="btn" onclick="location.href='track.html'">🔎 Track Package</button>
+        <button class="btn btn-blue" onclick="scanBarcode()">Scan Barcode</button>
+        <button class="btn btn-dark" onclick="callDispatcher()">📞 Call Dispatcher</button>
       </div>
 
       <div class="card notice">
@@ -190,8 +221,11 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 const driverId = localStorage.getItem("driver_id");
 const driverName = localStorage.getItem("driver_name");
+const role = localStorage.getItem("role");
+let currentDriverProfile = null;
+let deliveryCache = [];
 
-if (!driverId) window.location.href = "driver-login.html";
+if (!driverId || (role && role !== "driver")) window.location.href = "driver-login.html";
 document.getElementById("driverName").innerText = driverName || "Driver";
 
 function badge(status){
@@ -210,6 +244,64 @@ function assignmentBadge(status){
   if(value === "Rejected") return `<span class="assignment-badge rejected-badge">Rejected</span>`;
   if(value === "Assigned") return `<span class="assignment-badge assigned-badge">Assigned</span>`;
   return `<span class="assignment-badge pending">Unassigned</span>`;
+}
+
+function formatMoney(value){
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+}
+
+function setConnectivity(){
+  const banner = document.getElementById("offlineBanner");
+  const status = document.getElementById("connectionStatus");
+  const online = navigator.onLine;
+  if(status) status.innerText = online ? "● Online" : "● Offline";
+  if(banner) banner.classList.toggle("show", !online);
+}
+
+function toggleDarkMode(){
+  document.documentElement.classList.toggle("dark-mode");
+  localStorage.setItem("driver_dark_mode", document.documentElement.classList.contains("dark-mode") ? "1" : "0");
+}
+
+function openDriverProfile(){
+  if(!currentDriverProfile) return alert("Driver profile loading...");
+  alert([
+    currentDriverProfile.name || driverName || "Driver",
+    currentDriverProfile.phone || "",
+    currentDriverProfile.email || "",
+    currentDriverProfile.vehicle || currentDriverProfile.vehicle_type || "",
+    currentDriverProfile.license_plate || "",
+    `Rating: ${currentDriverProfile.rating || "5.0"}`
+  ].filter(Boolean).join("\n"));
+}
+
+function openDriverSettings(){
+  alert("Settings are available in the professional mobile dashboard controls.");
+}
+
+function callDispatcher(){
+  window.location.href = "tel:4108785949";
+}
+
+function scanBarcode(){
+  const code = prompt("Scan or enter tracking number");
+  if(code) alert(`Tracking scanned: ${code}`);
+}
+
+async function loadDriverProfile(){
+  const { data, error } = await supabaseClient.from("drivers").select("*").eq("id", driverId).limit(1);
+  if(error || !data || !data.length) return;
+  currentDriverProfile = data[0];
+  const summary = document.getElementById("driverProfileSummary");
+  if(summary){
+    summary.innerHTML = [
+      `Vehicle: ${currentDriverProfile.vehicle || currentDriverProfile.vehicle_type || "N/A"}`,
+      `Plate: ${currentDriverProfile.license_plate || "N/A"}`,
+      `Rating: ${currentDriverProfile.rating || "5.0"}`,
+      `GPS: ${currentDriverProfile.latitude && currentDriverProfile.longitude ? "Live" : "Waiting"}`,
+      `Battery: ${currentDriverProfile.battery_level || "N/A"}`
+    ].join("<br>");
+  }
 }
 
 function isMobileLayout(){
@@ -385,14 +477,16 @@ async function loadDeliveries(){
     return;
   }
 
-  const deliveries = data || [];
-  document.getElementById("assignedCount").innerText = deliveries.length;
-  const completed = deliveries.filter(d => d.status === "Delivered").length;
+  deliveryCache = data || [];
+  document.getElementById("assignedCount").innerText = deliveryCache.filter(d => d.status !== "Delivered").length;
+  const completed = deliveryCache.filter(d => d.status === "Delivered").length;
   document.getElementById("completedCount").innerText = completed;
+  document.getElementById("deliveryHistoryCount").innerText = `${completed} deliveries completed`;
+  document.getElementById("earningsTotal").innerText = formatMoney(deliveryCache.reduce((sum, d) => sum + Number(d.cod_amount || d.delivery_fee || d.total_amount || d.amount || 0), 0));
   document.getElementById("completionRate").innerText =
-    deliveries.length ? Math.round((completed / deliveries.length) * 100) + "% completed" : "0% completed";
+    deliveryCache.length ? Math.round((completed / deliveryCache.length) * 100) + "% completed" : "0% completed";
 
-  renderDeliveries(deliveries);
+  renderDeliveries(deliveryCache);
 }
 
 async function acceptDelivery(id){
@@ -510,6 +604,7 @@ function openMap(locationText){
 function logout(){
   localStorage.removeItem("driver_id");
   localStorage.removeItem("driver_name");
+  localStorage.removeItem("role");
   window.location.href = "driver-login.html";
 }
 
@@ -519,10 +614,19 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+if (localStorage.getItem("driver_dark_mode") === "1") {
+  document.documentElement.classList.add("dark-mode");
+}
+
+window.addEventListener("online", setConnectivity);
+window.addEventListener("offline", setConnectivity);
+
 window.addEventListener("resize", () => {
   loadDeliveries();
 });
 
+setConnectivity();
+loadDriverProfile();
 loadDeliveries();
 </script>
 

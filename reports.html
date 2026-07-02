@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Version 3.2 | Reports</title>
 <link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
 .admin-layout{display:flex;min-height:100vh;}
@@ -21,6 +22,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
 .card h3{margin:0;color:#0b2d52;}
 .card p{font-size:30px;font-weight:bold;color:#d9b431;margin:12px 0 0;}
 .btn{background:#d9b431;color:#071b33;padding:10px 16px;border:none;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;cursor:pointer;}
+.btn-dark{background:#0b2d52;color:white;}
 .muted{color:#6b7280;}
 table{width:100%;border-collapse:collapse;}
 th{background:#0b2d52;color:white;padding:12px;text-align:left;}
@@ -31,7 +33,12 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 .transit{background:#fef3c7;color:#92400e;}
 .picked{background:#dbeafe;color:#1d4ed8;}
 .out{background:#ede9fe;color:#6d28d9;}
+.accepted{background:#dcfce7;color:#166534;}
+.rejected{background:#fee2e2;color:#991b1b;}
+.cancelled{background:#e5e7eb;color:#374151;}
 .actions{display:flex;gap:8px;flex-wrap:wrap;}
+.filters{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
+.filters .btn{min-width:110px;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -57,6 +64,13 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
       <div>
         <h1>Reports</h1>
         <p class="muted">Live dashboard counts refreshed from Supabase.</p>
+        <div class="filters">
+          <button class="btn" onclick="loadReports('daily')">Daily</button>
+          <button class="btn" onclick="loadReports('weekly')">Weekly</button>
+          <button class="btn" onclick="loadReports('monthly')">Monthly</button>
+          <button class="btn btn-dark" onclick="exportReportsCsv()">Export Excel</button>
+          <button class="btn btn-dark" onclick="exportReportsPdf()">Export PDF</button>
+        </div>
       </div>
       <div class="actions">
         <button class="btn" onclick="loadReports()">Refresh</button>
@@ -65,11 +79,16 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 
     <div class="grid">
       <div class="card"><h3>Total Deliveries</h3><p id="totalDeliveries">0</p></div>
+      <div class="card"><h3>Revenue</h3><p id="revenueCount">$0</p></div>
       <div class="card"><h3>Active Drivers</h3><p id="activeDrivers">0</p></div>
       <div class="card"><h3>Delivered</h3><p id="deliveredCount">0</p></div>
+      <div class="card"><h3>Completed</h3><p id="completedCount">0</p></div>
       <div class="card"><h3>With Proof</h3><p id="proofCount">0</p></div>
       <div class="card"><h3>Pending</h3><p id="pendingCount">0</p></div>
       <div class="card"><h3>Unassigned</h3><p id="unassignedCount">0</p></div>
+      <div class="card"><h3>Cancelled</h3><p id="cancelledCount">0</p></div>
+      <div class="card"><h3>Rejected</h3><p id="rejectedCount">0</p></div>
+      <div class="card"><h3>Avg Delivery Time</h3><p id="avgTime">0m</p></div>
     </div>
 
     <div class="section">
@@ -99,11 +118,85 @@ const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+const currentRole = localStorage.getItem("role");
+if(currentRole !== "admin"){
+  window.location.href = "login.html";
+}
+
 function statusRow(label, count, statusClass){
   return `<tr><td><span class="status ${statusClass}">${label}</span></td><td>${count}</td></tr>`;
 }
 
+function formatMoney(value){
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+}
+
+function minutesBetween(startValue, endValue){
+  const start = new Date(startValue).getTime();
+  const end = new Date(endValue).getTime();
+  if(!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+  return Math.round((end - start) / 60000);
+}
+
+let currentReportData = { drivers: [], deliveries: [] };
+let currentRange = "all";
+
+function inRange(createdAt){
+  if(!createdAt || currentRange === "all") return true;
+  const created = new Date(createdAt).getTime();
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  if(currentRange === "daily") return created >= now - day;
+  if(currentRange === "weekly") return created >= now - (7 * day);
+  if(currentRange === "monthly") return created >= now - (30 * day);
+  return true;
+}
+
+function downloadTextFile(filename, content, mimeType){
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportReportsCsv(){
+  const rows = [
+    ["Tracking","Customer","Status","Assignment Status","Driver","Revenue","Created At"],
+    ...currentReportData.deliveries.map(delivery => [
+      delivery.tracking_number || "",
+      delivery.customer_name || "",
+      delivery.status || "",
+      delivery.assignment_status || "",
+      delivery.driver_name || "",
+      delivery.cod_amount || delivery.delivery_fee || delivery.total_amount || delivery.amount || 0,
+      delivery.created_at || ""
+    ])
+  ];
+
+  const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
+  downloadTextFile(`c-and-a-reports-${currentRange}.csv`, csv, "text/csv");
+}
+
+function exportReportsPdf(){
+  if(!window.jspdf) return alert("PDF export is unavailable.");
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text("C&A Quality Solutions Reports", 20, 20);
+  doc.setFontSize(12);
+  doc.text(`Range: ${currentRange}`, 20, 32);
+  doc.text(`Total Deliveries: ${document.getElementById("totalDeliveries").innerText}`, 20, 44);
+  doc.text(`Revenue: ${document.getElementById("revenueCount").innerText}`, 20, 54);
+  doc.text(`Delivered: ${document.getElementById("deliveredCount").innerText}`, 20, 64);
+  doc.text(`Pending: ${document.getElementById("pendingCount").innerText}`, 20, 74);
+  doc.save(`c-and-a-reports-${currentRange}.pdf`);
+}
+
 async function loadReports(){
+  currentRange = arguments[0] || currentRange || "all";
   const [driversResult, deliveriesResult] = await Promise.all([
     supabaseClient.from("drivers").select("*").order("created_at", { ascending: false }),
     supabaseClient.from("deliveries").select("*").order("created_at", { ascending: false })
@@ -118,32 +211,47 @@ async function loadReports(){
   }
 
   const drivers = driversResult.data || [];
-  const deliveries = deliveriesResult.data || [];
+  const deliveries = (deliveriesResult.data || []).filter(delivery => inRange(delivery.created_at));
+
+  currentReportData = { drivers, deliveries };
 
   const counts = {
     totalDeliveries: deliveries.length,
     activeDrivers: drivers.filter(driver => driver.is_active === true).length,
     deliveredCount: deliveries.filter(delivery => delivery.status === "Delivered").length,
+    completedCount: deliveries.filter(delivery => delivery.status === "Completed" || delivery.status === "Delivered").length,
     proofCount: deliveries.filter(delivery => delivery.proof_photo_url || delivery.proof_of_delivery).length,
     pendingCount: deliveries.filter(delivery => !delivery.status || delivery.status === "Pending").length,
     unassignedCount: deliveries.filter(delivery => !delivery.driver_id).length,
+    cancelledCount: deliveries.filter(delivery => delivery.status === "Cancelled").length,
+    rejectedCount: deliveries.filter(delivery => delivery.assignment_status === "Rejected").length,
     pickedUp: deliveries.filter(delivery => delivery.status === "Picked Up").length,
     inTransit: deliveries.filter(delivery => delivery.status === "In Transit").length,
-    outForDelivery: deliveries.filter(delivery => delivery.status === "Out for Delivery").length
+    outForDelivery: deliveries.filter(delivery => delivery.status === "Out for Delivery").length,
+    revenue: deliveries.filter(delivery => delivery.status === "Delivered").reduce((sum, delivery) => sum + Number(delivery.cod_amount || delivery.delivery_fee || delivery.total_amount || delivery.amount || 0), 0),
+    avgTime: deliveries.filter(delivery => delivery.status === "Delivered" && delivery.created_at && delivery.delivery_time).map(delivery => minutesBetween(delivery.created_at, delivery.delivery_time))
   };
 
   document.getElementById("totalDeliveries").innerText = counts.totalDeliveries;
   document.getElementById("activeDrivers").innerText = counts.activeDrivers;
   document.getElementById("deliveredCount").innerText = counts.deliveredCount;
+  document.getElementById("completedCount").innerText = counts.completedCount;
   document.getElementById("proofCount").innerText = counts.proofCount;
   document.getElementById("pendingCount").innerText = counts.pendingCount;
   document.getElementById("unassignedCount").innerText = counts.unassignedCount;
+  document.getElementById("cancelledCount").innerText = counts.cancelledCount;
+  document.getElementById("rejectedCount").innerText = counts.rejectedCount;
+  document.getElementById("revenueCount").innerText = formatMoney(counts.revenue);
+  document.getElementById("avgTime").innerText = counts.avgTime.length ? `${Math.round(counts.avgTime.reduce((a,b) => a + b, 0) / counts.avgTime.length)}m` : "0m";
   document.getElementById("statusTable").innerHTML = [
     statusRow("Delivered", counts.deliveredCount, "delivered"),
     statusRow("Pending", counts.pendingCount, "pending"),
+    statusRow("Accepted", deliveries.filter(delivery => delivery.assignment_status === "Accepted").length, "delivered"),
     statusRow("Picked Up", counts.pickedUp, "picked"),
     statusRow("In Transit", counts.inTransit, "transit"),
-    statusRow("Out for Delivery", counts.outForDelivery, "out")
+    statusRow("Out for Delivery", counts.outForDelivery, "out"),
+    statusRow("Rejected", counts.rejectedCount, "pending"),
+    statusRow("Cancelled", counts.cancelledCount, "pending")
   ].join("");
 
   document.getElementById("lastUpdated").innerText = `Last updated: ${new Date().toLocaleString()}`;

@@ -85,6 +85,15 @@ font-weight:bold;
   margin-top: 15px;
 }
 
+.progress-track{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin:18px 0}
+.progress-step{padding:8px 12px;border-radius:999px;background:#e5e7eb;color:#374151;font-size:12px;font-weight:bold}
+.progress-step.active{background:#d9b431;color:#071b33}
+.tracking-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:15px;background:#fff;padding:15px;border-radius:10px;text-align:left}
+.tracking-grid strong{color:#0b2d52}
+.track-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:15px}
+.track-actions a,.track-actions button{background:#d9b431;color:#071b33;border:none;padding:12px 16px;border-radius:8px;font-weight:bold;text-decoration:none;cursor:pointer}
+.map-link{display:inline-block;background:#0b4ea2;color:white;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:bold;}
+
   </style>
 </head>
 
@@ -138,6 +147,8 @@ font-weight:bold;
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
 const logoUrl = "images/logo.jpeg";
+  let currentDelivery = null;
+  let currentDriver = null;
 
 
   function formatDateTime(value) {
@@ -177,6 +188,30 @@ const logoUrl = "images/logo.jpeg";
     return "⚪ Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
   }
 
+  function getProgressSteps(status) {
+    const current = (status || "").toLowerCase();
+    const stages = [
+      ["Picked Up", current === "picked up" || current === "in transit" || current === "out for delivery" || current === "delivered"],
+      ["In Transit", current === "in transit" || current === "out for delivery" || current === "delivered"],
+      ["Out for Delivery", current === "out for delivery" || current === "delivered"],
+      ["Delivered", current === "delivered"]
+    ];
+
+    return stages.map(([label, active]) => `<span class="progress-step ${active ? "active" : ""}">${label}</span>`).join("");
+  }
+
+  async function loadDriver(driverId) {
+    if (!driverId) return null;
+    const { data } = await supabaseClient.from("drivers").select("*").eq("id", driverId).limit(1);
+    return data && data.length ? data[0] : null;
+  }
+
+  function deliveryEta(delivery) {
+    if (delivery.estimated_delivery_time) return formatDateTime(delivery.estimated_delivery_time);
+    if (delivery.delivery_time) return formatDateTime(delivery.delivery_time);
+    return "Pending";
+  }
+
   async function trackPackage() {
     const trackingNumber = document.getElementById("trackingNumber").value.trim();
     const result = document.getElementById("result");
@@ -204,7 +239,8 @@ const logoUrl = "images/logo.jpeg";
     }
 
     const delivery = data[0];
-    window.currentDelivery = delivery;
+    currentDelivery = delivery;
+    currentDriver = await loadDriver(delivery.driver_id);
 
     result.innerHTML = `
       <div class="success-banner">
@@ -219,11 +255,30 @@ const logoUrl = "images/logo.jpeg";
 
         <p><strong>Customer:</strong><br>${delivery.customer_name || "N/A"}</p>
 
+        <div class="progress-track">${getProgressSteps(delivery.status)}</div>
+
         <p>${getProgress(delivery.status)}</p>
 
         <p><strong>Status:</strong><br>
           <span class="status">${delivery.status || "Pending"}</span>
         </p>
+
+        <div class="tracking-grid">
+          <div><strong>Driver</strong><br>${currentDriver ? currentDriver.name : (delivery.driver_name || "Not Assigned")}</div>
+          <div><strong>ETA</strong><br>${deliveryEta(delivery)}</div>
+          <div><strong>Driver Location</strong><br>${currentDriver && currentDriver.latitude && currentDriver.longitude ? `${currentDriver.latitude}, ${currentDriver.longitude}` : "Not available"}</div>
+          <div><strong>Delivered Time</strong><br>${formatDateTime(delivery.delivery_time)}</div>
+        </div>
+
+        ${currentDriver && currentDriver.latitude && currentDriver.longitude ? `
+          <div style="text-align:center;margin-top:15px;">
+            <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(currentDriver.latitude + "," + currentDriver.longitude)}"
+            target="_blank"
+            class="map-link">
+              📍 View Driver Location on Google Maps
+            </a>
+          </div>
+        ` : ""}
 
         <p><strong>Delivered:</strong><br>${formatDateTime(delivery.delivery_time)}</p>
 
@@ -287,6 +342,9 @@ const logoUrl = "images/logo.jpeg";
       <a href="${delivery.proof_of_delivery}" target="_blank">
         View Proof of Delivery Photo
       </a>
+      <div class="track-actions">
+        <button onclick="window.open('${delivery.proof_of_delivery}', '_blank')">Open Photo</button>
+      </div>
     `
     : `<p><em>No proof of delivery photo uploaded.</em></p>`
 }

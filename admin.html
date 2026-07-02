@@ -173,6 +173,11 @@ const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 
   const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+const currentRole = localStorage.getItem("role");
+if(currentRole !== "admin"){
+  window.location.href = "login.html";
+}
+
 
 function logout(){
   localStorage.clear();

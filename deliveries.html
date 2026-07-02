@@ -80,6 +80,30 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
       <div class="form-grid">
         <input id="trackingNumber" placeholder="Tracking number (leave blank to auto-generate)">
         <input id="customerName" placeholder="Customer name">
+        <input id="companyName" placeholder="Company name">
+        <input id="pickupAddress" placeholder="Pickup address">
+        <input id="deliveryAddress" placeholder="Delivery address">
+        <input id="pickupContact" placeholder="Pickup contact">
+        <input id="deliveryContact" placeholder="Delivery contact">
+        <input id="customerPhone" placeholder="Customer phone number">
+        <input id="recipientPhone" placeholder="Delivery contact phone number">
+        <input id="packageType" placeholder="Package type">
+        <input id="packageWeight" type="number" step="0.1" placeholder="Weight">
+        <select id="prioritySelect">
+          <option value="Standard">Standard</option>
+          <option value="Express">Express</option>
+          <option value="Urgent">Urgent</option>
+        </select>
+        <select id="signatureRequired">
+          <option value="false">Signature Not Required</option>
+          <option value="true">Signature Required</option>
+        </select>
+        <select id="photoRequired">
+          <option value="false">Photo Not Required</option>
+          <option value="true">Photo Required</option>
+        </select>
+        <input id="codAmount" type="number" step="0.01" placeholder="COD amount">
+        <input id="estimatedDeliveryTime" type="datetime-local" placeholder="Estimated delivery time">
         <select id="driverSelect">
           <option value="">Unassigned</option>
         </select>
@@ -93,6 +117,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
         <input id="deliveryLocation" placeholder="Delivery location">
         <input id="deliveryTime" type="datetime-local">
         <input id="proofPhotoUrl" placeholder="Proof photo URL (optional)">
+        <textarea id="specialInstructions" placeholder="Special instructions"></textarea>
         <textarea id="deliveryNotes" placeholder="Delivery notes"></textarea>
       </div>
       <div class="actions" style="margin-top:12px;">
@@ -108,6 +133,14 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
           <tr>
             <th>Tracking</th>
             <th>Customer</th>
+            <th>Company</th>
+            <th>Pickup</th>
+            <th>Delivery</th>
+            <th>Contacts</th>
+            <th>Package</th>
+            <th>Priority</th>
+            <th>COD</th>
+            <th>ETA</th>
             <th>Driver</th>
             <th>Status</th>
             <th>Proof</th>
@@ -115,7 +148,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
           </tr>
         </thead>
         <tbody id="deliveriesTable">
-          <tr><td colspan="6" class="muted">Loading deliveries...</td></tr>
+          <tr><td colspan="14" class="muted">Loading deliveries...</td></tr>
         </tbody>
       </table>
     </div>
@@ -125,6 +158,11 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+const currentRole = localStorage.getItem("role");
+if(currentRole !== "admin"){
+  window.location.href = "login.html";
+}
 
 function formatDateTime(value){
   return value ? new Date(value).toLocaleString() : "";
@@ -164,7 +202,7 @@ async function loadDeliveries(){
     .order("created_at", { ascending: false });
 
   if(error){
-    table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
+    table.innerHTML = `<tr><td colspan="14">${error.message}</td></tr>`;
     return [];
   }
 
@@ -175,7 +213,7 @@ async function loadDeliveries(){
   document.getElementById("proofDeliveries").innerText = deliveries.filter(delivery => delivery.proof_photo_url || delivery.proof_of_delivery).length;
 
   if(!deliveries.length){
-    table.innerHTML = `<tr><td colspan="6" class="muted">No deliveries found in Supabase.</td></tr>`;
+    table.innerHTML = `<tr><td colspan="14" class="muted">No deliveries found in Supabase.</td></tr>`;
     return deliveries;
   }
 
@@ -186,6 +224,14 @@ async function loadDeliveries(){
       <tr>
         <td><strong>${delivery.tracking_number || ""}</strong></td>
         <td>${delivery.customer_name || ""}</td>
+        <td>${delivery.company_name || ""}</td>
+        <td>${delivery.pickup_location || delivery.pickup_address || ""}</td>
+        <td>${delivery.delivery_location || delivery.delivery_address || ""}</td>
+        <td>${[delivery.pickup_contact, delivery.delivery_contact, delivery.customer_phone || delivery.recipient_phone].filter(Boolean).join("<br>")}</td>
+        <td>${[delivery.package_type, delivery.package_weight ? `${delivery.package_weight} lb` : ""].filter(Boolean).join(" • ")}</td>
+        <td>${delivery.priority || "Standard"}</td>
+        <td>${Number(delivery.cod_amount || 0).toLocaleString("en-US", { style:"currency", currency:"USD" })}</td>
+        <td>${formatDateTime(delivery.estimated_delivery_time)}</td>
         <td>${driverName}</td>
         <td>${badge(delivery.status)}</td>
         <td>${proofUrl ? `<a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof photo" class="photo-thumb"></a>` : '<span class="muted">No proof</span>'}</td>
@@ -206,6 +252,21 @@ function autoTrackingNumber(){
 async function addDelivery(){
   const trackingNumber = document.getElementById("trackingNumber").value.trim() || autoTrackingNumber();
   const customerName = document.getElementById("customerName").value.trim();
+  const companyName = document.getElementById("companyName").value.trim();
+  const pickupAddress = document.getElementById("pickupAddress").value.trim();
+  const deliveryAddress = document.getElementById("deliveryAddress").value.trim();
+  const pickupContact = document.getElementById("pickupContact").value.trim();
+  const deliveryContact = document.getElementById("deliveryContact").value.trim();
+  const customerPhone = document.getElementById("customerPhone").value.trim();
+  const recipientPhone = document.getElementById("recipientPhone").value.trim();
+  const packageType = document.getElementById("packageType").value.trim();
+  const packageWeight = Number(document.getElementById("packageWeight").value || 0) || null;
+  const priority = document.getElementById("prioritySelect").value;
+  const specialInstructions = document.getElementById("specialInstructions").value.trim();
+  const signatureRequired = document.getElementById("signatureRequired").value === "true";
+  const photoRequired = document.getElementById("photoRequired").value === "true";
+  const codAmount = Number(document.getElementById("codAmount").value || 0) || 0;
+  const estimatedDeliveryTime = document.getElementById("estimatedDeliveryTime").value;
   const driverId = document.getElementById("driverSelect").value || null;
   const status = document.getElementById("statusSelect").value;
   const deliveryLocation = document.getElementById("deliveryLocation").value.trim();
@@ -221,6 +282,22 @@ async function addDelivery(){
   const insertPayload = {
     tracking_number: trackingNumber,
     customer_name: customerName,
+    company_name: companyName || null,
+    pickup_location: pickupAddress || null,
+    pickup_address: pickupAddress || null,
+    delivery_address: deliveryAddress || null,
+    pickup_contact: pickupContact || null,
+    delivery_contact: deliveryContact || null,
+    customer_phone: customerPhone || null,
+    recipient_phone: recipientPhone || null,
+    package_type: packageType || null,
+    package_weight: packageWeight,
+    priority,
+    special_instructions: specialInstructions || null,
+    signature_required: signatureRequired,
+    photo_required: photoRequired,
+    cod_amount: codAmount,
+    estimated_delivery_time: estimatedDeliveryTime ? new Date(estimatedDeliveryTime).toISOString() : null,
     driver_id: driverId,
     status,
     delivery_location: deliveryLocation || null,
@@ -239,6 +316,20 @@ async function addDelivery(){
   document.getElementById("message").innerText = "Delivery saved successfully.";
   document.getElementById("trackingNumber").value = "";
   document.getElementById("customerName").value = "";
+  document.getElementById("companyName").value = "";
+  document.getElementById("pickupAddress").value = "";
+  document.getElementById("deliveryAddress").value = "";
+  document.getElementById("pickupContact").value = "";
+  document.getElementById("deliveryContact").value = "";
+  document.getElementById("customerPhone").value = "";
+  document.getElementById("recipientPhone").value = "";
+  document.getElementById("packageType").value = "";
+  document.getElementById("packageWeight").value = "";
+  document.getElementById("specialInstructions").value = "";
+  document.getElementById("signatureRequired").value = "false";
+  document.getElementById("photoRequired").value = "false";
+  document.getElementById("codAmount").value = "";
+  document.getElementById("estimatedDeliveryTime").value = "";
   document.getElementById("deliveryLocation").value = "";
   document.getElementById("deliveryTime").value = "";
   document.getElementById("proofPhotoUrl").value = "";

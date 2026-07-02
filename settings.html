@@ -94,5 +94,11 @@ textarea{min-height:100px;resize:vertical;}
     </div>
   </main>
 </div>
+<script>
+const currentRole = localStorage.getItem("role");
+if(currentRole !== "admin"){
+  window.location.href = "login.html";
+}
+</script>
 </body>
 </html>
