@@ -39,6 +39,10 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 .actions{display:flex;gap:8px;flex-wrap:wrap;}
 .filters{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;}
 .filters .btn{min-width:110px;}
+.chart-wrap{display:grid;gap:12px;}
+.bar-row{display:grid;grid-template-columns:170px 1fr 70px;gap:12px;align-items:center;}
+.bar-track{height:12px;background:#e5e7eb;border-radius:999px;overflow:hidden;}
+.bar-fill{height:100%;background:linear-gradient(90deg,#0b2d52,#d9b431);}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -47,17 +51,22 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 <div class="admin-layout">
   <aside class="sidebar">
     <img src="images/logo.jpeg" alt="C&A Logo">
-    <h2>C&A Admin</h2>
-    <a href="admin.html">📊 Dashboard</a>
-    <a href="drivers.html">🚚 Drivers</a>
-    <a href="deliveries.html">📦 Deliveries</a>
-    <a href="dispatcher.html">📦 Dispatcher</a>
-    <a href="proofs.html">🖼️ Proofs</a>
-    <a href="reports.html" class="active">📈 Reports</a>
-    <a href="settings.html">⚙️ Settings</a>
-    <a href="driver-dashboard.html">📱 Driver Dashboard</a>
-    <a href="track.html">🔎 Tracking</a>
-    <a href="index.html">🌐 Website</a>
+    <h2>C&A CMS 5.0</h2>
+    <a href="admin.html">Dashboard</a>
+    <a href="dispatcher.html">Dispatcher</a>
+    <a href="deliveries.html">Deliveries</a>
+    <a href="drivers.html">Drivers</a>
+    <a href="employees.html">Employees</a>
+    <a href="customers.html">Customers</a>
+    <a href="booking.html">Booking</a>
+    <a href="payroll.html">Payroll</a>
+    <a href="invoices.html">Invoices</a>
+    <a href="proofs.html">Proofs</a>
+    <a href="reports.html" class="active">Reports</a>
+    <a href="settings.html">Settings</a>
+    <a href="driver-dashboard.html">Driver Dashboard</a>
+    <a href="track.html">Tracking</a>
+    <a href="index.html">Website</a>
   </aside>
   <main class="main">
     <div class="topbar">
@@ -104,6 +113,13 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
           <tr><td colspan="2" class="muted">Loading report counts...</td></tr>
         </tbody>
       </table>
+    </div>
+
+    <div class="section">
+      <h2>Operations Snapshot</h2>
+      <div id="chartArea" class="chart-wrap">
+        <div class="muted">Loading chart...</div>
+      </div>
     </div>
 
     <div class="section">
@@ -160,6 +176,20 @@ function downloadTextFile(filename, content, mimeType){
   a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function renderChart(items){
+  const max = Math.max(1, ...items.map(item => item.value));
+  document.getElementById("chartArea").innerHTML = items.map(item => {
+    const width = Math.max(2, Math.round((item.value / max) * 100));
+    return `
+      <div class="bar-row">
+        <strong>${item.label}</strong>
+        <div class="bar-track"><div class="bar-fill" style="width:${width}%"></div></div>
+        <span>${item.value}</span>
+      </div>
+    `;
+  }).join("");
 }
 
 function exportReportsCsv(){
@@ -253,6 +283,15 @@ async function loadReports(){
     statusRow("Rejected", counts.rejectedCount, "pending"),
     statusRow("Cancelled", counts.cancelledCount, "pending")
   ].join("");
+
+  renderChart([
+    { label: "Delivered", value: counts.deliveredCount },
+    { label: "Pending", value: counts.pendingCount },
+    { label: "In Transit", value: counts.inTransit },
+    { label: "Out for Delivery", value: counts.outForDelivery },
+    { label: "Rejected", value: counts.rejectedCount },
+    { label: "Cancelled", value: counts.cancelledCount }
+  ]);
 
   document.getElementById("lastUpdated").innerText = `Last updated: ${new Date().toLocaleString()}`;
 }

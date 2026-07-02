@@ -6,6 +6,7 @@
 <title>Book Now | C&A Quality Solutions</title>
 
 <link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 *{
@@ -342,6 +343,38 @@ const price = basePrice + (miles * mileRate);
 </script>
 
 <script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+function buildBookingTracking(){
+  return "BKG-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 12);
+}
+
+async function saveBookingRecord(amount, checkoutSessionId){
+  const form = document.getElementById("bookingForm");
+  const payload = {
+    tracking_number: buildBookingTracking(),
+    customer_name: form.querySelector('[name="Customer Name"]').value,
+    customer_phone: form.querySelector('[name="Phone Number"]').value,
+    customer_email: form.querySelector('[name="Email Address"]').value,
+    pickup_address: document.getElementById("pickup").value,
+    destination_address: document.getElementById("dropoff").value,
+    package_type: form.querySelector('[name="Service Type"]').value,
+    delivery_date: form.querySelector('[name="Pickup Date"]').value || null,
+    delivery_time: form.querySelector('[name="Pickup Time"]').value || null,
+    estimated_distance_miles: Number(document.getElementById("miles").value || 0),
+    estimated_price: Number(amount || 0),
+    payment_status: "Checkout Started",
+    checkout_session_id: checkoutSessionId || null,
+    notes: form.querySelector('[name="Instructions"]').value || null,
+    source: "website"
+  };
+
+  const { error } = await supabaseClient.from("bookings").insert([payload]);
+  if(error) console.warn("Booking save warning:", error.message);
+}
+
 async function payFullAmount() {
   try {
     const form = document.getElementById("bookingForm");
@@ -391,6 +424,8 @@ await fetch(form.action, {
     });
 
     const data = await response.json();
+
+    await saveBookingRecord(amount, data.sessionId || data.id || null);
 
     if (data.url) {
       window.location.href = data.url;

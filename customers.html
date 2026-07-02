@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version 5.0 | Customers</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
+.admin-layout{display:flex;min-height:100vh;}
+.sidebar{width:260px;background:#0b2d52;color:white;padding:25px 18px;}
+.sidebar img{width:110px;display:block;margin:0 auto 20px;}
+.sidebar h2{text-align:center;font-size:20px;}
+.sidebar a{display:block;color:white;text-decoration:none;padding:12px 14px;margin:6px 0;border-radius:8px;}
+.sidebar a:hover,.sidebar a.active{background:#d9b431;color:#071b33;}
+.main{flex:1;padding:30px;}
+.section{background:white;padding:22px;border-radius:14px;box-shadow:0 5px 15px rgba(0,0,0,.08);margin-bottom:20px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:10px;flex-wrap:wrap;}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cfd8e3;border-radius:10px;box-sizing:border-box;}
+textarea{min-height:90px;}
+.btn{background:#d9b431;color:#071b33;padding:10px 14px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
+.btn-blue{background:#0b2d52;color:white;}
+.btn-red{background:#dc2626;color:white;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;}
+.card{background:#f8fbff;border:1px solid #e6eef8;border-radius:14px;padding:18px;}
+.card h3{margin:0;color:#0b2d52;font-size:15px;}
+.card p{font-size:28px;font-weight:bold;color:#d9b431;margin:10px 0 0;}
+.table-wrap{overflow:auto;}
+table{width:100%;border-collapse:collapse;min-width:1200px;}
+th{background:#0b2d52;color:white;padding:12px;text-align:left;}
+td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
+.badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;display:inline-block;}
+.active{background:#dcfce7;color:#166534;}
+.inactive{background:#fee2e2;color:#991b1b;}
+.muted{color:#6b7280;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:1100px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <img src="images/logo.jpeg" alt="C&A Logo">
+    <h2>C&A CMS 5.0</h2>
+    <a href="admin.html">Dashboard</a>
+    <a href="dispatcher.html">Dispatcher</a>
+    <a href="deliveries.html">Deliveries</a>
+    <a href="drivers.html">Drivers</a>
+    <a href="employees.html">Employees</a>
+    <a href="customers.html" class="active">Customers</a>
+    <a href="booking.html">Booking</a>
+    <a href="payroll.html">Payroll</a>
+    <a href="invoices.html">Invoices</a>
+    <a href="reports.html">Reports</a>
+    <a href="settings.html">Settings</a>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Customer Management</h1>
+        <p class="muted">Business accounts, addresses, and account health.</p>
+      </div>
+      <div class="actions">
+        <input id="searchInput" placeholder="Search customers" oninput="renderCustomers()">
+        <button class="btn" onclick="loadCustomers()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Total Customers</h3><p id="totalCustomers">0</p></div>
+      <div class="card"><h3>Active Accounts</h3><p id="activeCustomers">0</p></div>
+      <div class="card"><h3>Outstanding Balance</h3><p id="outstandingBalance">$0</p></div>
+    </div>
+
+    <div class="section">
+      <h2>Add / Edit Customer</h2>
+      <div class="form-grid">
+        <input id="businessName" placeholder="Business Name">
+        <input id="contactPerson" placeholder="Contact Person">
+        <input id="phone" placeholder="Phone">
+        <input id="email" type="email" placeholder="Email">
+        <input id="billingAddress" placeholder="Billing Address">
+        <input id="pickupAddress" placeholder="Pickup Address">
+        <input id="deliveryAddress" placeholder="Delivery Address">
+        <input id="paymentTerms" placeholder="Payment Terms">
+        <select id="accountStatus">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+        <input id="outstanding" type="number" step="0.01" placeholder="Outstanding Balance">
+        <textarea id="notes" placeholder="Notes"></textarea>
+      </div>
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn" onclick="saveCustomer()">Add Customer</button>
+        <button class="btn btn-blue" onclick="updateCustomer()">Edit Customer</button>
+        <button class="btn btn-red" onclick="deleteCustomer()">Delete</button>
+        <button class="btn" onclick="clearForm()">Clear</button>
+      </div>
+      <p id="message" class="muted"></p>
+    </div>
+
+    <div class="section table-wrap">
+      <h2>Customer Accounts</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Contact</th>
+            <th>Phone / Email</th>
+            <th>Billing</th>
+            <th>Pickup</th>
+            <th>Delivery</th>
+            <th>Payment Terms</th>
+            <th>Status</th>
+            <th>Delivery History</th>
+            <th>Outstanding</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="customersTable">
+          <tr><td colspan="11" class="muted">Loading customers...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+const role = localStorage.getItem("role");
+if(role !== "admin" && role !== "dispatcher"){
+  window.location.href = "login.html";
+}
+
+let customers = [];
+let selectedCustomerId = null;
+let historyMap = new Map();
+
+function fmtMoney(value){
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+}
+
+function clearForm(){
+  selectedCustomerId = null;
+  ["businessName","contactPerson","phone","email","billingAddress","pickupAddress","deliveryAddress","paymentTerms","outstanding","notes"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("accountStatus").value = "Active";
+}
+
+function payload(){
+  return {
+    business_name: document.getElementById("businessName").value.trim(),
+    contact_person: document.getElementById("contactPerson").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    billing_address: document.getElementById("billingAddress").value.trim(),
+    pickup_address: document.getElementById("pickupAddress").value.trim(),
+    delivery_address: document.getElementById("deliveryAddress").value.trim(),
+    payment_terms: document.getElementById("paymentTerms").value.trim(),
+    account_status: document.getElementById("accountStatus").value,
+    notes: document.getElementById("notes").value.trim(),
+    outstanding_balance: Number(document.getElementById("outstanding").value || 0)
+  };
+}
+
+async function loadCustomers(){
+  const [customersResult, deliveriesResult] = await Promise.all([
+    supabaseClient.from("customers").select("*").order("created_at", { ascending: false }),
+    supabaseClient.from("deliveries").select("customer_name,customer_email")
+  ]);
+
+  if(customersResult.error){
+    document.getElementById("customersTable").innerHTML = `<tr><td colspan="11">${customersResult.error.message}</td></tr>`;
+    return;
+  }
+
+  customers = customersResult.data || [];
+  const deliveries = deliveriesResult.data || [];
+  historyMap = new Map();
+
+  deliveries.forEach(delivery => {
+    const key = `${(delivery.customer_name || "").toLowerCase()}|${(delivery.customer_email || "").toLowerCase()}`;
+    historyMap.set(key, (historyMap.get(key) || 0) + 1);
+  });
+
+  document.getElementById("totalCustomers").innerText = customers.length;
+  document.getElementById("activeCustomers").innerText = customers.filter(c => c.account_status === "Active").length;
+  document.getElementById("outstandingBalance").innerText = fmtMoney(customers.reduce((sum, customer) => sum + Number(customer.outstanding_balance || 0), 0));
+
+  renderCustomers();
+}
+
+function deliveryHistory(customer){
+  const key = `${(customer.business_name || customer.contact_person || "").toLowerCase()}|${(customer.email || "").toLowerCase()}`;
+  return historyMap.get(key) || 0;
+}
+
+function renderCustomers(){
+  const term = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = customers.filter(customer => {
+    const text = [
+      customer.business_name,
+      customer.contact_person,
+      customer.phone,
+      customer.email,
+      customer.billing_address,
+      customer.pickup_address,
+      customer.delivery_address
+    ].join(" ").toLowerCase();
+    return !term || text.includes(term);
+  });
+
+  const table = document.getElementById("customersTable");
+  if(!filtered.length){
+    table.innerHTML = `<tr><td colspan="11" class="muted">No customers found.</td></tr>`;
+    return;
+  }
+
+  table.innerHTML = filtered.map(customer => `
+    <tr>
+      <td><strong>${customer.business_name || ""}</strong></td>
+      <td>${customer.contact_person || ""}</td>
+      <td>${customer.phone || ""}<br>${customer.email || ""}</td>
+      <td>${customer.billing_address || ""}</td>
+      <td>${customer.pickup_address || ""}</td>
+      <td>${customer.delivery_address || ""}</td>
+      <td>${customer.payment_terms || ""}</td>
+      <td><span class="badge ${customer.account_status === "Active" ? "active" : "inactive"}">${customer.account_status || "Inactive"}</span></td>
+      <td>${deliveryHistory(customer)}</td>
+      <td>${fmtMoney(customer.outstanding_balance || 0)}</td>
+      <td><button class="btn btn-blue" onclick="selectCustomer('${customer.id}')">Select</button></td>
+    </tr>
+  `).join("");
+}
+
+function selectCustomer(id){
+  const customer = customers.find(item => String(item.id) === String(id));
+  if(!customer) return;
+  selectedCustomerId = customer.id;
+  document.getElementById("businessName").value = customer.business_name || "";
+  document.getElementById("contactPerson").value = customer.contact_person || "";
+  document.getElementById("phone").value = customer.phone || "";
+  document.getElementById("email").value = customer.email || "";
+  document.getElementById("billingAddress").value = customer.billing_address || "";
+  document.getElementById("pickupAddress").value = customer.pickup_address || "";
+  document.getElementById("deliveryAddress").value = customer.delivery_address || "";
+  document.getElementById("paymentTerms").value = customer.payment_terms || "";
+  document.getElementById("accountStatus").value = customer.account_status || "Active";
+  document.getElementById("notes").value = customer.notes || "";
+  document.getElementById("outstanding").value = customer.outstanding_balance || 0;
+}
+
+async function saveCustomer(){
+  const data = payload();
+  if(!data.business_name || !data.contact_person){
+    document.getElementById("message").innerText = "Business and contact person are required.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("customers").insert([data]);
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Customer added.";
+  clearForm();
+  loadCustomers();
+}
+
+async function updateCustomer(){
+  if(!selectedCustomerId){
+    document.getElementById("message").innerText = "Select a customer first.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("customers").update(payload()).eq("id", selectedCustomerId);
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Customer updated.";
+  loadCustomers();
+}
+
+async function deleteCustomer(){
+  if(!selectedCustomerId){
+    document.getElementById("message").innerText = "Select a customer first.";
+    return;
+  }
+  if(!confirm("Delete this customer account?")) return;
+
+  const { error } = await supabaseClient.from("customers").delete().eq("id", selectedCustomerId);
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Customer deleted.";
+  clearForm();
+  loadCustomers();
+}
+
+clearForm();
+loadCustomers();
+</script>
+</body>
+</html>

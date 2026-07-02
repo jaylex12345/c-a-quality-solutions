@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version 5.0 | Employees</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
+.admin-layout{display:flex;min-height:100vh;}
+.sidebar{width:260px;background:#0b2d52;color:white;padding:25px 18px;}
+.sidebar img{width:110px;display:block;margin:0 auto 20px;}
+.sidebar h2{text-align:center;font-size:20px;}
+.sidebar a{display:block;color:white;text-decoration:none;padding:12px 14px;margin:6px 0;border-radius:8px;}
+.sidebar a:hover,.sidebar a.active{background:#d9b431;color:#071b33;}
+.main{flex:1;padding:30px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;gap:12px;flex-wrap:wrap;}
+.section{background:white;padding:22px;border-radius:14px;box-shadow:0 5px 15px rgba(0,0,0,.08);margin-bottom:20px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;}
+.card{background:#f8fbff;border:1px solid #e6eef8;border-radius:14px;padding:18px;}
+.card h3{margin:0;color:#0b2d52;font-size:15px;}
+.card p{font-size:28px;font-weight:bold;color:#d9b431;margin:10px 0 0;}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cfd8e3;border-radius:10px;box-sizing:border-box;}
+textarea{min-height:90px;resize:vertical;}
+.btn{background:#d9b431;color:#071b33;padding:10px 14px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
+.btn-red{background:#dc2626;color:white;}
+.btn-blue{background:#0b2d52;color:white;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+.table-wrap{overflow:auto;}
+table{width:100%;border-collapse:collapse;min-width:1300px;}
+th{background:#0b2d52;color:white;padding:12px;text-align:left;}
+td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
+.badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;display:inline-block;}
+.active{background:#dcfce7;color:#166534;}
+.inactive{background:#fee2e2;color:#991b1b;}
+.muted{color:#6b7280;}
+@media(max-width:1100px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <img src="images/logo.jpeg" alt="C&A Logo">
+    <h2>C&A CMS 5.0</h2>
+    <a href="admin.html">Dashboard</a>
+    <a href="dispatcher.html">Dispatcher</a>
+    <a href="deliveries.html">Deliveries</a>
+    <a href="drivers.html">Drivers</a>
+    <a href="employees.html" class="active">Employees</a>
+    <a href="customers.html">Customers</a>
+    <a href="booking.html">Booking</a>
+    <a href="payroll.html">Payroll</a>
+    <a href="invoices.html">Invoices</a>
+    <a href="reports.html">Reports</a>
+    <a href="settings.html">Settings</a>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Employee Management</h1>
+        <p class="muted">C&A Dispatch Platform Version 5.0 Professional Edition</p>
+      </div>
+      <div class="actions">
+        <input id="searchInput" placeholder="Search employees" oninput="renderEmployees()">
+        <button class="btn" onclick="loadEmployees()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Total Employees</h3><p id="totalEmployees">0</p></div>
+      <div class="card"><h3>Active</h3><p id="activeEmployees">0</p></div>
+      <div class="card"><h3>Inactive</h3><p id="inactiveEmployees">0</p></div>
+    </div>
+
+    <div class="section">
+      <h2>Add / Edit Employee</h2>
+      <div class="form-grid">
+        <input id="employeeId" placeholder="Employee ID (auto)" readonly>
+        <input id="firstName" placeholder="First Name">
+        <input id="lastName" placeholder="Last Name">
+        <input id="phone" placeholder="Phone">
+        <input id="email" type="email" placeholder="Email">
+        <input id="address" placeholder="Address">
+        <input id="emergencyContact" placeholder="Emergency Contact">
+        <input id="jobTitle" placeholder="Job Title">
+        <input id="hireDate" type="date" placeholder="Hire Date">
+        <input id="hourlyRate" type="number" step="0.01" placeholder="Hourly Rate">
+        <select id="employmentType">
+          <option value="Full-Time">Full-Time</option>
+          <option value="Part-Time">Part-Time</option>
+          <option value="Contractor">Contractor</option>
+        </select>
+        <input id="driverLicense" placeholder="Driver License">
+        <input id="licenseExpiration" type="date" placeholder="License Expiration">
+        <input id="vehicleAssignment" placeholder="Vehicle Assignment">
+        <select id="status">
+          <option value="Active">Active</option>
+          <option value="Inactive">Inactive</option>
+        </select>
+        <input id="profilePhoto" placeholder="Profile Photo URL">
+      </div>
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn" onclick="saveEmployee()">Add Employee</button>
+        <button class="btn btn-blue" onclick="updateEmployee()">Edit Employee</button>
+        <button class="btn btn-red" onclick="deactivateEmployee()">Deactivate</button>
+        <button class="btn btn-red" onclick="deleteEmployee()">Delete</button>
+        <button class="btn" onclick="clearForm()">Clear</button>
+      </div>
+      <p id="message" class="muted"></p>
+    </div>
+
+    <div class="section table-wrap">
+      <h2>Employees</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Photo</th>
+            <th>Employee ID</th>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Job Title</th>
+            <th>Hire Date</th>
+            <th>Rate</th>
+            <th>Type</th>
+            <th>License</th>
+            <th>Vehicle</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="employeesTable">
+          <tr><td colspan="13" class="muted">Loading employees...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+const role = localStorage.getItem("role");
+if(role && !["admin","dispatcher","employee"].includes(role)){
+  window.location.href = "login.html";
+}
+
+let employees = [];
+let selectedEmployeeId = null;
+
+function autoEmployeeId(){
+  return "EMP-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 12);
+}
+
+function formatDate(value){
+  return value ? new Date(value).toLocaleDateString() : "";
+}
+
+function badge(status){
+  return `<span class="badge ${status === "Active" ? "active" : "inactive"}">${status || "Inactive"}</span>`;
+}
+
+function clearForm(){
+  selectedEmployeeId = null;
+  document.getElementById("employeeId").value = autoEmployeeId();
+  ["firstName","lastName","phone","email","address","emergencyContact","jobTitle","hireDate","hourlyRate","driverLicense","licenseExpiration","vehicleAssignment","profilePhoto"].forEach(id => document.getElementById(id).value = "");
+  document.getElementById("employmentType").value = "Full-Time";
+  document.getElementById("status").value = "Active";
+}
+
+function formPayload(){
+  return {
+    employee_id: document.getElementById("employeeId").value.trim() || autoEmployeeId(),
+    first_name: document.getElementById("firstName").value.trim(),
+    last_name: document.getElementById("lastName").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    address: document.getElementById("address").value.trim(),
+    emergency_contact: document.getElementById("emergencyContact").value.trim(),
+    job_title: document.getElementById("jobTitle").value.trim(),
+    hire_date: document.getElementById("hireDate").value || null,
+    hourly_rate: Number(document.getElementById("hourlyRate").value || 0),
+    employment_type: document.getElementById("employmentType").value,
+    driver_license: document.getElementById("driverLicense").value.trim(),
+    license_expiration: document.getElementById("licenseExpiration").value || null,
+    vehicle_assignment: document.getElementById("vehicleAssignment").value.trim(),
+    status: document.getElementById("status").value,
+    profile_photo: document.getElementById("profilePhoto").value.trim() || null
+  };
+}
+
+async function loadEmployees(){
+  const { data, error } = await supabaseClient.from("employees").select("*").order("created_at", { ascending: false });
+  if(error){
+    document.getElementById("employeesTable").innerHTML = `<tr><td colspan="13">${error.message}</td></tr>`;
+    return;
+  }
+
+  employees = data || [];
+  document.getElementById("totalEmployees").innerText = employees.length;
+  document.getElementById("activeEmployees").innerText = employees.filter(e => e.status === "Active").length;
+  document.getElementById("inactiveEmployees").innerText = employees.filter(e => e.status !== "Active").length;
+  renderEmployees();
+}
+
+function renderEmployees(){
+  const term = document.getElementById("searchInput").value.trim().toLowerCase();
+  const filtered = employees.filter(employee => {
+    const text = [
+      employee.employee_id,
+      employee.first_name,
+      employee.last_name,
+      employee.phone,
+      employee.email,
+      employee.job_title
+    ].join(" ").toLowerCase();
+    return !term || text.includes(term);
+  });
+
+  const table = document.getElementById("employeesTable");
+  if(!filtered.length){
+    table.innerHTML = `<tr><td colspan="13" class="muted">No employees found.</td></tr>`;
+    return;
+  }
+
+  table.innerHTML = filtered.map(employee => `
+    <tr>
+      <td>${employee.profile_photo ? `<img src="${employee.profile_photo}" alt="${employee.first_name || "Employee"}" style="width:42px;height:42px;border-radius:8px;object-fit:cover;">` : '<span class="muted">N/A</span>'}</td>
+      <td>${employee.employee_id || ""}</td>
+      <td><strong>${employee.first_name || ""} ${employee.last_name || ""}</strong></td>
+      <td>${employee.phone || ""}</td>
+      <td>${employee.email || ""}</td>
+      <td>${employee.job_title || ""}</td>
+      <td>${formatDate(employee.hire_date)}</td>
+      <td>$${Number(employee.hourly_rate || 0).toFixed(2)}</td>
+      <td>${employee.employment_type || ""}</td>
+      <td>${employee.driver_license || ""}<br><span class="muted">${formatDate(employee.license_expiration)}</span></td>
+      <td>${employee.vehicle_assignment || ""}</td>
+      <td>${badge(employee.status)}</td>
+      <td><button class="btn btn-blue" onclick="selectEmployee('${employee.id}')">Select</button></td>
+    </tr>
+  `).join("");
+}
+
+function selectEmployee(id){
+  const employee = employees.find(item => String(item.id) === String(id));
+  if(!employee) return;
+  selectedEmployeeId = employee.id;
+  document.getElementById("employeeId").value = employee.employee_id || "";
+  document.getElementById("firstName").value = employee.first_name || "";
+  document.getElementById("lastName").value = employee.last_name || "";
+  document.getElementById("phone").value = employee.phone || "";
+  document.getElementById("email").value = employee.email || "";
+  document.getElementById("address").value = employee.address || "";
+  document.getElementById("emergencyContact").value = employee.emergency_contact || "";
+  document.getElementById("jobTitle").value = employee.job_title || "";
+  document.getElementById("hireDate").value = employee.hire_date || "";
+  document.getElementById("hourlyRate").value = employee.hourly_rate || "";
+  document.getElementById("employmentType").value = employee.employment_type || "Full-Time";
+  document.getElementById("driverLicense").value = employee.driver_license || "";
+  document.getElementById("licenseExpiration").value = employee.license_expiration || "";
+  document.getElementById("vehicleAssignment").value = employee.vehicle_assignment || "";
+  document.getElementById("status").value = employee.status || "Active";
+  document.getElementById("profilePhoto").value = employee.profile_photo || "";
+}
+
+async function saveEmployee(){
+  const payload = formPayload();
+  if(!payload.first_name || !payload.last_name){
+    document.getElementById("message").innerText = "First and last name are required.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("employees").insert([payload]);
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Employee added.";
+  clearForm();
+  loadEmployees();
+}
+
+async function updateEmployee(){
+  if(!selectedEmployeeId){
+    document.getElementById("message").innerText = "Select an employee first.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("employees").update(formPayload()).eq("id", selectedEmployeeId);
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Employee updated.";
+  loadEmployees();
+}
+
+async function deactivateEmployee(){
+  if(!selectedEmployeeId){
+    document.getElementById("message").innerText = "Select an employee first.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("employees").update({ status: "Inactive" }).eq("id", selectedEmployeeId);
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Employee deactivated.";
+  loadEmployees();
+}
+
+async function deleteEmployee(){
+  if(!selectedEmployeeId){
+    document.getElementById("message").innerText = "Select an employee first.";
+    return;
+  }
+
+  if(!confirm("Delete this employee record?")) return;
+
+  const { error } = await supabaseClient.from("employees").delete().eq("id", selectedEmployeeId);
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Employee deleted.";
+  clearForm();
+  loadEmployees();
+}
+
+clearForm();
+loadEmployees();
+</script>
+</body>
+</html>

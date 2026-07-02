@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version 5.0 | Payroll</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
+.admin-layout{display:flex;min-height:100vh;}
+.sidebar{width:260px;background:#0b2d52;color:white;padding:25px 18px;}
+.sidebar img{width:110px;display:block;margin:0 auto 20px;}
+.sidebar h2{text-align:center;font-size:20px;}
+.sidebar a{display:block;color:white;text-decoration:none;padding:12px 14px;margin:6px 0;border-radius:8px;}
+.sidebar a:hover,.sidebar a.active{background:#d9b431;color:#071b33;}
+.main{flex:1;padding:30px;}
+.section{background:white;padding:22px;border-radius:14px;box-shadow:0 5px 15px rgba(0,0,0,.08);margin-bottom:20px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:10px;flex-wrap:wrap;}
+.btn{background:#d9b431;color:#071b33;padding:10px 14px;border:none;border-radius:8px;font-weight:bold;cursor:pointer;}
+.btn-blue{background:#0b2d52;color:white;}
+.btn-green{background:#16a34a;color:white;}
+.btn-red{background:#dc2626;color:white;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:15px;}
+.card{background:#f8fbff;border:1px solid #e6eef8;border-radius:14px;padding:18px;}
+.card h3{margin:0;color:#0b2d52;font-size:15px;}
+.card p{font-size:28px;font-weight:bold;color:#d9b431;margin:10px 0 0;}
+.table-wrap{overflow:auto;}
+table{width:100%;border-collapse:collapse;min-width:1200px;}
+th{background:#0b2d52;color:white;padding:12px;text-align:left;}
+td{padding:12px;border-bottom:1px solid #e5e7eb;}
+.badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;display:inline-block;}
+.paid{background:#dcfce7;color:#166534;}
+.pending{background:#fee2e2;color:#991b1b;}
+.muted{color:#6b7280;}
+@media(max-width:1100px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <img src="images/logo.jpeg" alt="C&A Logo">
+    <h2>C&A CMS 5.0</h2>
+    <a href="admin.html">Dashboard</a>
+    <a href="dispatcher.html">Dispatcher</a>
+    <a href="deliveries.html">Deliveries</a>
+    <a href="drivers.html">Drivers</a>
+    <a href="employees.html">Employees</a>
+    <a href="customers.html">Customers</a>
+    <a href="booking.html">Booking</a>
+    <a href="payroll.html" class="active">Payroll</a>
+    <a href="invoices.html">Invoices</a>
+    <a href="reports.html">Reports</a>
+    <a href="settings.html">Settings</a>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Payroll Management</h1>
+        <p class="muted">Hourly pay, overtime, mileage reimbursement, net pay.</p>
+      </div>
+      <div class="actions">
+        <select id="periodType">
+          <option value="weekly">Weekly Payroll</option>
+          <option value="biweekly">Biweekly Payroll</option>
+          <option value="monthly">Monthly Payroll</option>
+        </select>
+        <button class="btn" onclick="generatePayroll()">Generate Payroll</button>
+        <button class="btn btn-blue" onclick="exportPdf()">Export PDF</button>
+        <button class="btn btn-blue" onclick="exportCsv()">Export Excel</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Gross Pay</h3><p id="grossTotal">$0</p></div>
+      <div class="card"><h3>Net Pay</h3><p id="netTotal">$0</p></div>
+      <div class="card"><h3>Overtime</h3><p id="overtimeTotal">0h</p></div>
+      <div class="card"><h3>Payroll Due</h3><p id="pendingTotal">0</p></div>
+    </div>
+
+    <div class="section table-wrap">
+      <h2>Payroll Run</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Employee</th>
+            <th>Hours</th>
+            <th>Overtime</th>
+            <th>Hourly Pay</th>
+            <th>Bonus</th>
+            <th>Mileage</th>
+            <th>Gross</th>
+            <th>Deductions</th>
+            <th>Net</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="payrollTable">
+          <tr><td colspan="11" class="muted">Generate payroll to begin.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+const role = localStorage.getItem("role");
+if(role !== "admin" && role !== "dispatcher"){
+  window.location.href = "login.html";
+}
+
+let payrollRows = [];
+
+function fmtMoney(value){
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+}
+
+function periodRange(period){
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000;
+  if(period === "weekly") return now - 7 * day;
+  if(period === "biweekly") return now - 14 * day;
+  if(period === "monthly") return now - 30 * day;
+  return now - 7 * day;
+}
+
+function downloadTextFile(filename, content, mimeType){
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function generatePayroll(){
+  const period = document.getElementById("periodType").value;
+  const since = new Date(periodRange(period)).toISOString();
+
+  const [employeesResult, timesheetsResult] = await Promise.all([
+    supabaseClient.from("employees").select("*").eq("status", "Active"),
+    supabaseClient.from("timesheets").select("*").gte("created_at", since)
+  ]);
+
+  if(employeesResult.error || timesheetsResult.error){
+    document.getElementById("payrollTable").innerHTML = `<tr><td colspan="11">${(employeesResult.error || timesheetsResult.error).message}</td></tr>`;
+    return;
+  }
+
+  const employees = employeesResult.data || [];
+  const timesheets = timesheetsResult.data || [];
+
+  payrollRows = employees.map(employee => {
+    const records = timesheets.filter(item => String(item.employee_id || item.driver_id) === String(employee.id));
+    const hours = records.reduce((sum, item) => sum + Number(item.hours_today || item.hours || 0), 0);
+    const overtime = Math.max(0, hours - 40);
+    const regularHours = Math.max(0, hours - overtime);
+    const hourlyRate = Number(employee.hourly_rate || 0);
+    const bonus = Number(employee.payroll_bonus || 0);
+    const mileage = Number(employee.mileage_reimbursement || 0);
+    const gross = (regularHours * hourlyRate) + (overtime * hourlyRate * 1.5) + bonus + mileage;
+    const deductions = Number(employee.deductions_placeholder || 0);
+    const net = gross - deductions;
+
+    return {
+      employee_id: employee.id,
+      employee_name: `${employee.first_name || ""} ${employee.last_name || ""}`.trim() || employee.employee_id || "Employee",
+      period_type: period,
+      hours,
+      overtime,
+      hourly_rate: hourlyRate,
+      bonus,
+      mileage,
+      gross_pay: gross,
+      deductions,
+      net_pay: net,
+      status: "Pending"
+    };
+  });
+
+  const { error } = await supabaseClient.from("payroll").insert(payrollRows);
+  if(error){
+    document.getElementById("payrollTable").innerHTML = `<tr><td colspan="11">${error.message}</td></tr>`;
+    return;
+  }
+
+  renderPayroll();
+}
+
+function renderPayroll(){
+  if(!payrollRows.length){
+    document.getElementById("payrollTable").innerHTML = `<tr><td colspan="11" class="muted">No payroll rows generated yet.</td></tr>`;
+    document.getElementById("grossTotal").innerText = "$0";
+    document.getElementById("netTotal").innerText = "$0";
+    document.getElementById("overtimeTotal").innerText = "0h";
+    document.getElementById("pendingTotal").innerText = "0";
+    return;
+  }
+
+  document.getElementById("grossTotal").innerText = fmtMoney(payrollRows.reduce((sum, row) => sum + row.gross_pay, 0));
+  document.getElementById("netTotal").innerText = fmtMoney(payrollRows.reduce((sum, row) => sum + row.net_pay, 0));
+  document.getElementById("overtimeTotal").innerText = `${payrollRows.reduce((sum, row) => sum + row.overtime, 0).toFixed(2)}h`;
+  document.getElementById("pendingTotal").innerText = payrollRows.filter(row => row.status !== "Paid").length;
+
+  document.getElementById("payrollTable").innerHTML = payrollRows.map(row => `
+    <tr>
+      <td>${row.employee_name}</td>
+      <td>${row.hours.toFixed(2)}</td>
+      <td>${row.overtime.toFixed(2)}</td>
+      <td>${fmtMoney(row.hourly_rate)}</td>
+      <td>${fmtMoney(row.bonus)}</td>
+      <td>${fmtMoney(row.mileage)}</td>
+      <td>${fmtMoney(row.gross_pay)}</td>
+      <td>${fmtMoney(row.deductions)}</td>
+      <td>${fmtMoney(row.net_pay)}</td>
+      <td><span class="badge ${row.status === "Paid" ? "paid" : "pending"}">${row.status}</span></td>
+      <td><button class="btn btn-green" onclick="markPaid('${row.employee_id}')">Mark Paid</button></td>
+    </tr>
+  `).join("");
+}
+
+async function markPaid(employeeId){
+  payrollRows = payrollRows.map(row => String(row.employee_id) === String(employeeId) ? { ...row, status: "Paid" } : row);
+  renderPayroll();
+
+  await supabaseClient
+    .from("payroll")
+    .update({ status: "Paid", paid_at: new Date().toISOString() })
+    .eq("employee_id", employeeId)
+    .eq("period_type", document.getElementById("periodType").value)
+    .gte("created_at", new Date(periodRange(document.getElementById("periodType").value)).toISOString());
+}
+
+function exportCsv(){
+  const rows = [
+    ["Employee","Hours","Overtime","Hourly","Bonus","Mileage","Gross","Deductions","Net","Status"],
+    ...payrollRows.map(row => [
+      row.employee_name,
+      row.hours,
+      row.overtime,
+      row.hourly_rate,
+      row.bonus,
+      row.mileage,
+      row.gross_pay,
+      row.deductions,
+      row.net_pay,
+      row.status
+    ])
+  ];
+  const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
+  downloadTextFile(`payroll-${document.getElementById("periodType").value}.csv`, csv, "text/csv");
+}
+
+function exportPdf(){
+  if(!window.jspdf){
+    alert("PDF export unavailable.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text("C&A Payroll Report", 20, 20);
+  doc.setFontSize(12);
+  doc.text(`Period: ${document.getElementById("periodType").value}`, 20, 34);
+  doc.text(`Gross: ${document.getElementById("grossTotal").innerText}`, 20, 46);
+  doc.text(`Net: ${document.getElementById("netTotal").innerText}`, 20, 56);
+  doc.text(`Overtime: ${document.getElementById("overtimeTotal").innerText}`, 20, 66);
+  doc.text(`Rows: ${payrollRows.length}`, 20, 76);
+  doc.save(`payroll-${document.getElementById("periodType").value}.pdf`);
+}
+
+renderPayroll();
+</script>
+</body>
+</html>

@@ -158,6 +158,19 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
         <button class="btn btn-blue" onclick="openDriverProfile()">Profile</button>
       </div>
     </div>
+
+    <div class="card">
+      <h3>Time Clock</h3>
+      <div class="big" id="timeClockStatus">Off</div>
+      <p id="timeClockSummary">Clock out status</p>
+      <p class="muted">Today: <span id="hoursToday">0.00</span>h | Week: <span id="hoursWeek">0.00</span>h | OT: <span id="hoursOvertime">0.00</span>h</p>
+      <div class="tool-grid">
+        <button class="btn btn-green" onclick="clockIn()">Clock In</button>
+        <button class="btn btn-red" onclick="clockOut()">Clock Out</button>
+        <button class="btn btn-blue" onclick="startBreak()">Break Start</button>
+        <button class="btn" onclick="endBreak()">Break End</button>
+      </div>
+    </div>
   </div>
 
   <div class="main">
@@ -224,6 +237,8 @@ const driverName = localStorage.getItem("driver_name");
 const role = localStorage.getItem("role");
 let currentDriverProfile = null;
 let deliveryCache = [];
+let activeTimesheetId = null;
+let breakStartedAt = null;
 
 if (!driverId || (role && role !== "driver")) window.location.href = "driver-login.html";
 document.getElementById("driverName").innerText = driverName || "Driver";
@@ -286,6 +301,224 @@ function callDispatcher(){
 function scanBarcode(){
   const code = prompt("Scan or enter tracking number");
   if(code) alert(`Tracking scanned: ${code}`);
+}
+
+function setClockStats(hoursToday, hoursWeek, overtimeHours){
+  document.getElementById("hoursToday").innerText = Number(hoursToday || 0).toFixed(2);
+  document.getElementById("hoursWeek").innerText = Number(hoursWeek || 0).toFixed(2);
+  document.getElementById("hoursOvertime").innerText = Number(overtimeHours || 0).toFixed(2);
+}
+
+function calcWorkedHours(clockInAt, clockOutAt, breakMinutes){
+  const start = new Date(clockInAt).getTime();
+  const end = new Date(clockOutAt).getTime();
+  if(!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+  return Math.max(0, ((end - start) / 3600000) - (Number(breakMinutes || 0) / 60));
+}
+
+function weekStartIso(){
+  const now = new Date();
+  const start = new Date(now);
+  const day = start.getDay();
+  const offset = day === 0 ? 6 : day - 1;
+  start.setDate(start.getDate() - offset);
+  start.setHours(0, 0, 0, 0);
+  return start.toISOString();
+}
+
+async function loadTimeClock(){
+  const { data, error } = await supabaseClient
+    .from("timesheets")
+    .select("*")
+    .eq("driver_id", driverId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  if(error){
+    document.getElementById("timeClockStatus").innerText = "N/A";
+    document.getElementById("timeClockSummary").innerText = "Timesheet unavailable";
+    setClockStats(0, 0, 0);
+    return;
+  }
+
+  const row = data && data.length ? data[0] : null;
+  if(!row){
+    activeTimesheetId = null;
+    breakStartedAt = null;
+    document.getElementById("timeClockStatus").innerText = "Off";
+    document.getElementById("timeClockSummary").innerText = "Not clocked in";
+    setClockStats(0, 0, 0);
+    return;
+  }
+
+  if(row.status === "Open" && row.clock_in_at){
+    activeTimesheetId = row.id;
+    breakStartedAt = row.break_started_at && !row.break_ended_at ? row.break_started_at : null;
+    const runningBreakMinutes = breakStartedAt ? ((Date.now() - new Date(breakStartedAt).getTime()) / 60000) : 0;
+    const hoursToday = calcWorkedHours(row.clock_in_at, new Date().toISOString(), Number(row.break_minutes || 0) + Math.max(0, runningBreakMinutes));
+    document.getElementById("timeClockStatus").innerText = breakStartedAt ? "Break" : "On";
+    document.getElementById("timeClockSummary").innerText = breakStartedAt ? "Break in progress" : "Clocked in";
+    setClockStats(hoursToday, row.hours_week || hoursToday, row.overtime_hours || Math.max(0, (row.hours_week || hoursToday) - 40));
+    return;
+  }
+
+  activeTimesheetId = null;
+  breakStartedAt = null;
+  document.getElementById("timeClockStatus").innerText = "Off";
+  document.getElementById("timeClockSummary").innerText = row.clock_out_at ? "Last shift complete" : "Not clocked in";
+  setClockStats(row.hours_today || row.hours || 0, row.hours_week || row.hours || 0, row.overtime_hours || 0);
+}
+
+async function clockIn(){
+  if(activeTimesheetId){
+    alert("Already clocked in.");
+    return;
+  }
+
+  const payload = {
+    driver_id: driverId,
+    employee_name: currentDriverProfile?.name || driverName || "Driver",
+    clock_in_at: new Date().toISOString(),
+    status: "Open",
+    break_minutes: 0,
+    hours: 0,
+    hours_today: 0,
+    hours_week: 0,
+    overtime_hours: 0
+  };
+
+  const { data, error } = await supabaseClient
+    .from("timesheets")
+    .insert([payload])
+    .select()
+    .limit(1);
+
+  if(error) return alert(error.message);
+  activeTimesheetId = data && data.length ? data[0].id : null;
+  breakStartedAt = null;
+  await loadTimeClock();
+  alert("Clocked in.");
+}
+
+async function startBreak(){
+  if(!activeTimesheetId){
+    alert("Clock in first.");
+    return;
+  }
+  if(breakStartedAt){
+    alert("Break already started.");
+    return;
+  }
+
+  const nowIso = new Date().toISOString();
+  const { error } = await supabaseClient
+    .from("timesheets")
+    .update({ break_started_at: nowIso, break_ended_at: null })
+    .eq("id", activeTimesheetId)
+    .eq("driver_id", driverId);
+
+  if(error) return alert(error.message);
+  breakStartedAt = nowIso;
+  await loadTimeClock();
+}
+
+async function endBreak(){
+  if(!activeTimesheetId || !breakStartedAt){
+    alert("No break in progress.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("timesheets")
+    .select("break_minutes, break_started_at")
+    .eq("id", activeTimesheetId)
+    .eq("driver_id", driverId)
+    .single();
+
+  if(error) return alert(error.message);
+
+  const start = new Date(data.break_started_at || breakStartedAt).getTime();
+  const extraMinutes = Math.max(0, (Date.now() - start) / 60000);
+  const totalBreakMinutes = Number(data.break_minutes || 0) + extraMinutes;
+
+  const { error: updateError } = await supabaseClient
+    .from("timesheets")
+    .update({
+      break_minutes: totalBreakMinutes,
+      break_ended_at: new Date().toISOString(),
+      break_started_at: null
+    })
+    .eq("id", activeTimesheetId)
+    .eq("driver_id", driverId);
+
+  if(updateError) return alert(updateError.message);
+  breakStartedAt = null;
+  await loadTimeClock();
+}
+
+async function clockOut(){
+  if(!activeTimesheetId){
+    alert("No active shift.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("timesheets")
+    .select("*")
+    .eq("id", activeTimesheetId)
+    .eq("driver_id", driverId)
+    .single();
+
+  if(error) return alert(error.message);
+
+  const nowIso = new Date().toISOString();
+  let breakMinutes = Number(data.break_minutes || 0);
+  let breakEndedAt = data.break_ended_at || null;
+  let breakStartedValue = data.break_started_at || null;
+
+  if(breakStartedValue && !breakEndedAt){
+    const breakStartMs = new Date(breakStartedValue).getTime();
+    breakMinutes += Math.max(0, (Date.now() - breakStartMs) / 60000);
+    breakEndedAt = nowIso;
+    breakStartedValue = null;
+  }
+
+  const hoursToday = calcWorkedHours(data.clock_in_at, nowIso, breakMinutes);
+
+  const weekStart = weekStartIso();
+  const { data: weekRows } = await supabaseClient
+    .from("timesheets")
+    .select("id,hours_today,hours")
+    .eq("driver_id", driverId)
+    .gte("created_at", weekStart);
+
+  const previousWeekHours = (weekRows || []).filter(row => row.id !== activeTimesheetId)
+    .reduce((sum, row) => sum + Number(row.hours_today || row.hours || 0), 0);
+  const hoursWeek = previousWeekHours + hoursToday;
+  const overtimeHours = Math.max(0, hoursWeek - 40);
+
+  const { error: updateError } = await supabaseClient
+    .from("timesheets")
+    .update({
+      clock_out_at: nowIso,
+      break_minutes: breakMinutes,
+      break_ended_at: breakEndedAt,
+      break_started_at: breakStartedValue,
+      hours: hoursToday,
+      hours_today: hoursToday,
+      hours_week: hoursWeek,
+      overtime_hours: overtimeHours,
+      status: "Closed"
+    })
+    .eq("id", activeTimesheetId)
+    .eq("driver_id", driverId);
+
+  if(updateError) return alert(updateError.message);
+
+  activeTimesheetId = null;
+  breakStartedAt = null;
+  await loadTimeClock();
+  alert("Clocked out.");
 }
 
 async function loadDriverProfile(){
@@ -628,6 +861,7 @@ window.addEventListener("resize", () => {
 setConnectivity();
 loadDriverProfile();
 loadDeliveries();
+loadTimeClock();
 </script>
 
 </body>

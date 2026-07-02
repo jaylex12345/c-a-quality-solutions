@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Dashboard | C&A Quality Solutions</title>
+<title>Version 5.0 | Admin Dashboard</title>
 <link rel="stylesheet" href="css/style.css">
 
 <style>
@@ -40,18 +40,23 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
 
   <aside class="sidebar">
     <img src="images/logo.jpeg" alt="C&A Logo">
-    <h2>C&A Admin</h2>
+    <h2>C&A CMS 5.0</h2>
 
-    <a href="admin.html">📊 Dashboard</a>
-    <a href="drivers.html">🚚 Drivers</a>
-    <a href="deliveries.html">📦 Deliveries</a>
-    <a href="dispatcher.html">📦 Dispatcher</a>
-    <a href="proofs.html">🖼️ Proofs</a>
-    <a href="reports.html">📈 Reports</a>
-    <a href="settings.html">⚙️ Settings</a>
-    <a href="driver-dashboard.html">📱 Driver Dashboard</a>
-    <a href="track.html">🔎 Tracking</a>
-    <a href="index.html">🌐 Website</a>
+    <a href="admin.html">Dashboard</a>
+    <a href="dispatcher.html">Dispatcher</a>
+    <a href="deliveries.html">Deliveries</a>
+    <a href="drivers.html">Drivers</a>
+    <a href="employees.html">Employees</a>
+    <a href="customers.html">Customers</a>
+    <a href="booking.html">Booking</a>
+    <a href="payroll.html">Payroll</a>
+    <a href="invoices.html">Invoices</a>
+    <a href="proofs.html">Proofs</a>
+    <a href="reports.html">Reports</a>
+    <a href="settings.html">Settings</a>
+    <a href="driver-dashboard.html">Driver Dashboard</a>
+    <a href="track.html">Tracking</a>
+    <a href="index.html">Website</a>
     <a href="#" onclick="logout()">🚪 Logout</a>
   </aside>
 
@@ -84,6 +89,26 @@ td{padding:12px;border-bottom:1px solid #ddd;text-align:center;}
       <div class="card">
         <h3>Completed Today</h3>
         <p id="completedToday">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Employees</h3>
+        <p id="employeeCount">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Customers</h3>
+        <p id="customerCount">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Open Invoices</h3>
+        <p id="openInvoices">0</p>
+      </div>
+
+      <div class="card">
+        <h3>Pending Payroll</h3>
+        <p id="pendingPayroll">0</p>
       </div>
     </div>
 
@@ -185,18 +210,26 @@ function logout(){
 }
 
 async function loadAdminStats() {
-  const { data: deliveries, error: deliveryError } = await supabaseClient
-    .from("deliveries")
-    .select("*");
+  const [deliveriesResult, driversResult, employeesResult, customersResult, invoicesResult, payrollResult] = await Promise.all([
+    supabaseClient.from("deliveries").select("*"),
+    supabaseClient.from("drivers").select("*"),
+    supabaseClient.from("employees").select("id,status"),
+    supabaseClient.from("customers").select("id,account_status"),
+    supabaseClient.from("invoices").select("id,status"),
+    supabaseClient.from("payroll").select("id,status")
+  ]);
 
-  const { data: drivers, error: driverError } = await supabaseClient
-    .from("drivers")
-    .select("*");
-
-  if (deliveryError || driverError) {
-    console.error(deliveryError || driverError);
+  if (deliveriesResult.error || driversResult.error) {
+    console.error(deliveriesResult.error || driversResult.error);
     return;
   }
+
+  const deliveries = deliveriesResult.data || [];
+  const drivers = driversResult.data || [];
+  const employees = employeesResult.error ? [] : (employeesResult.data || []);
+  const customers = customersResult.error ? [] : (customersResult.data || []);
+  const invoices = invoicesResult.error ? [] : (invoicesResult.data || []);
+  const payroll = payrollResult.error ? [] : (payrollResult.data || []);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -222,6 +255,10 @@ async function loadAdminStats() {
   document.getElementById("activeDrivers").innerText = activeDrivers;
   document.getElementById("pendingJobs").innerText = pendingJobs;
   document.getElementById("completedToday").innerText = completedToday;
+  document.getElementById("employeeCount").innerText = employees.filter(item => item.status === "Active").length || employees.length;
+  document.getElementById("customerCount").innerText = customers.filter(item => item.account_status !== "Inactive").length || customers.length;
+  document.getElementById("openInvoices").innerText = invoices.filter(item => item.status !== "Paid").length;
+  document.getElementById("pendingPayroll").innerText = payroll.filter(item => item.status !== "Paid").length;
 }
 
 loadAdminStats();

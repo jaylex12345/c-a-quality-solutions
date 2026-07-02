@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Version 3.2 | Settings</title>
+<title>Version 5.0 | Settings</title>
 <link rel="stylesheet" href="css/style.css">
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
@@ -33,64 +33,76 @@ textarea{min-height:100px;resize:vertical;}
 <div class="admin-layout">
   <aside class="sidebar">
     <img src="images/logo.jpeg" alt="C&A Logo">
-    <h2>C&A Admin</h2>
-    <a href="admin.html">📊 Dashboard</a>
-    <a href="drivers.html">🚚 Drivers</a>
-    <a href="deliveries.html">📦 Deliveries</a>
-    <a href="dispatcher.html">📦 Dispatcher</a>
-    <a href="proofs.html">🖼️ Proofs</a>
-    <a href="reports.html">📈 Reports</a>
-    <a href="settings.html" class="active">⚙️ Settings</a>
-    <a href="driver-dashboard.html">📱 Driver Dashboard</a>
-    <a href="track.html">🔎 Tracking</a>
-    <a href="index.html">🌐 Website</a>
+    <h2>C&A CMS 5.0</h2>
+    <a href="admin.html">Dashboard</a>
+    <a href="dispatcher.html">Dispatcher</a>
+    <a href="deliveries.html">Deliveries</a>
+    <a href="drivers.html">Drivers</a>
+    <a href="employees.html">Employees</a>
+    <a href="customers.html">Customers</a>
+    <a href="booking.html">Booking</a>
+    <a href="payroll.html">Payroll</a>
+    <a href="invoices.html">Invoices</a>
+    <a href="proofs.html">Proofs</a>
+    <a href="reports.html">Reports</a>
+    <a href="settings.html" class="active">Settings</a>
+    <a href="driver-dashboard.html">Driver Dashboard</a>
+    <a href="track.html">Tracking</a>
+    <a href="index.html">Website</a>
   </aside>
   <main class="main">
     <div class="topbar">
       <div>
         <h1>Settings</h1>
-        <p class="muted">Company settings placeholders for Version 3.2.</p>
+        <p class="muted">Version 5.0 business operations configuration.</p>
       </div>
     </div>
 
     <div class="section">
       <h2>Company Profile</h2>
       <div class="form-grid">
-        <input placeholder="Company name placeholder">
-        <input placeholder="Primary email placeholder">
-        <input placeholder="Phone number placeholder">
-        <input placeholder="Office hours placeholder">
-        <input placeholder="Website placeholder">
-        <input placeholder="Support contact placeholder">
+        <input id="companyName" placeholder="Company name">
+        <input id="primaryEmail" placeholder="Primary email">
+        <input id="phoneNumber" placeholder="Phone number">
+        <input id="website" placeholder="Website">
+        <input id="supportContact" placeholder="Support contact">
+        <input id="businessHours" placeholder="Working hours e.g. Mon-Fri 8am-6pm">
       </div>
     </div>
 
     <div class="section">
-      <h2>Branding</h2>
-      <div class="placeholder">
-        Logo upload placeholder, brand color placeholder, and footer text placeholder.
-      </div>
-    </div>
-
-    <div class="section">
-      <h2>Notifications</h2>
+      <h2>Tax and Billing</h2>
       <div class="form-grid">
-        <input placeholder="Notification email placeholder">
-        <input placeholder="SMS gateway placeholder">
-        <textarea placeholder="Alert message template placeholder"></textarea>
-        <textarea placeholder="Dispatch instructions placeholder"></textarea>
+        <input id="taxRate" placeholder="Default tax rate %">
+        <input id="taxId" placeholder="Tax ID / EIN">
+        <input id="invoicePrefix" placeholder="Invoice prefix">
+        <input id="defaultInvoiceTerms" placeholder="Invoice terms e.g. Net 15">
       </div>
     </div>
 
     <div class="section">
-      <h2>Security</h2>
-      <div class="placeholder">
-        Password policy placeholder, access role placeholder, and API key management placeholder.
+      <h2>Service Area and Operations</h2>
+      <div class="form-grid">
+        <textarea id="serviceAreas" placeholder="Service areas (city, state, region)"></textarea>
+        <textarea id="deliveryZones" placeholder="Delivery zones"></textarea>
+        <textarea id="dispatchInstructions" placeholder="Default dispatch instructions"></textarea>
+        <textarea id="invoiceFooterTerms" placeholder="Invoice footer terms"></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Notifications and Compliance</h2>
+      <div class="form-grid">
+        <input id="notificationEmail" placeholder="Notification email">
+        <input id="smsGateway" placeholder="SMS gateway">
+        <textarea id="alertTemplate" placeholder="Alert message template"></textarea>
+        <textarea id="policyNotes" placeholder="Policy notes"></textarea>
       </div>
       <div class="actions" style="margin-top:12px;">
-        <button class="btn" onclick="alert('Settings save is a placeholder in Version 3.2.')">Save Placeholder Settings</button>
-        <button class="btn btn-secondary" onclick="alert('No live settings backend connected yet.')">Preview Only</button>
+        <button class="btn" onclick="saveSettings()">Save Settings</button>
+        <button class="btn btn-secondary" onclick="resetSettings()">Reset Defaults</button>
       </div>
+      <p id="settingsMessage" class="muted"></p>
     </div>
   </main>
 </div>
@@ -99,6 +111,62 @@ const currentRole = localStorage.getItem("role");
 if(currentRole !== "admin"){
   window.location.href = "login.html";
 }
+
+const SETTINGS_KEY = "ca_v5_settings";
+const defaultSettings = {
+  companyName: "C&A Quality Solutions LLC",
+  primaryEmail: "contact@caqualitysolutions.com",
+  phoneNumber: "(410) 878-5949",
+  website: "https://caqualitysolutions.com",
+  supportContact: "James",
+  businessHours: "Mon-Fri 8:00 AM - 6:00 PM",
+  taxRate: "6",
+  taxId: "",
+  invoicePrefix: "INV",
+  defaultInvoiceTerms: "Net 15",
+  serviceAreas: "Maryland, Washington DC, Virginia",
+  deliveryZones: "Baltimore Metro, DMV Corridor",
+  dispatchInstructions: "Verify recipient name and photo proof for all completed deliveries.",
+  invoiceFooterTerms: "Payment due within agreed terms.",
+  notificationEmail: "dispatch@caqualitysolutions.com",
+  smsGateway: "",
+  alertTemplate: "New dispatch assigned.",
+  policyNotes: "Refunds available for cancellations made 24+ hours in advance."
+};
+
+function readSettings(){
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || "{}");
+    return { ...defaultSettings, ...saved };
+  } catch {
+    return { ...defaultSettings };
+  }
+}
+
+function applySettings(settings){
+  Object.keys(defaultSettings).forEach(key => {
+    const field = document.getElementById(key);
+    if(field) field.value = settings[key] || "";
+  });
+}
+
+function saveSettings(){
+  const payload = {};
+  Object.keys(defaultSettings).forEach(key => {
+    const field = document.getElementById(key);
+    payload[key] = field ? field.value.trim() : "";
+  });
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(payload));
+  document.getElementById("settingsMessage").innerText = "Settings saved locally.";
+}
+
+function resetSettings(){
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(defaultSettings));
+  applySettings(defaultSettings);
+  document.getElementById("settingsMessage").innerText = "Default settings restored.";
+}
+
+applySettings(readSettings());
 </script>
 </body>
 </html>
