@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version 3.2 | Proofs</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
+.admin-layout{display:flex;min-height:100vh;}
+.sidebar{width:250px;background:#0b2d52;color:white;padding:25px 18px;}
+.sidebar img{width:110px;display:block;margin:0 auto 20px;}
+.sidebar h2{text-align:center;font-size:20px;}
+.sidebar a{display:block;color:white;text-decoration:none;padding:13px 15px;margin:8px 0;border-radius:8px;}
+.sidebar a:hover,.sidebar a.active{background:#d9b431;color:#071b33;}
+.main{flex:1;padding:30px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;gap:12px;flex-wrap:wrap;}
+.section{background:white;padding:25px;border-radius:14px;box-shadow:0 5px 15px rgba(0,0,0,.08);margin-bottom:25px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;}
+.card{background:#f8fbff;border:1px solid #e6eef8;border-radius:14px;padding:18px;}
+.card h3{margin:0;color:#0b2d52;}
+.card p{font-size:30px;font-weight:bold;color:#d9b431;margin:12px 0 0;}
+.btn{background:#d9b431;color:#071b33;padding:10px 16px;border:none;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;cursor:pointer;}
+.muted{color:#6b7280;}
+.gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:18px;}
+.proof-card{background:#fff;border:1px solid #e6eef8;border-radius:16px;overflow:hidden;box-shadow:0 5px 15px rgba(0,0,0,.06);}
+.proof-card img{width:100%;height:220px;object-fit:cover;background:#f8fafc;display:block;}
+.proof-card .body{padding:16px;}
+.badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#dbeafe;color:#1d4ed8;font-size:12px;font-weight:bold;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <img src="images/logo.jpeg" alt="C&A Logo">
+    <h2>C&A Admin</h2>
+    <a href="admin.html">📊 Dashboard</a>
+    <a href="drivers.html">🚚 Drivers</a>
+    <a href="deliveries.html">📦 Deliveries</a>
+    <a href="proofs.html" class="active">🖼️ Proofs</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+    <a href="driver-dashboard.html">📱 Driver Dashboard</a>
+    <a href="track.html">🔎 Tracking</a>
+    <a href="index.html">🌐 Website</a>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Proofs</h1>
+        <p class="muted">Delivery proof images pulled directly from Supabase delivery records.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="loadProofs()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Delivery Records</h3><p id="totalRecords">0</p></div>
+      <div class="card"><h3>Proof Images</h3><p id="proofCount">0</p></div>
+      <div class="card"><h3>Without Proof</h3><p id="missingProof">0</p></div>
+    </div>
+
+    <div class="section">
+      <h2>Proof Gallery</h2>
+      <div id="proofGallery" class="gallery">
+        <div class="muted">Loading proof photos...</div>
+      </div>
+    </div>
+  </main>
+</div>
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+function formatDateTime(value){
+  return value ? new Date(value).toLocaleString() : "";
+}
+
+async function loadProofs(){
+  const gallery = document.getElementById("proofGallery");
+  const { data, error } = await supabaseClient
+    .from("deliveries")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if(error){
+    gallery.innerHTML = `<div class="muted">${error.message}</div>`;
+    return;
+  }
+
+  const deliveries = data || [];
+  const proofDeliveries = deliveries.filter(delivery => delivery.proof_photo_url || delivery.proof_of_delivery);
+
+  document.getElementById("totalRecords").innerText = deliveries.length;
+  document.getElementById("proofCount").innerText = proofDeliveries.length;
+  document.getElementById("missingProof").innerText = deliveries.length - proofDeliveries.length;
+
+  if(!proofDeliveries.length){
+    gallery.innerHTML = '<div class="muted">No proof photos found in Supabase yet.</div>';
+    return;
+  }
+
+  gallery.innerHTML = proofDeliveries.map(delivery => {
+    const proofUrl = delivery.proof_photo_url || delivery.proof_of_delivery;
+    return `
+      <article class="proof-card">
+        <a href="${proofUrl}" target="_blank" rel="noopener">
+          <img src="${proofUrl}" alt="Proof photo for ${delivery.tracking_number || "delivery"}">
+        </a>
+        <div class="body">
+          <div class="badge">${delivery.status || "Pending"}</div>
+          <h3 style="margin:12px 0 6px;">${delivery.tracking_number || "No tracking number"}</h3>
+          <p style="margin:0 0 6px;">${delivery.customer_name || ""}</p>
+          <p class="muted" style="margin:0;">${formatDateTime(delivery.delivery_time || delivery.created_at)}</p>
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+loadProofs();
+</script>
+</body>
+</html>

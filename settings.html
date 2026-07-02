@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version 3.2 | Settings</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
+.admin-layout{display:flex;min-height:100vh;}
+.sidebar{width:250px;background:#0b2d52;color:white;padding:25px 18px;}
+.sidebar img{width:110px;display:block;margin:0 auto 20px;}
+.sidebar h2{text-align:center;font-size:20px;}
+.sidebar a{display:block;color:white;text-decoration:none;padding:13px 15px;margin:8px 0;border-radius:8px;}
+.sidebar a:hover,.sidebar a.active{background:#d9b431;color:#071b33;}
+.main{flex:1;padding:30px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;gap:12px;flex-wrap:wrap;}
+.section{background:white;padding:25px;border-radius:14px;box-shadow:0 5px 15px rgba(0,0,0,.08);margin-bottom:25px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:18px;}
+.card{background:#f8fbff;border:1px solid #e6eef8;border-radius:14px;padding:18px;}
+.btn{background:#d9b431;color:#071b33;padding:10px 16px;border:none;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;cursor:pointer;}
+.btn-secondary{background:#0b2d52;color:white;}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cfd8e3;border-radius:10px;box-sizing:border-box;}
+textarea{min-height:100px;resize:vertical;}
+.muted{color:#6b7280;}
+.placeholder{border:1px dashed #cfd8e3;border-radius:12px;padding:16px;background:#fafcff;color:#516174;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <img src="images/logo.jpeg" alt="C&A Logo">
+    <h2>C&A Admin</h2>
+    <a href="admin.html">📊 Dashboard</a>
+    <a href="drivers.html">🚚 Drivers</a>
+    <a href="deliveries.html">📦 Deliveries</a>
+    <a href="proofs.html">🖼️ Proofs</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="settings.html" class="active">⚙️ Settings</a>
+    <a href="driver-dashboard.html">📱 Driver Dashboard</a>
+    <a href="track.html">🔎 Tracking</a>
+    <a href="index.html">🌐 Website</a>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Settings</h1>
+        <p class="muted">Company settings placeholders for Version 3.2.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Company Profile</h2>
+      <div class="form-grid">
+        <input placeholder="Company name placeholder">
+        <input placeholder="Primary email placeholder">
+        <input placeholder="Phone number placeholder">
+        <input placeholder="Office hours placeholder">
+        <input placeholder="Website placeholder">
+        <input placeholder="Support contact placeholder">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Branding</h2>
+      <div class="placeholder">
+        Logo upload placeholder, brand color placeholder, and footer text placeholder.
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Notifications</h2>
+      <div class="form-grid">
+        <input placeholder="Notification email placeholder">
+        <input placeholder="SMS gateway placeholder">
+        <textarea placeholder="Alert message template placeholder"></textarea>
+        <textarea placeholder="Dispatch instructions placeholder"></textarea>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Security</h2>
+      <div class="placeholder">
+        Password policy placeholder, access role placeholder, and API key management placeholder.
+      </div>
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn" onclick="alert('Settings save is a placeholder in Version 3.2.')">Save Placeholder Settings</button>
+        <button class="btn btn-secondary" onclick="alert('No live settings backend connected yet.')">Preview Only</button>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

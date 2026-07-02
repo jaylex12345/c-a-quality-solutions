@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version 3.2 | Drivers</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
+.admin-layout{display:flex;min-height:100vh;}
+.sidebar{width:250px;background:#0b2d52;color:white;padding:25px 18px;}
+.sidebar img{width:110px;display:block;margin:0 auto 20px;}
+.sidebar h2{text-align:center;font-size:20px;}
+.sidebar a{display:block;color:white;text-decoration:none;padding:13px 15px;margin:8px 0;border-radius:8px;}
+.sidebar a:hover,.sidebar a.active{background:#d9b431;color:#071b33;}
+.main{flex:1;padding:30px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;gap:12px;flex-wrap:wrap;}
+.section{background:white;padding:25px;border-radius:14px;box-shadow:0 5px 15px rgba(0,0,0,.08);margin-bottom:25px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:18px;}
+.card{background:#f8fbff;border:1px solid #e6eef8;border-radius:14px;padding:18px;}
+.card h3{margin:0;color:#0b2d52;}
+.card p{font-size:30px;font-weight:bold;color:#d9b431;margin:12px 0 0;}
+.btn{background:#d9b431;color:#071b33;padding:10px 16px;border:none;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;cursor:pointer;}
+.btn-secondary{background:#0b2d52;color:white;}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cfd8e3;border-radius:10px;box-sizing:border-box;}
+textarea{min-height:100px;resize:vertical;}
+table{width:100%;border-collapse:collapse;}
+th{background:#0b2d52;color:white;padding:12px;text-align:left;}
+td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
+.status{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;display:inline-block;}
+.active{background:#dcfce7;color:#166534;}
+.inactive{background:#fee2e2;color:#991b1b;}
+.muted{color:#6b7280;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <img src="images/logo.jpeg" alt="C&A Logo">
+    <h2>C&A Admin</h2>
+    <a href="admin.html">📊 Dashboard</a>
+    <a href="drivers.html" class="active">🚚 Drivers</a>
+    <a href="deliveries.html">📦 Deliveries</a>
+    <a href="proofs.html">🖼️ Proofs</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+    <a href="driver-dashboard.html">📱 Driver Dashboard</a>
+    <a href="track.html">🔎 Tracking</a>
+    <a href="index.html">🌐 Website</a>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Drivers</h1>
+        <p class="muted">Version 3.2 driver management connected to Supabase.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="loadDrivers()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Total Drivers</h3><p id="totalDrivers">0</p></div>
+      <div class="card"><h3>Active Drivers</h3><p id="activeDrivers">0</p></div>
+      <div class="card"><h3>Inactive Drivers</h3><p id="inactiveDrivers">0</p></div>
+    </div>
+
+    <div class="section">
+      <h2>Add Driver</h2>
+      <div class="form-grid">
+        <input id="driverName" placeholder="Driver full name">
+        <input id="driverPhone" placeholder="Phone number">
+        <input id="driverEmail" type="email" placeholder="Email address">
+        <input id="driverPassword" type="text" placeholder="Password">
+        <select id="driverStatus">
+          <option value="Available">Available</option>
+          <option value="On Duty">On Duty</option>
+          <option value="Offline">Offline</option>
+        </select>
+        <select id="driverActive">
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn" onclick="addDriver()">Save Driver</button>
+      </div>
+      <p id="message" class="muted"></p>
+    </div>
+
+    <div class="section">
+      <h2>Drivers List</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Phone</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Active</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="driversTable">
+          <tr><td colspan="6" class="muted">Loading drivers...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+function formatDateTime(value){
+  return value ? new Date(value).toLocaleString() : "";
+}
+
+function activeBadge(active){
+  return active ? '<span class="status active">Active</span>' : '<span class="status inactive">Inactive</span>';
+}
+
+async function loadDrivers(){
+  const table = document.getElementById("driversTable");
+  const { data, error } = await supabaseClient
+    .from("drivers")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if(error){
+    table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
+    return;
+  }
+
+  const drivers = data || [];
+  document.getElementById("totalDrivers").innerText = drivers.length;
+  document.getElementById("activeDrivers").innerText = drivers.filter(driver => driver.is_active === true).length;
+  document.getElementById("inactiveDrivers").innerText = drivers.filter(driver => driver.is_active === false).length;
+
+  if(!drivers.length){
+    table.innerHTML = `<tr><td colspan="6" class="muted">No drivers found in Supabase.</td></tr>`;
+    return;
+  }
+
+  table.innerHTML = drivers.map(driver => `
+    <tr>
+      <td><strong>${driver.name || ""}</strong></td>
+      <td>${driver.phone || ""}</td>
+      <td>${driver.email || ""}</td>
+      <td>${driver.status || ""}</td>
+      <td>${activeBadge(driver.is_active === true)}</td>
+      <td>${formatDateTime(driver.created_at)}</td>
+    </tr>
+  `).join("");
+}
+
+async function addDriver(){
+  const name = document.getElementById("driverName").value.trim();
+  const phone = document.getElementById("driverPhone").value.trim();
+  const email = document.getElementById("driverEmail").value.trim();
+  const password = document.getElementById("driverPassword").value.trim();
+  const status = document.getElementById("driverStatus").value;
+  const isActive = document.getElementById("driverActive").value === "true";
+
+  if(!name || !phone || !email || !password){
+    document.getElementById("message").innerText = "Fill in all driver fields.";
+    return;
+  }
+
+  const { error } = await supabaseClient.from("drivers").insert([{ name, phone, email, password, status, is_active: isActive }]);
+
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Driver saved successfully.";
+  document.getElementById("driverName").value = "";
+  document.getElementById("driverPhone").value = "";
+  document.getElementById("driverEmail").value = "";
+  document.getElementById("driverPassword").value = "";
+  loadDrivers();
+}
+
+loadDrivers();
+</script>
+</body>
+</html>

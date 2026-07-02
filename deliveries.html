@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Version 3.2 | Deliveries</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
+.admin-layout{display:flex;min-height:100vh;}
+.sidebar{width:250px;background:#0b2d52;color:white;padding:25px 18px;}
+.sidebar img{width:110px;display:block;margin:0 auto 20px;}
+.sidebar h2{text-align:center;font-size:20px;}
+.sidebar a{display:block;color:white;text-decoration:none;padding:13px 15px;margin:8px 0;border-radius:8px;}
+.sidebar a:hover,.sidebar a.active{background:#d9b431;color:#071b33;}
+.main{flex:1;padding:30px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;gap:12px;flex-wrap:wrap;}
+.section{background:white;padding:25px;border-radius:14px;box-shadow:0 5px 15px rgba(0,0,0,.08);margin-bottom:25px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:18px;}
+.card{background:#f8fbff;border:1px solid #e6eef8;border-radius:14px;padding:18px;}
+.card h3{margin:0;color:#0b2d52;}
+.card p{font-size:30px;font-weight:bold;color:#d9b431;margin:12px 0 0;}
+.btn{background:#d9b431;color:#071b33;padding:10px 16px;border:none;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;cursor:pointer;}
+.btn-secondary{background:#0b2d52;color:white;}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+input,select,textarea{width:100%;padding:12px;border:1px solid #cfd8e3;border-radius:10px;box-sizing:border-box;}
+textarea{min-height:100px;resize:vertical;}
+table{width:100%;border-collapse:collapse;}
+th{background:#0b2d52;color:white;padding:12px;text-align:left;}
+td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
+.muted{color:#6b7280;}
+.status{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold;display:inline-block;}
+.assigned{background:#dbeafe;color:#1d4ed8;}
+.pending{background:#fee2e2;color:#991b1b;}
+.delivered{background:#dcfce7;color:#166534;}
+.transit{background:#fef3c7;color:#92400e;}
+.out{background:#ede9fe;color:#6d28d9;}
+.photo-thumb{width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #dbe3ed;background:#f8fafc;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;}
+@media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+<div class="admin-layout">
+  <aside class="sidebar">
+    <img src="images/logo.jpeg" alt="C&A Logo">
+    <h2>C&A Admin</h2>
+    <a href="admin.html">📊 Dashboard</a>
+    <a href="drivers.html">🚚 Drivers</a>
+    <a href="deliveries.html" class="active">📦 Deliveries</a>
+    <a href="proofs.html">🖼️ Proofs</a>
+    <a href="reports.html">📈 Reports</a>
+    <a href="settings.html">⚙️ Settings</a>
+    <a href="driver-dashboard.html">📱 Driver Dashboard</a>
+    <a href="track.html">🔎 Tracking</a>
+    <a href="index.html">🌐 Website</a>
+  </aside>
+  <main class="main">
+    <div class="topbar">
+      <div>
+        <h1>Deliveries</h1>
+        <p class="muted">Create and review delivery records from Supabase.</p>
+      </div>
+      <div class="actions">
+        <button class="btn" onclick="loadPage()">Refresh</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3>Total Deliveries</h3><p id="totalDeliveries">0</p></div>
+      <div class="card"><h3>Assigned</h3><p id="assignedDeliveries">0</p></div>
+      <div class="card"><h3>Delivered</h3><p id="deliveredDeliveries">0</p></div>
+      <div class="card"><h3>With Proof</h3><p id="proofDeliveries">0</p></div>
+    </div>
+
+    <div class="section">
+      <h2>Add Delivery</h2>
+      <div class="form-grid">
+        <input id="trackingNumber" placeholder="Tracking number (leave blank to auto-generate)">
+        <input id="customerName" placeholder="Customer name">
+        <select id="driverSelect">
+          <option value="">Unassigned</option>
+        </select>
+        <select id="statusSelect">
+          <option value="Pending">Pending</option>
+          <option value="Picked Up">Picked Up</option>
+          <option value="In Transit">In Transit</option>
+          <option value="Out for Delivery">Out for Delivery</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+        <input id="deliveryLocation" placeholder="Delivery location">
+        <input id="deliveryTime" type="datetime-local">
+        <input id="proofPhotoUrl" placeholder="Proof photo URL (optional)">
+        <textarea id="deliveryNotes" placeholder="Delivery notes"></textarea>
+      </div>
+      <div class="actions" style="margin-top:12px;">
+        <button class="btn" onclick="addDelivery()">Save Delivery</button>
+      </div>
+      <p id="message" class="muted"></p>
+    </div>
+
+    <div class="section">
+      <h2>Delivery List</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Tracking</th>
+            <th>Customer</th>
+            <th>Driver</th>
+            <th>Status</th>
+            <th>Proof</th>
+            <th>Created</th>
+          </tr>
+        </thead>
+        <tbody id="deliveriesTable">
+          <tr><td colspan="6" class="muted">Loading deliveries...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</div>
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+function formatDateTime(value){
+  return value ? new Date(value).toLocaleString() : "";
+}
+
+function badge(status){
+  if(status === "Delivered") return '<span class="status delivered">Delivered</span>';
+  if(status === "In Transit") return '<span class="status transit">In Transit</span>';
+  if(status === "Out for Delivery") return '<span class="status out">Out for Delivery</span>';
+  if(status === "Picked Up") return '<span class="status assigned">Picked Up</span>';
+  if(status === "Assigned") return '<span class="status assigned">Assigned</span>';
+  return '<span class="status pending">Pending</span>';
+}
+
+let driverMap = new Map();
+
+async function loadDrivers(){
+  const { data, error } = await supabaseClient.from("drivers").select("id,name").order("name", { ascending: true });
+
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  const drivers = data || [];
+  driverMap = new Map(drivers.map(driver => [String(driver.id), driver.name || ""]));
+
+  const select = document.getElementById("driverSelect");
+  select.innerHTML = '<option value="">Unassigned</option>' + drivers.map(driver => `<option value="${driver.id}">${driver.name || ""}</option>`).join("");
+}
+
+async function loadDeliveries(){
+  const table = document.getElementById("deliveriesTable");
+  const { data, error } = await supabaseClient
+    .from("deliveries")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if(error){
+    table.innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`;
+    return [];
+  }
+
+  const deliveries = data || [];
+  document.getElementById("totalDeliveries").innerText = deliveries.length;
+  document.getElementById("assignedDeliveries").innerText = deliveries.filter(delivery => delivery.driver_id).length;
+  document.getElementById("deliveredDeliveries").innerText = deliveries.filter(delivery => delivery.status === "Delivered").length;
+  document.getElementById("proofDeliveries").innerText = deliveries.filter(delivery => delivery.proof_photo_url || delivery.proof_of_delivery).length;
+
+  if(!deliveries.length){
+    table.innerHTML = `<tr><td colspan="6" class="muted">No deliveries found in Supabase.</td></tr>`;
+    return deliveries;
+  }
+
+  table.innerHTML = deliveries.map(delivery => {
+    const driverName = delivery.driver_id ? (driverMap.get(String(delivery.driver_id)) || "Assigned") : "Unassigned";
+    const proofUrl = delivery.proof_photo_url || delivery.proof_of_delivery || "";
+    return `
+      <tr>
+        <td><strong>${delivery.tracking_number || ""}</strong></td>
+        <td>${delivery.customer_name || ""}</td>
+        <td>${driverName}</td>
+        <td>${badge(delivery.status)}</td>
+        <td>${proofUrl ? `<a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof photo" class="photo-thumb"></a>` : '<span class="muted">No proof</span>'}</td>
+        <td>${formatDateTime(delivery.created_at)}</td>
+      </tr>
+    `;
+  }).join("");
+
+  return deliveries;
+}
+
+function autoTrackingNumber(){
+  const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
+  const randomPart = Math.floor(Math.random() * 9000 + 1000);
+  return `CQA-${stamp}-${randomPart}`;
+}
+
+async function addDelivery(){
+  const trackingNumber = document.getElementById("trackingNumber").value.trim() || autoTrackingNumber();
+  const customerName = document.getElementById("customerName").value.trim();
+  const driverId = document.getElementById("driverSelect").value || null;
+  const status = document.getElementById("statusSelect").value;
+  const deliveryLocation = document.getElementById("deliveryLocation").value.trim();
+  const deliveryTime = document.getElementById("deliveryTime").value;
+  const proofPhotoUrl = document.getElementById("proofPhotoUrl").value.trim();
+  const deliveryNotes = document.getElementById("deliveryNotes").value.trim();
+
+  if(!customerName){
+    document.getElementById("message").innerText = "Customer name is required.";
+    return;
+  }
+
+  const insertPayload = {
+    tracking_number: trackingNumber,
+    customer_name: customerName,
+    driver_id: driverId,
+    status,
+    delivery_location: deliveryLocation || null,
+    delivery_time: deliveryTime ? new Date(deliveryTime).toISOString() : null,
+    proof_photo_url: proofPhotoUrl || null,
+    driver_notes: deliveryNotes || null
+  };
+
+  const { error } = await supabaseClient.from("deliveries").insert([insertPayload]);
+
+  if(error){
+    document.getElementById("message").innerText = error.message;
+    return;
+  }
+
+  document.getElementById("message").innerText = "Delivery saved successfully.";
+  document.getElementById("trackingNumber").value = "";
+  document.getElementById("customerName").value = "";
+  document.getElementById("deliveryLocation").value = "";
+  document.getElementById("deliveryTime").value = "";
+  document.getElementById("proofPhotoUrl").value = "";
+  document.getElementById("deliveryNotes").value = "";
+  document.getElementById("statusSelect").value = "Pending";
+  document.getElementById("driverSelect").value = "";
+  await loadPage();
+}
+
+async function loadPage(){
+  await loadDrivers();
+  await loadDeliveries();
+}
+
+loadPage();
+</script>
+</body>
+</html>
