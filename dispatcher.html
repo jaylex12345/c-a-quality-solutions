@@ -15,6 +15,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
 .nav{background:#071b33;text-align:center;padding:12px}
 .nav button,.btn{background:#d9b431;color:#061b3a;border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;margin:3px}
 .btn-green{background:#16a34a;color:white}.btn-blue{background:#0b5ed7;color:white}
+.btn-red{background:#dc2626;color:white}
 .container{max-width:1400px;margin:25px auto;padding:0 18px}
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
 .card{background:white;border-radius:18px;padding:20px;margin-bottom:20px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
@@ -28,6 +29,12 @@ select{padding:8px;border-radius:8px;width:100%}
 .badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:13px}
 .delivered{background:#dcfce7;color:#166534}.pending{background:#fee2e2;color:#991b1b}
 .transit{background:#fef3c7;color:#92400e}.picked{background:#dbeafe;color:#1d4ed8}.out{background:#ede9fe;color:#6d28d9}
+.assignment-badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:12px;display:inline-block}
+.assigned-badge{background:#dbeafe;color:#1d4ed8}
+.pending-acceptance-badge{background:#fef3c7;color:#92400e}
+.accepted-badge{background:#dcfce7;color:#166534}
+.rejected-badge{background:#fee2e2;color:#991b1b}
+.unassigned-badge{background:#e5e7eb;color:#374151}
 .driver-card{border:1px solid #e5e7eb;border-radius:12px;padding:13px;margin-bottom:10px}
 .online{color:#16a34a;font-weight:bold}
 .footer{text-align:center;color:#6b7280;margin:25px}
@@ -73,6 +80,7 @@ select{padding:8px;border-radius:8px;width:100%}
             <th>Tracking</th>
             <th>Customer</th>
             <th>Status</th>
+            <th>Assignment Status</th>
             <th>Driver</th>
             <th>Assign</th>
             <th>Action</th>
@@ -168,6 +176,16 @@ function badge(status){
   return `<span class="badge pending">${status || "Pending"}</span>`;
 }
 
+function assignmentBadge(status){
+  const value = status || "Unassigned";
+
+  if(value === "Pending Acceptance") return `<span class="assignment-badge pending-acceptance-badge">Pending Acceptance</span>`;
+  if(value === "Accepted") return `<span class="assignment-badge accepted-badge">Accepted</span>`;
+  if(value === "Rejected") return `<span class="assignment-badge rejected-badge">Rejected</span>`;
+  if(value === "Assigned") return `<span class="assignment-badge assigned-badge">Assigned</span>`;
+  return `<span class="assignment-badge unassigned-badge">Unassigned</span>`;
+}
+
 async function loadDashboard(){
   await loadDrivers();
   await loadDeliveries();
@@ -231,7 +249,7 @@ async function loadDeliveries(){
   document.getElementById("completedJobs").innerText = deliveries.filter(d => d.status === "Delivered").length;
 
   if(!deliveries.length){
-    table.innerHTML = `<tr><td colspan="6">No deliveries found.</td></tr>`;
+    table.innerHTML = `<tr><td colspan="7">No deliveries found.</td></tr>`;
     return;
   }
 
@@ -239,26 +257,29 @@ async function loadDeliveries(){
 
   deliveries.forEach(d => {
     const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
+    const assignmentStatus = d.assignment_status || (d.driver_id ? "Assigned" : "Unassigned");
 
     let options = `<option value="">Select Driver</option>`;
 
-drivers.forEach(driver => {
-  options += `
-    <option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>
-      ${driver.name}
-    </option>
-  `;
-});
+    drivers.forEach(driver => {
+      options += `
+        <option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>
+          ${driver.name}
+        </option>
+      `;
+    });
 
     table.innerHTML += `
       <tr>
         <td><strong>${d.tracking_number || ""}</strong></td>
         <td>${d.customer_name || ""}</td>
         <td>${badge(d.status)}</td>
+        <td>${assignmentBadge(assignmentStatus)}</td>
         <td>${currentDriver ? currentDriver.name : "Unassigned"}</td>
         <td><select id="driver-${d.id}">${options}</select></td>
         <td>
           <button class="btn" onclick="assignDriver('${d.id}')">Assign</button>
+          ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${d.id}')">Unassign</button>` : ""}
           ${d.delivery_location ? `<button class="btn btn-green" onclick="openDeliveryMap('${d.delivery_location}')">Map</button>` : ""}
         </td>
       </tr>
@@ -270,19 +291,7 @@ async function assignDriver(deliveryId) {
   const selectedDriverId = document.getElementById("driver-" + deliveryId).value;
 
   if (!selectedDriverId) {
-    const { error } = await supabaseClient
-      .from("deliveries")
-      .update({
-        driver_id: null,
-        assignment_status: "Unassigned",
-        status: "Pending"
-      })
-      .eq("id", deliveryId);
-
-    if (error) return alert(error.message);
-
-    alert("Delivery unassigned.");
-    loadDashboard();
+    alert("Select a driver before assigning.");
     return;
   }
 
@@ -297,7 +306,8 @@ async function assignDriver(deliveryId) {
     .from("deliveries")
     .update({
       driver_id: driver.id,
-      assignment_status: "Assigned",
+      driver_name: driver.name,
+      assignment_status: "Pending Acceptance",
       status: "Assigned"
     })
     .eq("id", deliveryId);
@@ -305,6 +315,23 @@ async function assignDriver(deliveryId) {
   if (error) return alert(error.message);
 
   alert("Driver assigned successfully.");
+  loadDashboard();
+}
+
+async function unassignDelivery(deliveryId) {
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .update({
+      driver_id: null,
+      driver_name: null,
+      assignment_status: "Unassigned",
+      status: "Pending"
+    })
+    .eq("id", deliveryId);
+
+  if (error) return alert(error.message);
+
+  alert("Delivery unassigned.");
   loadDashboard();
 }
 
