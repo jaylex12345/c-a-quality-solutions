@@ -38,6 +38,9 @@ td{padding:14px;border-bottom:1px solid #e5e7eb}
 .accepted-badge{background:#dcfce7;color:#166534}
 .rejected-badge{background:#fee2e2;color:#991b1b}
 .assigned-badge{background:#dbeafe;color:#1d4ed8}
+.proof-preview{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.proof-preview img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid #cbd5e1;background:#fff}
+.proof-link{color:#0b5ed7;font-weight:bold;text-decoration:none}
 
 .btn{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#d9b431;color:#061b3a;margin:3px}
 .btn-blue{background:#0b5ed7;color:white}
@@ -105,9 +108,8 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%}
             <th>Customer</th>
             <th>Status</th>
             <th>Assignment Status</th>
-            <th>Update</th>
             <th>Proof</th>
-            <th>Action</th>
+            <th>Controls</th>
           </tr>
         </thead>
         <tbody id="deliveryTable">
@@ -196,34 +198,43 @@ async function loadDeliveries(){
     data.length ? Math.round((completed / data.length) * 100) + "% completed" : "0% completed";
 
   if(!data.length){
-    table.innerHTML = `<tr><td colspan="7" class="empty">No deliveries assigned yet.</td></tr>`;
+    table.innerHTML = `<tr><td colspan="6" class="empty">No deliveries assigned yet.</td></tr>`;
     return;
   }
 
   table.innerHTML = "";
   data.forEach(d => {
     const assignmentStatus = d.assignment_status || "Assigned";
+    const isDelivered = d.status === "Delivered";
+    const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
+
+    const proofHtml = proofUrl
+      ? `<div class="proof-preview"><a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a><a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a></div>`
+      : `<span class="empty">No proof</span>`;
+
+    const controlsHtml = isDelivered
+      ? `${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}`
+      : `
+        <select id="status-${d.id}">
+          <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
+          <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+          <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
+          <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
+        </select>
+        <input type="file" id="photo-${d.id}" accept="image/*">
+        <button class="btn" onclick="updateStatus('${d.id}')">Update</button>
+        <button class="btn btn-blue" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
+        ${assignmentStatus === "Pending Acceptance" ? `<button class="btn btn-green" onclick="acceptDelivery('${d.id}')">Accept</button><button class="btn btn-red" onclick="rejectDelivery('${d.id}')">Reject</button>` : ""}
+        ${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
+      `;
     table.innerHTML += `
       <tr>
         <td><strong>${d.tracking_number || ""}</strong></td>
         <td>${d.customer_name || ""}</td>
-        <td>${badge(d.status)}</td>
-        <td>${assignmentBadge(assignmentStatus)}</td>
-        <td>
-          <select id="status-${d.id}">
-            <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
-            <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
-            <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
-            <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
-          </select>
-        </td>
-        <td><input type="file" id="photo-${d.id}" accept="image/*"></td>
-        <td>
-          <button class="btn" onclick="updateStatus('${d.id}')">Update</button>
-          <button class="btn btn-blue" onclick="uploadProof('${d.id}','${d.tracking_number}')">Upload</button>
-          ${assignmentStatus === "Pending Acceptance" ? `<button class="btn btn-green" onclick="acceptDelivery('${d.id}')">Accept</button><button class="btn btn-red" onclick="rejectDelivery('${d.id}')">Reject</button>` : ""}
-          ${d.delivery_location ? `<button class="btn btn-green" onclick="openMap('${d.delivery_location}')">Map</button>` : ""}
-        </td>
+        <td>${isDelivered ? `<span class="badge delivered">Delivered</span>` : badge(d.status)}</td>
+        <td>${isDelivered ? `<span class="assignment-badge accepted-badge">Completed</span>` : assignmentBadge(assignmentStatus)}</td>
+        <td>${proofHtml}</td>
+        <td>${controlsHtml}</td>
       </tr>
     `;
   });
