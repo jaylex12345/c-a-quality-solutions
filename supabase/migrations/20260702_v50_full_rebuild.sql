@@ -3,6 +3,15 @@
 
 begin;
 
+alter table if exists public.customers add column if not exists password text;
+alter table if exists public.customers add column if not exists address text;
+alter table if exists public.bookings add column if not exists customer_id uuid references public.customers(id) on delete set null;
+alter table if exists public.bookings add column if not exists status text default 'Pending';
+alter table if exists public.bookings add column if not exists pickup_address text;
+alter table if exists public.bookings add column if not exists dropoff_address text;
+alter table if exists public.invoices add column if not exists customer_id uuid references public.customers(id) on delete set null;
+alter table if exists public.invoices add column if not exists status text default 'Pending';
+
 -- Ensure RLS is enabled
 alter table if exists public.drivers enable row level security;
 alter table if exists public.deliveries enable row level security;
@@ -184,6 +193,26 @@ for delete
 using (auth.role() = 'authenticated');
 
 -- Timesheets
+drop policy if exists "Allow timesheets select" on public.timesheets;
+drop policy if exists "Allow timesheets insert" on public.timesheets;
+drop policy if exists "Allow timesheets update" on public.timesheets;
+
+create policy "Allow timesheets select"
+on public.timesheets
+for select
+using (true);
+
+create policy "Allow timesheets insert"
+on public.timesheets
+for insert
+with check (true);
+
+create policy "Allow timesheets update"
+on public.timesheets
+for update
+using (true)
+with check (true);
+
 create policy timesheets_select on public.timesheets
 for select
 using (auth.role() = 'authenticated');

@@ -35,6 +35,8 @@ select,input{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px}
 		<button class="btn btn2" onclick="sendGPS()">Send GPS</button>
 		<button class="btn btn3" onclick="clockIn()">Clock In</button>
 		<button class="btn btn4" onclick="clockOut()">Clock Out</button>
+		<button class="btn btn3" onclick="breakStart()">Break Start</button>
+		<button class="btn btn4" onclick="breakEnd()">Break End</button>
 		<button class="btn" onclick="logout()">Logout</button>
 	</div>
 
@@ -52,6 +54,7 @@ const driverId = localStorage.getItem("driver_id");
 if(!driverId) window.location.href = "driver-login.html";
 document.getElementById("driverName").innerText = localStorage.getItem("driver_name") || "Driver";
 let activeTimesheetId = null;
+let activeBreakStartedAt = null;
 
 function logout(){ localStorage.clear(); window.location.href = "driver-login.html"; }
 
@@ -132,7 +135,22 @@ async function clockOut(){
 	if(!activeTimesheetId){ return; }
 	await supabaseClient.from("timesheets").update({ clock_out: new Date().toISOString(), status: "Clocked Out" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
 	activeTimesheetId = null;
+	activeBreakStartedAt = null;
 	document.getElementById("clockStatus").innerText = "Off";
+}
+
+async function breakStart(){
+	if(!activeTimesheetId){ await clockIn(); }
+	activeBreakStartedAt = new Date().toISOString();
+	if(activeTimesheetId){
+		await supabaseClient.from("timesheets").update({ break_started_at: activeBreakStartedAt, status: "On Break" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	}
+}
+
+async function breakEnd(){
+	if(!activeTimesheetId){ return; }
+	await supabaseClient.from("timesheets").update({ break_ended_at: new Date().toISOString(), status: "Clocked In" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	activeBreakStartedAt = null;
 }
 
 loadJobs();

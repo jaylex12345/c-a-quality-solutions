@@ -18,6 +18,7 @@ textarea{min-height:100px}
 #result{font-weight:bold;margin-top:10px}
 @media(max-width:860px){.grid{grid-template-columns:1fr}}
 </style>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries=places&callback=initAutocomplete" async defer></script>
 </head>
 <body>
 <div class="header"><h1>Book a Delivery</h1></div>
@@ -35,8 +36,8 @@ textarea{min-height:100px}
 					<option>Legal Courier</option>
 					<option>Property Services</option>
 				</select>
-				<input id="pickupAddress" placeholder="Pickup Address" required>
-				<input id="dropoffAddress" placeholder="Drop-off Address" required>
+				<input id="pickup_address" placeholder="Pickup Address" required>
+				<input id="dropoff_address" placeholder="Drop-off Address" required>
 				<input id="estimatedMiles" type="number" min="1" step="0.1" placeholder="Estimated Miles" required>
 				<input id="pickupDate" type="date" required>
 			</div>
@@ -51,6 +52,13 @@ textarea{min-height:100px}
 <script>
 const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 let estimatedPrice = 0;
+let pickupAutocomplete;
+let dropoffAutocomplete;
+
+function initAutocomplete(){
+	pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById("pickup_address"));
+	dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById("dropoff_address"));
+}
 
 function servicePricing(type){
 	if(type === "Priority / Same-Day Delivery") return { base: 70, mile: 2.5 };
@@ -82,8 +90,8 @@ document.getElementById("bookingForm").addEventListener("submit", async (e) => {
 		customer_email: document.getElementById("customerEmail").value.trim(),
 		customer_phone: document.getElementById("customerPhone").value.trim(),
 		service_type: document.getElementById("serviceType").value,
-		pickup_address: document.getElementById("pickupAddress").value.trim(),
-		dropoff_address: document.getElementById("dropoffAddress").value.trim(),
+		pickup_address: document.getElementById("pickup_address").value.trim(),
+		dropoff_address: document.getElementById("dropoff_address").value.trim(),
 		estimated_miles: Number(document.getElementById("estimatedMiles").value),
 		pickup_date: document.getElementById("pickupDate").value,
 		instructions: document.getElementById("instructions").value.trim(),

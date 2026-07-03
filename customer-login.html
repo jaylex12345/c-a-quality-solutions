@@ -8,9 +8,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh}
-.card{background:#fff;padding:28px;width:360px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
-input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border-radius:8px}
+.card{background:#fff;padding:28px;width:420px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border-radius:8px;box-sizing:border-box}
 button{width:100%;padding:12px;border:0;border-radius:8px;background:#0b2d52;color:#fff;font-weight:bold;cursor:pointer}
+.section{margin-top:18px;padding-top:18px;border-top:1px solid #e5e7eb}
+.section h3{margin:0 0 10px}
+.muted{color:#6b7280;font-size:13px}
 </style>
 </head>
 <body>
@@ -21,6 +24,16 @@ button{width:100%;padding:12px;border:0;border-radius:8px;background:#0b2d52;col
 <button onclick="login()">Login</button>
 <p id="msg"></p>
 <p><a href="booking.html">Need service? Book now</a></p>
+
+<div class="section">
+  <h3>Create Account</h3>
+  <input id="registerName" placeholder="Full Name">
+  <input id="registerPhone" placeholder="Phone Number">
+  <input id="registerEmail" type="email" placeholder="Email Address">
+  <input id="registerPassword" type="password" placeholder="Password">
+  <button onclick="registerCustomer()">Register</button>
+  <p class="muted">Forgot password? Contact support if you need account help.</p>
+</div>
 </div>
 <script>
 const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
@@ -37,6 +50,37 @@ async function login(){
   localStorage.setItem('customer_name',data[0].contact_person||data[0].business_name||'Customer');
   localStorage.setItem('role','customer');
   window.location.href='customer-dashboard.html';
+}
+
+async function registerCustomer(){
+  const name=document.getElementById('registerName').value.trim();
+  const phone=document.getElementById('registerPhone').value.trim();
+  const email=document.getElementById('registerEmail').value.trim();
+  const password=document.getElementById('registerPassword').value.trim();
+  const msg=document.getElementById('msg');
+
+  if(!name||!phone||!email||!password){
+    msg.innerText='Fill in all registration fields.';
+    return;
+  }
+
+  const {data: existing} = await supabaseClient.from('customers').select('id').eq('email', email).limit(1);
+  if(existing && existing.length){
+    msg.innerText='An account already exists for that email.';
+    return;
+  }
+
+  const {error} = await supabaseClient.from('customers').insert([{ business_name: name, contact_person: name, phone, email, password }]);
+  if(error){
+    msg.innerText = error.message;
+    return;
+  }
+
+  msg.innerText = 'Account created. You can log in now.';
+  document.getElementById('registerName').value='';
+  document.getElementById('registerPhone').value='';
+  document.getElementById('registerEmail').value='';
+  document.getElementById('registerPassword').value='';
 }
 </script>
 </body>
