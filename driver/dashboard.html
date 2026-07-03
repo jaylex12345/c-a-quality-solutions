@@ -239,6 +239,8 @@ let currentDriverProfile = null;
 let deliveryCache = [];
 let activeTimesheetId = null;
 let breakStartedAt = null;
+let gpsAutoIntervalId = null;
+let gpsSending = false;
 
 if (!driverId || (role && role !== "driver")) window.location.href = "/driver/login.html";
 document.getElementById("driverName").innerText = driverName || "Driver";
@@ -802,11 +804,26 @@ async function uploadProof(id, tracking){
   loadDeliveries();
 }
 
-function sendGPS(){
+async function setDriverOffline(){
+  if(!driverId) return;
+  await supabaseClient
+    .from("drivers")
+    .update({
+      status: "Offline",
+      last_seen: new Date().toISOString()
+    })
+    .eq("id", driverId);
+}
+
+async function pushGPS(silent){
+  if(gpsSending) return;
+
   if(!navigator.geolocation){
-    alert("GPS not supported.");
+    if(!silent) alert("GPS not supported.");
     return;
   }
+
+  gpsSending = true;
 
   navigator.geolocation.getCurrentPosition(async position => {
     const lat = position.coords.latitude;
@@ -822,20 +839,56 @@ function sendGPS(){
       })
       .eq("id", driverId);
 
-    if(error) return alert(error.message);
+    gpsSending = false;
+
+    if(error){
+      if(!silent) alert(error.message);
+      return;
+    }
 
     document.getElementById("gpsStatus").innerText = "Sent";
-    alert("GPS location sent.");
+    if(!silent) alert("GPS location sent.");
   }, () => {
-    alert("Allow location access to send GPS.");
+    gpsSending = false;
+    if(!silent) alert("Allow location access to send GPS.");
   });
+}
+
+function sendGPS(){
+  pushGPS(false);
+}
+
+function startAutoGPS(){
+  if(gpsAutoIntervalId) clearInterval(gpsAutoIntervalId);
+  pushGPS(true);
+  gpsAutoIntervalId = setInterval(() => {
+    pushGPS(true);
+  }, 10000);
+}
+
+function setDriverOfflineBeacon(){
+  if(!driverId) return;
+
+  fetch(`${supabaseUrl}/rest/v1/drivers?id=eq.${encodeURIComponent(driverId)}`, {
+    method: "PATCH",
+    headers: {
+      apikey: supabaseKey,
+      Authorization: `Bearer ${supabaseKey}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal"
+    },
+    body: JSON.stringify({ status: "Offline", last_seen: new Date().toISOString() }),
+    keepalive: true
+  }).catch(() => {});
 }
 
 function openMap(locationText){
   window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
 }
 
-function logout(){
+async function logout(){
+  if(gpsAutoIntervalId) clearInterval(gpsAutoIntervalId);
+  await setDriverOffline();
   localStorage.removeItem("driver_id");
   localStorage.removeItem("driver_name");
   localStorage.removeItem("role");
@@ -854,6 +907,7 @@ if (localStorage.getItem("driver_dark_mode") === "1") {
 
 window.addEventListener("online", setConnectivity);
 window.addEventListener("offline", setConnectivity);
+window.addEventListener("beforeunload", setDriverOfflineBeacon);
 
 window.addEventListener("resize", () => {
   loadDeliveries();
@@ -863,6 +917,9 @@ setConnectivity();
 loadDriverProfile();
 loadDeliveries();
 loadTimeClock();
+startAutoGPS();
+setInterval(loadDeliveries, 15000);
+setInterval(loadTimeClock, 30000);
 </script>
 
 </body>

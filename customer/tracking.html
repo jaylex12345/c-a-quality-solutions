@@ -149,6 +149,8 @@ font-weight:bold;
 const logoUrl = "/assets/images/logo.jpeg";
   let currentDelivery = null;
   let currentDriver = null;
+  let currentTrackingNumber = "";
+  let liveRefreshTimer = null;
 
 
   function formatDateTime(value) {
@@ -221,6 +223,8 @@ const logoUrl = "/assets/images/logo.jpeg";
       return;
     }
 
+    currentTrackingNumber = trackingNumber;
+
     const { data, error } = await supabaseClient
       .from("deliveries")
       .select("*")
@@ -265,8 +269,10 @@ const logoUrl = "/assets/images/logo.jpeg";
 
         <div class="tracking-grid">
           <div><strong>Driver</strong><br>${currentDriver ? currentDriver.name : (delivery.driver_name || "Not Assigned")}</div>
+          <div><strong>Driver Vehicle</strong><br>${currentDriver ? (currentDriver.vehicle || currentDriver.vehicle_type || "Not listed") : "Not listed"}</div>
           <div><strong>ETA</strong><br>${deliveryEta(delivery)}</div>
           <div><strong>Driver Location</strong><br>${currentDriver && currentDriver.latitude && currentDriver.longitude ? `${currentDriver.latitude}, ${currentDriver.longitude}` : "Not available"}</div>
+          <div><strong>Last GPS Update</strong><br>${currentDriver && currentDriver.last_seen ? formatDateTime(currentDriver.last_seen) : "Not available"}</div>
           <div><strong>Delivered Time</strong><br>${formatDateTime(delivery.delivery_time)}</div>
         </div>
 
@@ -277,6 +283,17 @@ const logoUrl = "/assets/images/logo.jpeg";
             class="map-link">
               📍 View Driver Location on Google Maps
             </a>
+          </div>
+          <div style="margin-top:15px;">
+            <iframe
+              title="Live Driver Location"
+              width="100%"
+              height="280"
+              style="border:0;border-radius:10px;"
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              src="https://www.google.com/maps?q=${encodeURIComponent(currentDriver.latitude + "," + currentDriver.longitude)}&z=14&output=embed">
+            </iframe>
           </div>
         ` : ""}
 
@@ -357,7 +374,18 @@ const logoUrl = "/assets/images/logo.jpeg";
 
       </div>
     `;
+
+    if (liveRefreshTimer) {
+      clearInterval(liveRefreshTimer);
     }
+
+    liveRefreshTimer = setInterval(async () => {
+      if (!currentTrackingNumber) return;
+      const input = document.getElementById("trackingNumber");
+      if (input) input.value = currentTrackingNumber;
+      await trackPackage();
+    }, 12000);
+  }
   window.downloadPODPDF = function () {
   const delivery = window.currentDelivery;
 
