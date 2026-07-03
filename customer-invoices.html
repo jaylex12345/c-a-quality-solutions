@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Invoices | C&A Quality Solutions</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
+.header{background:#061b3a;color:#fff;padding:20px;text-align:center}
+.nav{background:#0b2d52;padding:12px;text-align:center}.nav a{color:#fff;text-decoration:none;margin:0 10px;font-weight:bold}
+.container{max-width:1100px;margin:24px auto;padding:0 16px}.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}
+.badge{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold}.paid{background:#dcfce7;color:#166534}.pending{background:#fee2e2;color:#991b1b}.sent{background:#dbeafe;color:#1d4ed8}
+</style>
+</head>
+<body>
+<div class="header"><h1>Customer Invoices</h1></div>
+<div class="nav"><a href="customer-dashboard.html">Dashboard</a><a href="customer-profile.html">Profile</a><a href="customer-invoices.html">Invoices</a><a href="booking.html">Booking</a><a href="track.html">Tracking</a></div>
+<div class="container">
+  <div class="card">
+    <table>
+      <thead><tr><th>Invoice #</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Deliveries</th></tr></thead>
+      <tbody id="rows"><tr><td colspan="5">Loading...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<script>
+const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
+const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
+const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
+const customerEmail=localStorage.getItem('customer_email');
+const customerName=localStorage.getItem('customer_name');
+if(!customerEmail){window.location.href='customer-login.html';}
+
+function badge(status){
+  if(status==='Paid') return '<span class="badge paid">Paid</span>';
+  if(status==='Sent') return '<span class="badge sent">Sent</span>';
+  return '<span class="badge pending">Pending</span>';
+}
+
+async function loadInvoices(){
+  const {data,error}=await supabaseClient.from('invoices').select('*').or(`customer_email.eq.${customerEmail},customer_name.eq.${customerName||''}`).order('created_at',{ascending:false});
+  if(error){document.getElementById('rows').innerHTML=`<tr><td colspan="5">${error.message}</td></tr>`;return;}
+  const rows=data||[];
+  if(!rows.length){document.getElementById('rows').innerHTML='<tr><td colspan="5">No invoices found.</td></tr>';return;}
+  document.getElementById('rows').innerHTML=rows.map(i=>`<tr><td>${i.invoice_number||''}</td><td>$${Number(i.amount||0).toFixed(2)}</td><td>${i.due_date?new Date(i.due_date).toLocaleDateString():''}</td><td>${badge(i.status)}</td><td>${Array.isArray(i.delivery_ids)?i.delivery_ids.join(', '):(i.delivery_ids||'')}</td></tr>`).join('');
+}
+
+loadInvoices();
+</script>
+</body>
+</html>

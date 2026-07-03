@@ -1,2 +1,101 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0; url=/customer/booking.html"><title>Redirecting...</title><script>window.location.replace('/customer/booking.html');</script></head><body><a href="/customer/booking.html">Continue</a></body></html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Book Delivery | C&A Quality Solutions</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
+.header{background:#061b3a;color:#fff;padding:20px;text-align:center}
+.wrap{max-width:980px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px}
+textarea{min-height:100px}
+.btn{background:#d9b431;color:#071b33;border:0;padding:12px 16px;border-radius:8px;font-weight:bold;cursor:pointer}
+#result{font-weight:bold;margin-top:10px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header"><h1>Book a Delivery</h1></div>
+<div class="wrap">
+	<div class="card">
+		<form id="bookingForm">
+			<div class="grid">
+				<input id="customerName" placeholder="Customer Name" required>
+				<input id="customerEmail" type="email" placeholder="Customer Email" required>
+				<input id="customerPhone" placeholder="Customer Phone" required>
+				<select id="serviceType">
+					<option>Standard Courier</option>
+					<option>Priority / Same-Day Delivery</option>
+					<option>Medical Courier</option>
+					<option>Legal Courier</option>
+					<option>Property Services</option>
+				</select>
+				<input id="pickupAddress" placeholder="Pickup Address" required>
+				<input id="dropoffAddress" placeholder="Drop-off Address" required>
+				<input id="estimatedMiles" type="number" min="1" step="0.1" placeholder="Estimated Miles" required>
+				<input id="pickupDate" type="date" required>
+			</div>
+			<textarea id="instructions" placeholder="Special instructions"></textarea>
+			<button class="btn" type="button" onclick="calculatePrice()">Calculate Price</button>
+			<div id="result">Estimated Price: $0.00</div>
+			<button class="btn" type="submit" style="margin-top:10px;">Submit Booking</button>
+			<p id="msg"></p>
+		</form>
+	</div>
+</div>
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+let estimatedPrice = 0;
+
+function servicePricing(type){
+	if(type === "Priority / Same-Day Delivery") return { base: 70, mile: 2.5 };
+	if(type === "Medical Courier") return { base: 75, mile: 2.5 };
+	if(type === "Legal Courier") return { base: 65, mile: 2.25 };
+	if(type === "Property Services") return { base: 65, mile: 2.25 };
+	return { base: 45, mile: 2.25 };
+}
+
+function calculatePrice(){
+	const miles = Number(document.getElementById("estimatedMiles").value || 0);
+	const type = document.getElementById("serviceType").value;
+	if(miles <= 0){ alert("Enter a valid miles value."); return; }
+	const rate = servicePricing(type);
+	estimatedPrice = rate.base + (miles * rate.mile);
+	document.getElementById("result").innerText = `Estimated Price: $${estimatedPrice.toFixed(2)}`;
+}
+
+function trackingNumber(){
+	const seed = Date.now().toString().slice(-6);
+	return `CAQ-${seed}-${Math.floor(Math.random()*900+100)}`;
+}
+
+document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+	e.preventDefault();
+	if(!estimatedPrice) calculatePrice();
+	const payload = {
+		customer_name: document.getElementById("customerName").value.trim(),
+		customer_email: document.getElementById("customerEmail").value.trim(),
+		customer_phone: document.getElementById("customerPhone").value.trim(),
+		service_type: document.getElementById("serviceType").value,
+		pickup_address: document.getElementById("pickupAddress").value.trim(),
+		dropoff_address: document.getElementById("dropoffAddress").value.trim(),
+		estimated_miles: Number(document.getElementById("estimatedMiles").value),
+		pickup_date: document.getElementById("pickupDate").value,
+		instructions: document.getElementById("instructions").value.trim(),
+		status: "Pending",
+		payment_status: "Pending",
+		estimated_price: Number(estimatedPrice.toFixed(2)),
+		tracking_number: trackingNumber()
+	};
+	const { error } = await supabaseClient.from("bookings").insert([payload]);
+	document.getElementById("msg").innerText = error ? error.message : `Booking submitted. Tracking: ${payload.tracking_number}`;
+	if(!error) document.getElementById("bookingForm").reset();
+});
+</script>
+</body>
+</html>

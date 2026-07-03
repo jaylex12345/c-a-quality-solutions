@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver Profile | C&A Quality Solutions</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+.header{background:#061b3a;color:#fff;padding:20px;text-align:center}
+.nav{background:#0b2d52;padding:12px;text-align:center}
+.nav a{color:#fff;text-decoration:none;margin:0 12px;font-weight:bold}
+.container{max-width:920px;margin:24px auto;padding:0 16px}
+.card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px}
+.btn{margin-top:14px;background:#d9b431;color:#071b33;border:0;padding:12px 16px;border-radius:8px;font-weight:bold;cursor:pointer}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header"><h1>Driver Profile</h1></div>
+<div class="nav">
+  <a href="driver-login.html">Login</a>
+  <a href="driver-dashboard.html">Dashboard</a>
+  <a href="driver-profile.html">Profile</a>
+  <a href="driver-history.html">History</a>
+</div>
+<div class="container">
+  <div class="card">
+    <div class="grid">
+      <input id="name" placeholder="Name">
+      <input id="email" placeholder="Email">
+      <input id="phone" placeholder="Phone">
+      <input id="vehicle" placeholder="Vehicle">
+      <input id="license_plate" placeholder="License plate">
+      <input id="availability" placeholder="Availability">
+    </div>
+    <button class="btn" onclick="saveProfile()">Save Profile</button>
+    <p id="msg"></p>
+  </div>
+</div>
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+const driverId = localStorage.getItem("driver_id");
+if(!driverId){ window.location.href = "driver-login.html"; }
+
+async function loadProfile(){
+  const { data, error } = await supabaseClient.from("drivers").select("*").eq("id", driverId).single();
+  if(error || !data){ document.getElementById("msg").innerText = error ? error.message : "Driver not found"; return; }
+  ["name","email","phone","vehicle","license_plate","availability"].forEach(key => {
+    document.getElementById(key).value = data[key] || "";
+  });
+}
+
+async function saveProfile(){
+  const payload = {
+    name: document.getElementById("name").value.trim(),
+    email: document.getElementById("email").value.trim(),
+    phone: document.getElementById("phone").value.trim(),
+    vehicle: document.getElementById("vehicle").value.trim(),
+    license_plate: document.getElementById("license_plate").value.trim(),
+    availability: document.getElementById("availability").value.trim()
+  };
+  const { error } = await supabaseClient.from("drivers").update(payload).eq("id", driverId);
+  document.getElementById("msg").innerText = error ? error.message : "Profile updated.";
+}
+
+loadProfile();
+</script>
+</body>
+</html>

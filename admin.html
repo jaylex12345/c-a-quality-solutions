@@ -1,2 +1,97 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0; url=/admin/dashboard.html"><title>Redirecting...</title><script>window.location.replace('/admin/dashboard.html');</script></head><body><a href="/admin/dashboard.html">Continue</a></body></html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | C&A Quality Solutions</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
+.layout{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+.side{background:#0b2d52;color:#fff;padding:20px}
+.side img{width:96px;display:block;margin:0 auto 14px}
+.side a{display:block;color:#fff;text-decoration:none;padding:10px;border-radius:8px;margin:6px 0}
+.side a.active,.side a:hover{background:#d9b431;color:#071b33}
+.main{padding:24px}
+.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.value{font-size:30px;color:#d9b431;font-weight:bold}
+input{width:100%;padding:10px;margin:6px 0;border:1px solid #d1d5db;border-radius:8px}
+.btn{background:#d9b431;color:#071b33;border:0;padding:10px 14px;border-radius:8px;font-weight:bold;cursor:pointer}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="layout">
+	<aside class="side">
+		<img src="/assets/images/logo.jpeg" alt="Logo">
+		<a class="active" href="admin.html">Dashboard</a>
+		<a href="dispatcher.html">Dispatcher</a>
+		<a href="drivers.html">Drivers</a>
+		<a href="deliveries.html">Deliveries</a>
+		<a href="customers.html">Customers</a>
+		<a href="reports.html">Reports</a>
+		<a href="settings.html">Settings</a>
+		<a href="#" onclick="logout()">Logout</a>
+	</aside>
+	<main class="main">
+		<h1>Admin Dashboard</h1>
+		<div class="cards">
+			<div class="card"><h3>Deliveries</h3><div class="value" id="deliveriesCount">0</div></div>
+			<div class="card"><h3>Pending</h3><div class="value" id="pendingCount">0</div></div>
+			<div class="card"><h3>Drivers</h3><div class="value" id="driversCount">0</div></div>
+			<div class="card"><h3>Revenue</h3><div class="value" id="revenue">$0</div></div>
+		</div>
+		<div class="card" style="margin-top:14px;">
+			<h2>Add Driver</h2>
+			<input id="name" placeholder="Driver name">
+			<input id="phone" placeholder="Phone">
+			<input id="email" placeholder="Email">
+			<input id="password" placeholder="Password">
+			<button class="btn" onclick="addDriver()">Create Driver</button>
+			<p id="msg"></p>
+		</div>
+	</main>
+</div>
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+if(localStorage.getItem("role") !== "admin") window.location.href = "login.html";
+
+function logout(){ localStorage.clear(); window.location.href = "login.html"; }
+
+async function loadStats(){
+	const [{data:deliveries},{data:drivers}] = await Promise.all([
+		supabaseClient.from("deliveries").select("status,total_price"),
+		supabaseClient.from("drivers").select("id")
+	]);
+	const d = deliveries || [];
+	document.getElementById("deliveriesCount").innerText = d.length;
+	document.getElementById("pendingCount").innerText = d.filter(x => (x.status || "").toLowerCase() === "pending").length;
+	document.getElementById("driversCount").innerText = (drivers || []).length;
+	const total = d.reduce((n,x)=>n + Number(x.total_price || 0),0);
+	document.getElementById("revenue").innerText = `$${total.toFixed(2)}`;
+}
+
+async function addDriver(){
+	const payload = {
+		name: document.getElementById("name").value.trim(),
+		phone: document.getElementById("phone").value.trim(),
+		email: document.getElementById("email").value.trim(),
+		password: document.getElementById("password").value.trim(),
+		is_active: true,
+		status: "Available"
+	};
+	if(!payload.name || !payload.phone || !payload.email || !payload.password){
+		document.getElementById("msg").innerText = "All fields are required.";
+		return;
+	}
+	const { error } = await supabaseClient.from("drivers").insert([payload]);
+	document.getElementById("msg").innerText = error ? error.message : "Driver created.";
+	if(!error) loadStats();
+}
+
+loadStats();
+</script>
+</body>
+</html>

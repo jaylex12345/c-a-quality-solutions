@@ -1,2 +1,39 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0; url=/driver/login.html"><title>Redirecting...</title><script>window.location.replace('/driver/login.html');</script></head><body><a href="/driver/login.html">Continue</a></body></html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Driver Login | C&A Quality Solutions</title>
+	<link rel="stylesheet" href="/assets/css/style.css">
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<style>
+		body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh}
+		.card{background:#fff;padding:28px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);width:360px}
+		input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;margin:8px 0}
+		button{width:100%;padding:12px;background:#d9b431;color:#071b33;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+	</style>
+</head>
+<body>
+<div class="card">
+	<h2>Driver Login</h2>
+	<input id="email" placeholder="Driver Email">
+	<input id="password" type="password" placeholder="Password">
+	<button onclick="driverLogin()">Login</button>
+	<p id="message"></p>
+</div>
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+async function driverLogin(){
+	const email = document.getElementById("email").value.trim();
+	const password = document.getElementById("password").value.trim();
+	const { data, error } = await supabaseClient.from("drivers").select("*").eq("email", email).eq("password", password).limit(1);
+	if(error || !data || !data.length){ document.getElementById("message").innerText = "Invalid credentials."; return; }
+	const driver = data[0];
+	localStorage.setItem("driver_id", driver.id);
+	localStorage.setItem("driver_name", driver.name || "Driver");
+	localStorage.setItem("role", "driver");
+	window.location.href = "driver-dashboard.html";
+}
+</script>
+</body>
+</html>

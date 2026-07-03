@@ -1,2 +1,69 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0; url=/admin/dispatcher.html"><title>Redirecting...</title><script>window.location.replace('/admin/dispatcher.html');</script></head><body><a href="/admin/dispatcher.html">Continue</a></body></html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dispatcher Console | C&A Quality Solutions</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+.header{background:#061b3a;color:#fff;padding:20px;text-align:center}
+.wrap{max-width:1300px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}
+select{padding:8px;border:1px solid #d1d5db;border-radius:8px;width:100%}
+.btn{background:#d9b431;color:#071b33;border:0;padding:8px 12px;border-radius:8px;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="header"><h1>Dispatcher Console</h1></div>
+<div class="wrap">
+	<div class="card">
+		<h2>Delivery Assignment Board</h2>
+		<table>
+			<thead><tr><th>Tracking</th><th>Customer</th><th>Status</th><th>Driver</th><th>Assign</th><th>Action</th></tr></thead>
+			<tbody id="rows"><tr><td colspan="6">Loading...</td></tr></tbody>
+		</table>
+	</div>
+</div>
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+if(localStorage.getItem("role") !== "admin") window.location.href = "login.html";
+
+let drivers = [];
+
+async function loadBoard(){
+	const [{data:d,error:e1},{data:drv,error:e2}] = await Promise.all([
+		supabaseClient.from("deliveries").select("id,tracking_number,customer_name,status,driver_id").order("created_at",{ascending:false}),
+		supabaseClient.from("drivers").select("id,name,status").order("name")
+	]);
+	if(e1 || e2){ document.getElementById("rows").innerHTML = `<tr><td colspan="6">${(e1||e2).message}</td></tr>`; return; }
+	drivers = drv || [];
+	const items = d || [];
+	if(!items.length){ document.getElementById("rows").innerHTML = '<tr><td colspan="6">No deliveries.</td></tr>'; return; }
+	document.getElementById("rows").innerHTML = items.map(item => {
+		const options = ['<option value="">Select Driver</option>'].concat(drivers.map(dr=>`<option value="${dr.id}" ${item.driver_id===dr.id?'selected':''}>${dr.name}</option>`)).join('');
+		return `<tr>
+			<td>${item.tracking_number || ''}</td>
+			<td>${item.customer_name || ''}</td>
+			<td>${item.status || 'Pending'}</td>
+			<td>${(drivers.find(x=>x.id===item.driver_id)||{}).name || 'Unassigned'}</td>
+			<td><select id="driver_${item.id}">${options}</select></td>
+			<td><button class="btn" onclick="assign('${item.id}')">Assign</button></td>
+		</tr>`;
+	}).join('');
+}
+
+async function assign(deliveryId){
+	const driverId = document.getElementById(`driver_${deliveryId}`).value;
+	if(!driverId) return;
+	const { error } = await supabaseClient.from("deliveries").update({ driver_id: driverId, assignment_status: "Pending Acceptance", status: "Assigned" }).eq("id", deliveryId);
+	if(error){ alert(error.message); return; }
+	loadBoard();
+}
+
+loadBoard();
+</script>
+</body>
+</html>

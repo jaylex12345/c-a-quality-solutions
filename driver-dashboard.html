@@ -1,2 +1,141 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0; url=/driver/dashboard.html"><title>Redirecting...</title><script>window.location.replace('/driver/dashboard.html');</script></head><body><a href="/driver/dashboard.html">Continue</a></body></html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Driver Dashboard | C&A Quality Solutions</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
+.header{background:#061b3a;color:#fff;padding:20px;text-align:center}
+.wrap{max-width:1250px;margin:20px auto;padding:0 16px}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.08);margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.value{font-size:26px;color:#d9b431;font-weight:bold}
+table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+select,input{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px}
+.btn{background:#d9b431;color:#071b33;border:0;padding:8px 12px;border-radius:8px;font-weight:bold;cursor:pointer}
+.btn2{background:#0b5ed7;color:#fff}
+.btn3{background:#16a34a;color:#fff}
+.btn4{background:#b91c1c;color:#fff}
+@media(max-width:980px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+</style>
+</head>
+<body>
+<div class="header"><h1>Driver Dashboard</h1></div>
+<div class="wrap">
+	<div class="grid">
+		<div class="card"><h3>Driver</h3><div class="value" id="driverName">Driver</div></div>
+		<div class="card"><h3>Assigned</h3><div class="value" id="assigned">0</div></div>
+		<div class="card"><h3>Completed</h3><div class="value" id="completed">0</div></div>
+		<div class="card"><h3>Clock</h3><div class="value" id="clockStatus">Off</div></div>
+	</div>
+
+	<div class="card">
+		<button class="btn btn2" onclick="sendGPS()">Send GPS</button>
+		<button class="btn btn3" onclick="clockIn()">Clock In</button>
+		<button class="btn btn4" onclick="clockOut()">Clock Out</button>
+		<button class="btn" onclick="logout()">Logout</button>
+	</div>
+
+	<div class="card">
+		<h2>Assigned Jobs</h2>
+		<table>
+			<thead><tr><th>Tracking</th><th>Customer</th><th>Assignment</th><th>Status</th><th>Proof</th><th>Actions</th></tr></thead>
+			<tbody id="rows"><tr><td colspan="6">Loading...</td></tr></tbody>
+		</table>
+	</div>
+</div>
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+const driverId = localStorage.getItem("driver_id");
+if(!driverId) window.location.href = "driver-login.html";
+document.getElementById("driverName").innerText = localStorage.getItem("driver_name") || "Driver";
+let activeTimesheetId = null;
+
+function logout(){ localStorage.clear(); window.location.href = "driver-login.html"; }
+
+async function loadJobs(){
+	const { data, error } = await supabaseClient.from("deliveries").select("*").eq("driver_id", driverId).order("created_at", {ascending:false});
+	if(error){ document.getElementById("rows").innerHTML = `<tr><td colspan="6">${error.message}</td></tr>`; return; }
+	const jobs = data || [];
+	document.getElementById("assigned").innerText = jobs.length;
+	document.getElementById("completed").innerText = jobs.filter(j => (j.status||"").toLowerCase()==="delivered").length;
+	if(!jobs.length){ document.getElementById("rows").innerHTML = '<tr><td colspan="6">No assigned jobs.</td></tr>'; return; }
+	document.getElementById("rows").innerHTML = jobs.map(j => `
+		<tr>
+			<td>${j.tracking_number||''}</td>
+			<td>${j.customer_name||''}</td>
+			<td>${j.assignment_status||'Assigned'}</td>
+			<td>
+				<select id="status_${j.id}">
+					<option ${j.status==='Picked Up'?'selected':''}>Picked Up</option>
+					<option ${j.status==='In Transit'?'selected':''}>In Transit</option>
+					<option ${j.status==='Out for Delivery'?'selected':''}>Out for Delivery</option>
+					<option ${j.status==='Delivered'?'selected':''}>Delivered</option>
+				</select>
+			</td>
+			<td>
+				<input id="proof_${j.id}" type="file" accept="image/*">
+			</td>
+			<td>
+				<button class="btn" onclick="acceptJob('${j.id}')">Accept</button>
+				<button class="btn btn4" onclick="rejectJob('${j.id}')">Reject</button>
+				<button class="btn btn2" onclick="updateStatus('${j.id}')">Update</button>
+				<button class="btn btn3" onclick="uploadProof('${j.id}')">Upload Proof</button>
+			</td>
+		</tr>
+	`).join('');
+}
+
+async function acceptJob(id){
+	await supabaseClient.from("deliveries").update({ assignment_status:"Accepted", status:"Accepted" }).eq("id", id).eq("driver_id", driverId);
+	loadJobs();
+}
+async function rejectJob(id){
+	await supabaseClient.from("deliveries").update({ assignment_status:"Rejected", status:"Pending", driver_id:null }).eq("id", id).eq("driver_id", driverId);
+	loadJobs();
+}
+async function updateStatus(id){
+	const status = document.getElementById(`status_${id}`).value;
+	const payload = { status };
+	if(status === "Delivered") payload.delivery_time = new Date().toISOString();
+	await supabaseClient.from("deliveries").update(payload).eq("id", id).eq("driver_id", driverId);
+	loadJobs();
+}
+async function uploadProof(id){
+	const input = document.getElementById(`proof_${id}`);
+	if(!input.files || !input.files.length) return;
+	const file = input.files[0];
+	const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+	const path = `proofs/${id}_${Date.now()}.${ext}`;
+	const { error:upErr } = await supabaseClient.storage.from("proofs").upload(path, file, { upsert: true });
+	if(upErr){ alert(upErr.message); return; }
+	const { data } = supabaseClient.storage.from("proofs").getPublicUrl(path);
+	await supabaseClient.from("deliveries").update({ proof_of_delivery: data.publicUrl }).eq("id", id).eq("driver_id", driverId);
+	loadJobs();
+}
+
+function sendGPS(){
+	if(!navigator.geolocation){ alert("Geolocation unavailable"); return; }
+	navigator.geolocation.getCurrentPosition(async (p) => {
+		await supabaseClient.from("drivers").update({ latitude:p.coords.latitude, longitude:p.coords.longitude, is_active:true }).eq("id", driverId);
+		alert("GPS sent");
+	});
+}
+
+async function clockIn(){
+	const { data, error } = await supabaseClient.from("timesheets").insert([{ driver_id: driverId, clock_in: new Date().toISOString(), status: "Clocked In" }]).select().single();
+	if(!error && data){ activeTimesheetId = data.id; document.getElementById("clockStatus").innerText = "On"; }
+}
+async function clockOut(){
+	if(!activeTimesheetId){ return; }
+	await supabaseClient.from("timesheets").update({ clock_out: new Date().toISOString(), status: "Clocked Out" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	activeTimesheetId = null;
+	document.getElementById("clockStatus").innerText = "Off";
+}
+
+loadJobs();
+</script>
+</body>
+</html>

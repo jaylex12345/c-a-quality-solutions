@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Customer Login | C&A Quality Solutions</title>
+<link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh}
+.card{background:#fff;padding:28px;width:360px;border-radius:14px;box-shadow:0 8px 20px rgba(0,0,0,.1)}
+input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border-radius:8px}
+button{width:100%;padding:12px;border:0;border-radius:8px;background:#0b2d52;color:#fff;font-weight:bold;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="card">
+<h2>Customer Login</h2>
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<p id="msg"></p>
+<p><a href="booking.html">Need service? Book now</a></p>
+</div>
+<script>
+const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
+const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
+const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
+
+async function login(){
+  const email=document.getElementById('email').value.trim();
+  const password=document.getElementById('password').value.trim();
+  const {data,error}=await supabaseClient.from('customers').select('*').eq('email',email).eq('password',password).limit(1);
+  if(error||!data||!data.length){document.getElementById('msg').innerText='Invalid login';return;}
+  localStorage.setItem('customer_id',data[0].id);
+  localStorage.setItem('customer_email',data[0].email||email);
+  localStorage.setItem('customer_name',data[0].contact_person||data[0].business_name||'Customer');
+  localStorage.setItem('role','customer');
+  window.location.href='customer-dashboard.html';
+}
+</script>
+</body>
+</html>

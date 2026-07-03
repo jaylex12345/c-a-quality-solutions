@@ -1,9 +1,35 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-	<meta http-equiv="refresh" content="0; url=/admin/login.html">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Login | C&A Quality Solutions</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
+.card{background:#fff;padding:28px;width:360px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border-radius:8px}
+button{width:100%;padding:12px;background:#0b2d52;color:#fff;border:none;border-radius:8px;cursor:pointer}
+</style>
 </head>
 <body>
-	<script>window.location.href="/admin/login.html";</script>
+<div class="card">
+	<h2>C&A Admin Login</h2>
+	<input id="email" placeholder="Email">
+	<input id="password" type="password" placeholder="Password">
+	<button onclick="login()">Login</button>
+	<p id="msg"></p>
+</div>
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+async function login(){
+	const email = document.getElementById("email").value.trim();
+	const password = document.getElementById("password").value.trim();
+	const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+	if(error){ document.getElementById("msg").innerText = error.message; return; }
+	localStorage.setItem("role", "admin");
+	window.location.href = "admin.html";
+}
+</script>
 </body>
 </html>
