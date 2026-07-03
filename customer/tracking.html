@@ -106,12 +106,12 @@ font-weight:bold;
 </header>
 
 <nav style="text-align:center;padding:15px;background:#0b2d52;">
-  <a href="index.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Home</a>
-  <a href="services.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Services</a>
-  <a href="pricing.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Pricing</a>
-  <a href="about.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">About</a>
-  <a href="contact.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Contact</a>
-  <a href="login.html" style="margin:0 15px;color:#d9b431;font-weight:bold;text-decoration:none;">Admin Login</a>
+  <a href="/index.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Home</a>
+  <a href="/services.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Services</a>
+  <a href="/pricing.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Pricing</a>
+  <a href="/about.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">About</a>
+  <a href="/contact.html" style="margin:0 15px;color:white;font-weight:bold;text-decoration:none;">Contact</a>
+  <a href="/admin/login.html" style="margin:0 15px;color:#d9b431;font-weight:bold;text-decoration:none;">Admin Login</a>
 </nav>
 
 <section class="track-page">
@@ -326,24 +326,24 @@ const logoUrl = "/assets/images/logo.jpeg";
 
 
       ${
-  delivery.proof_of_delivery
+  (delivery.proof_of_delivery || delivery.proof_photo_url)
     ? `
       
     <h3 style="margin-top:20px;">📸 Proof of Delivery</h3>
     
       <img 
-        src="${delivery.proof_of_delivery}" 
+        src="${delivery.proof_of_delivery || delivery.proof_photo_url}" 
         class="delivery-photo"
         alt="Proof of Delivery Photo"
       >
       <br>
      <div style="text-align:center;">
 
-      <a href="${delivery.proof_of_delivery}" target="_blank">
+      <a href="${delivery.proof_of_delivery || delivery.proof_photo_url}" target="_blank">
         View Proof of Delivery Photo
       </a>
       <div class="track-actions">
-        <button onclick="window.open('${delivery.proof_of_delivery}', '_blank')">Open Photo</button>
+        <button onclick="window.open('${delivery.proof_of_delivery || delivery.proof_photo_url}', '_blank')">Open Photo</button>
       </div>
     `
     : `<p><em>No proof of delivery photo uploaded.</em></p>`

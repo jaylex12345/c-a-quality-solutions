@@ -33,7 +33,7 @@ textarea{min-height:100px}
     <a href="/pricing.html">Pricing</a>
     <a href="/about.html">About Us</a>
     <a href="/contact.html">Contact</a>
-    <a class="book" href="/booking">Request Quote / Book</a>
+		<a class="book" href="/customer/booking.html">Request Quote / Book</a>
   </nav>
 </div>
 <div class="wrap">
@@ -59,6 +59,7 @@ textarea{min-height:100px}
 			<textarea id="instructions" placeholder="Special instructions"></textarea>
 			<div id="result">Estimated Price: $0.00</div>
 			<p id="msg"></p>
+			<button class="btn" type="submit">Submit Booking</button>
 		</form>
 	</div>
 </div>
@@ -160,19 +161,20 @@ document.getElementById("bookingForm").addEventListener("submit", async (e) => {
 		const estimatedPrice = rate.base + (latestMiles * rate.mile);
 		const payload = {
 			customer_id: customerId,
+			tracking_number: tracking,
 			customer_name: document.getElementById("customerName").value.trim(),
 			customer_email: document.getElementById("customerEmail").value.trim(),
 			customer_phone: document.getElementById("customerPhone").value.trim(),
-			service_type: document.getElementById("serviceType").value,
+			package_type: document.getElementById("serviceType").value,
 			pickup_address: document.getElementById("pickup_address").value.trim(),
-			dropoff_address: document.getElementById("dropoff_address").value.trim(),
-			estimated_miles: latestMiles,
-			pickup_date: document.getElementById("pickupDate").value,
-			instructions: document.getElementById("instructions").value.trim(),
+			destination_address: document.getElementById("dropoff_address").value.trim(),
+			estimated_distance_miles: latestMiles,
+			delivery_date: document.getElementById("pickupDate").value,
+			notes: document.getElementById("instructions").value.trim(),
 			status: "Pending",
 			payment_status: "Pending",
 			estimated_price: Number(estimatedPrice.toFixed(2)),
-			tracking_number: tracking
+			source: "website"
 		};
 		const { error } = await supabaseClient.from("bookings").insert([payload]);
 		document.getElementById("msg").innerText = error ? error.message : `Booking submitted. Tracking: ${tracking}`;

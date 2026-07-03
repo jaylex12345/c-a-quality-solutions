@@ -19,10 +19,8 @@ nav a.book{color:#f2b632}
 .container{max-width:1000px;margin:40px auto;padding:20px}
 .card{background:white;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
 h2{color:#061f45;margin-bottom:20px}
-input, select, textarea{width:100%;padding:15px;margin-top:8px;border:1px solid #ccc;border-radius:8px;font-size:16px}
-button{width:100%;padding:16px;margin-top:20px;border:none;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer}
-.calculate{background:#f2b632;color:#061f45}
-.submit{background:#061f45;color:white}
+input,select,textarea{width:100%;padding:15px;margin-top:8px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+button{width:100%;padding:16px;margin-top:20px;border:none;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer;background:#061f45;color:white}
 .price-box{margin-top:20px;padding:20px;background:#061f45;color:white;font-size:24px;text-align:center;border-radius:12px;font-weight:bold}
 .footer{text-align:center;padding:20px;margin-top:40px;background:#061f45;color:white}
 .meta{margin-top:10px;color:#061f45;font-weight:bold}
@@ -39,7 +37,7 @@ button{width:100%;padding:16px;margin-top:20px;border:none;border-radius:10px;fo
     <a href="/pricing.html">Pricing</a>
     <a href="/about.html">About Us</a>
     <a href="/contact.html">Contact</a>
-    <a class="book" href="/booking">Request Quote / Book</a>
+    <a class="book" href="/customer/booking.html">Request Quote / Book</a>
   </nav>
 </header>
 
@@ -85,7 +83,7 @@ button{width:100%;padding:16px;margin-top:20px;border:none;border-radius:10px;fo
       <div id="result" class="price-box">Estimated Price: $0.00</div>
       <p id="msg"></p>
 
-      <button type="submit" class="submit">Submit Booking</button>
+      <button type="submit">Submit Booking</button>
     </form>
   </div>
 </div>
@@ -125,13 +123,13 @@ function updatePrice(){
   const rate = servicePricing(document.getElementById("serviceType").value);
   const price = rate.base + (latestMiles * rate.mile);
   document.getElementById("result").innerText = `Estimated Price: $${price.toFixed(2)}`;
-  window.currentEstimatedPrice = price;
 }
 
 function calculateAutoMiles(){
   const pickup = document.getElementById("pickup_address").value.trim();
   const dropoff = document.getElementById("dropoff_address").value.trim();
   if(!pickup || !dropoff || !distanceService) return;
+
   distanceService.getDistanceMatrix({
     origins:[pickup],
     destinations:[dropoff],
@@ -167,12 +165,14 @@ async function upsertCustomer(){
     billing_address: document.getElementById("pickup_address").value.trim(),
     account_status: "Active"
   };
+
   const { data: existing } = await supabaseClient.from("customers").select("id").eq("email", email).limit(1);
   if(existing && existing.length){
     const { error } = await supabaseClient.from("customers").update(customerPayload).eq("id", existing[0].id);
     if(error) throw error;
     return existing[0].id;
   }
+
   const { data, error } = await supabaseClient.from("customers").insert([customerPayload]).select("id").single();
   if(error) throw error;
   return data.id;
@@ -184,29 +184,34 @@ document.getElementById("bookingForm").addEventListener("submit", async (e) => {
     document.getElementById("msg").innerText = "Select pickup and drop-off addresses to calculate miles automatically.";
     return;
   }
+
   try{
     const customerId = await upsertCustomer();
     const rate = servicePricing(document.getElementById("serviceType").value);
     const estimatedPrice = rate.base + (latestMiles * rate.mile);
     const tracking = trackingNumber();
+
     const payload = {
       customer_id: customerId,
+      tracking_number: tracking,
       customer_name: document.getElementById("customerName").value.trim(),
       customer_email: document.getElementById("customerEmail").value.trim(),
       customer_phone: document.getElementById("customerPhone").value.trim(),
-      service_type: document.getElementById("serviceType").value,
+      package_type: document.getElementById("serviceType").value,
       pickup_address: document.getElementById("pickup_address").value.trim(),
-      dropoff_address: document.getElementById("dropoff_address").value.trim(),
-      estimated_miles: latestMiles,
-      pickup_date: document.getElementById("pickupDate").value,
-      instructions: document.getElementById("instructions").value.trim(),
+      destination_address: document.getElementById("dropoff_address").value.trim(),
+      estimated_distance_miles: latestMiles,
+      delivery_date: document.getElementById("pickupDate").value,
+      notes: document.getElementById("instructions").value.trim(),
       status: "Pending",
       payment_status: "Pending",
       estimated_price: Number(estimatedPrice.toFixed(2)),
-      tracking_number: tracking
+      source: "website"
     };
+
     const { error } = await supabaseClient.from("bookings").insert([payload]);
     document.getElementById("msg").innerText = error ? error.message : `Booking submitted. Tracking: ${tracking}`;
+
     if(!error){
       document.getElementById("bookingForm").reset();
       latestMiles = 0;
@@ -219,188 +224,4 @@ document.getElementById("bookingForm").addEventListener("submit", async (e) => {
 });
 </script>
 </body>
-</html>
-
-function calculateDistanceAndPrice() {
-  const pickup = document.getElementById("pickup").value;
-  const dropoff = document.getElementById("dropoff").value;
-  const resultBox = document.getElementById("result");
-  const milesInput = document.getElementById("miles");
-  const priceInput = document.getElementById("estimatedPriceInput");
-
-  
-  if (!pickup || !dropoff) {
-    alert("Please enter pickup and drop-off address.");
-    return;
-  }
-
-  const service = new google.maps.DistanceMatrixService();
-
-  service.getDistanceMatrix(
-    {
-      origins: [pickup],
-      destinations: [dropoff],
-      travelMode: google.maps.TravelMode.DRIVING,
-      unitSystem: google.maps.UnitSystem.IMPERIAL
-    },
-    function (response, status) {
-      if (status !== "OK") {
-        alert("Unable to calculate distance. Please check the addresses.");
-        return;
-      }
-
-      const element = response.rows[0].elements[0];
-
-      if (element.status !== "OK") {
-        alert("No route found. Please check the addresses.");
-        return;
-      }
-
-      const miles = element.distance.value / 1609.344;
-      const roundedMiles = miles.toFixed(1);
-      const serviceType = document.querySelector('[name="Service Type"]').value;
-
-let basePrice = 45;
-let mileRate = 2.25;
-
-if (serviceType === "Priority / Same-Day Delivery") {
-  basePrice = 70;
-  mileRate = 2.50;
-}
-
-if (serviceType === "Medical Courier") {
-  basePrice = 75;
-  mileRate = 2.50;
-}
-
-if (serviceType === "Legal Courier") {
-  basePrice = 65;
-  mileRate = 2.25;
-}
-
-if (serviceType === "Property Services") {
-  basePrice = 65;
-  mileRate = 2.25;
-}
-
-if (serviceType === "Dedicated Route / Monthly Contract") {
-  resultBox.innerText = "Custom quote required. Please submit your request.";
-  priceInput.value = "Custom Quote";
-  return;
-}
-
-
-const price = basePrice + (miles * mileRate);
-
-      
-
-      milesInput.value = roundedMiles;
-      priceInput.value = "$" + price.toFixed(2);
-      resultBox.innerText = "Estimated Price: $" + price.toFixed(2) + " (" + roundedMiles + " miles)";
-
-    
-    }
-  );
-}
-</script>
-
-<script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
-const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-function buildBookingTracking(){
-  return "BKG-" + new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 12);
-}
-
-async function saveBookingRecord(amount, checkoutSessionId){
-  const form = document.getElementById("bookingForm");
-  const payload = {
-    tracking_number: buildBookingTracking(),
-    customer_name: form.querySelector('[name="Customer Name"]').value,
-    customer_phone: form.querySelector('[name="Phone Number"]').value,
-    customer_email: form.querySelector('[name="Email Address"]').value,
-    pickup_address: document.getElementById("pickup").value,
-    destination_address: document.getElementById("dropoff").value,
-    package_type: form.querySelector('[name="Service Type"]').value,
-    delivery_date: form.querySelector('[name="Pickup Date"]').value || null,
-    delivery_time: form.querySelector('[name="Pickup Time"]').value || null,
-    estimated_distance_miles: Number(document.getElementById("miles").value || 0),
-    estimated_price: Number(amount || 0),
-    payment_status: "Checkout Started",
-    checkout_session_id: checkoutSessionId || null,
-    notes: form.querySelector('[name="Instructions"]').value || null,
-    source: "website"
-  };
-
-  const { error } = await supabaseClient.from("bookings").insert([payload]);
-  if(error) console.warn("Booking save warning:", error.message);
-}
-
-async function payFullAmount() {
-  try {
-    const form = document.getElementById("bookingForm");
-
-    if (!form.checkValidity()) {
-      form.reportValidity();
-      return;
-    }
-
-    const priceText = document.getElementById("result").innerText;
-    const amountMatch = priceText.match(/\$([0-9.]+)/);
-
-    if (!amountMatch || amountMatch[1] === "0.00") {
-      alert("Please calculate the price first.");
-      return;
-    }
-
-    const amount = amountMatch[1];
-    const emailInput = document.getElementById("customerEmail");
-    const email = emailInput ? emailInput.value : "";
-
-const formData = new FormData(form);
-
-await fetch(form.action, {
-  method: "POST",
-  body: formData,
-  headers: {
-    Accept: "application/json"
-  }
-});
-    
-    const response = await fetch("/.netlify/functions/create-checkout", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-    body: JSON.stringify({
-  amount,
-  email: document.querySelector('[name="Email Address"]').value,
-  customerName: document.querySelector('[name="Customer Name"]').value,
-  pickup: document.getElementById("pickup").value,
-  dropoff: document.getElementById("dropoff").value,
-  serviceType: document.querySelector('[name="Service Type"]').value,
-  pickupDate: document.querySelector('[name="Pickup Date"]').value,
-  pickupTime: document.querySelector('[name="Pickup Time"]').value
-})
-    });
-
-    const data = await response.json();
-
-    await saveBookingRecord(amount, data.sessionId || data.id || null);
-
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert("Payment could not be started. Please try again.");
-    }
-  } catch (error) {
-    alert("Payment error: " + error.message);
-  }
-}
-</script>
-
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries=places&callback=initAutocomplete" async defer></script>
-</body>
-
 </html>

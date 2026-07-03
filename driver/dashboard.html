@@ -744,8 +744,9 @@ async function rejectDelivery(id){
     .update({
       driver_id: null,
       driver_name: null,
-      assignment_status: "Rejected",
-      status: "Pending"
+      assignment_status: "Unassigned",
+      status: "Pending",
+      driver_notes: "Driver rejected assignment"
     })
     .eq("id", id)
     .eq("driver_id", driverId);

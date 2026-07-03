@@ -96,7 +96,7 @@ async function acceptJob(id){
 	loadJobs();
 }
 async function rejectJob(id){
-	await supabaseClient.from("deliveries").update({ assignment_status:"Rejected", status:"Pending", driver_id:null }).eq("id", id).eq("driver_id", driverId);
+	await supabaseClient.from("deliveries").update({ assignment_status:"Unassigned", status:"Pending", driver_id:null, driver_name:null }).eq("id", id).eq("driver_id", driverId);
 	loadJobs();
 }
 async function updateStatus(id){
@@ -115,7 +115,7 @@ async function uploadProof(id){
 	const { error:upErr } = await supabaseClient.storage.from("proofs").upload(path, file, { upsert: true });
 	if(upErr){ alert(upErr.message); return; }
 	const { data } = supabaseClient.storage.from("proofs").getPublicUrl(path);
-	await supabaseClient.from("deliveries").update({ proof_of_delivery: data.publicUrl }).eq("id", id).eq("driver_id", driverId);
+	await supabaseClient.from("deliveries").update({ proof_of_delivery: data.publicUrl, proof_photo_url: data.publicUrl }).eq("id", id).eq("driver_id", driverId);
 	loadJobs();
 }
 
@@ -128,12 +128,12 @@ function sendGPS(){
 }
 
 async function clockIn(){
-	const { data, error } = await supabaseClient.from("timesheets").insert([{ driver_id: driverId, clock_in: new Date().toISOString(), status: "Clocked In" }]).select().single();
+	const { data, error } = await supabaseClient.from("timesheets").insert([{ driver_id: driverId, clock_in_at: new Date().toISOString(), status: "Open" }]).select().single();
 	if(!error && data){ activeTimesheetId = data.id; document.getElementById("clockStatus").innerText = "On"; }
 }
 async function clockOut(){
 	if(!activeTimesheetId){ return; }
-	await supabaseClient.from("timesheets").update({ clock_out: new Date().toISOString(), status: "Clocked Out" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	await supabaseClient.from("timesheets").update({ clock_out_at: new Date().toISOString(), status: "Closed" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
 	activeTimesheetId = null;
 	activeBreakStartedAt = null;
 	document.getElementById("clockStatus").innerText = "Off";

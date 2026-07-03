@@ -326,13 +326,11 @@ function driverInfo(driver){
       <strong>${driver.name || "Driver"}</strong><br>
       ${driverSummary(driver)}
     </div>
-  applyNotifications(counts);
   `;
 }
 
 function deliveryInfo(delivery){
   return `
-requestNotifyPermission();
     <div style="min-width:240px">
       <strong>${delivery.tracking_number || "Delivery"}</strong><br>
       Customer: ${delivery.customer_name || "N/A"}<br>
@@ -453,6 +451,7 @@ function assignmentBadge(status){
 }
 
 async function loadDashboard(){
+  requestNotifyPermission();
   await loadDrivers();
   await loadDeliveries();
   await renderMap();
@@ -520,6 +519,7 @@ async function loadDeliveries(){
     rejected: deliveries.filter(d => normalizeStatus(d.assignment_status) === "Rejected").length,
     cancelled: deliveries.filter(d => normalizeStatus(d.status) === "Cancelled").length,
   };
+  applyNotifications(counts);
 
   const revenue = deliveries
     .filter(d => normalizeStatus(d.status) === "Delivered")

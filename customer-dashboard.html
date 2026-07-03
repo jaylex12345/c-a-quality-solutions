@@ -61,7 +61,6 @@ function mergeRows(...lists){
 async function loadData(){
   const [
     bookingsByCustomerEmail,
-    bookingsByLegacyEmail,
     deliveriesByEmail,
     deliveriesByName,
     invoicesByEmail,
@@ -69,7 +68,6 @@ async function loadData(){
     invoicesByCustomerId
   ] = await Promise.all([
     supabaseClient.from('bookings').select('*').eq('customer_email', customerEmail),
-    supabaseClient.from('bookings').select('*').eq('email', customerEmail),
     supabaseClient.from('deliveries').select('*').eq('customer_email', customerEmail),
     supabaseClient.from('deliveries').select('*').eq('customer_name', customerName || ''),
     supabaseClient.from('invoices').select('*').eq('customer_email', customerEmail),
@@ -79,7 +77,6 @@ async function loadData(){
 
   const firstError = [
     bookingsByCustomerEmail.error,
-    bookingsByLegacyEmail.error,
     deliveriesByEmail.error,
     deliveriesByName.error,
     invoicesByEmail.error,
@@ -92,7 +89,7 @@ async function loadData(){
     return;
   }
 
-  const bookings = mergeRows(bookingsByCustomerEmail.data || [], bookingsByLegacyEmail.data || []);
+  const bookings = mergeRows(bookingsByCustomerEmail.data || []);
   const deliveries = mergeRows(deliveriesByEmail.data || [], deliveriesByName.data || []);
   const invoices = mergeRows(invoicesByEmail.data || [], invoicesByName.data || [], invoicesByCustomerId.data || []);
   document.getElementById('bookingCount').innerText = bookings.length;

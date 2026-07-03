@@ -36,15 +36,17 @@ async function trackPackage(){
 	if(error){ document.getElementById("result").innerHTML = `<div class="result">${error.message}</div>`; return; }
 	if(!data || !data.length){ document.getElementById("result").innerHTML = '<div class="result">No delivery found.</div>'; return; }
 	const d = data[0];
+	const dropoff = d.delivery_address || d.delivery_location || d.dropoff_address || d.destination_address || '';
+	const proofUrl = d.proof_photo_url || d.proof_of_delivery || '';
 	document.getElementById("result").innerHTML = `
 		<div class="result">
 			<p><strong>Tracking:</strong> ${d.tracking_number || ''}</p>
 			<p><strong>Customer:</strong> ${d.customer_name || ''}</p>
 			<p><strong>Status:</strong> <span class="status">${d.status || 'Pending'}</span></p>
 			<p><strong>Pickup:</strong> ${d.pickup_address || ''}</p>
-			<p><strong>Drop-off:</strong> ${d.dropoff_address || ''}</p>
+			<p><strong>Drop-off:</strong> ${dropoff}</p>
 			<p><strong>Delivered:</strong> ${d.delivery_time ? new Date(d.delivery_time).toLocaleString() : 'Pending'}</p>
-			${d.proof_of_delivery ? `<img class="proof" src="${d.proof_of_delivery}" alt="Proof of delivery">` : '<p>No proof uploaded yet.</p>'}
+			${proofUrl ? `<img class="proof" src="${proofUrl}" alt="Proof of delivery">` : '<p>No proof uploaded yet.</p>'}
 		</div>`;
 }
 </script>
