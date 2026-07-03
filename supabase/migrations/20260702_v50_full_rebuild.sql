@@ -96,10 +96,9 @@ create policy deliveries_delete on public.deliveries
 for delete
 using (auth.role() = 'authenticated');
 
--- Customers
 create policy customers_select on public.customers
 for select
-using (auth.role() = 'authenticated');
+using (true);
 
 create policy customers_insert on public.customers
 for insert
@@ -107,17 +106,16 @@ with check (true);
 
 create policy customers_update on public.customers
 for update
-using (auth.role() = 'authenticated')
-with check (auth.role() = 'authenticated');
+using (true)
+with check (true);
 
 create policy customers_delete on public.customers
 for delete
 using (auth.role() = 'authenticated');
 
--- Bookings (public create allowed)
 create policy bookings_select on public.bookings
 for select
-using (auth.role() = 'authenticated');
+using (true);
 
 create policy bookings_insert on public.bookings
 for insert
@@ -125,17 +123,16 @@ with check (true);
 
 create policy bookings_update on public.bookings
 for update
-using (auth.role() = 'authenticated')
-with check (auth.role() = 'authenticated');
+using (true)
+with check (true);
 
 create policy bookings_delete on public.bookings
 for delete
 using (auth.role() = 'authenticated');
 
--- Invoices
 create policy invoices_select on public.invoices
 for select
-using (auth.role() = 'authenticated');
+using (true);
 
 create policy invoices_insert on public.invoices
 for insert
@@ -143,8 +140,8 @@ with check (auth.role() = 'authenticated');
 
 create policy invoices_update on public.invoices
 for update
-using (auth.role() = 'authenticated')
-with check (auth.role() = 'authenticated');
+using (true)
+with check (true);
 
 create policy invoices_delete on public.invoices
 for delete
