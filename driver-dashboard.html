@@ -112,7 +112,7 @@ async function acceptJob(id){
 async function rejectJob(id){
 	if(!id) return;
 	const client = requireSupabaseClient();
-	const { error } = await client.from("deliveries").update({ assignment_status:"Unassigned", status:"Pending", driver_id:null, driver_name:null }).eq("id", id).eq("driver_id", driverId);
+	const { error } = await client.from("deliveries").update({ assignment_status:"Rejected", status:"Pending", driver_id:null, driver_name:null }).eq("id", id).eq("driver_id", driverId);
 	if(error){ alert(error.message); return; }
 	await loadJobs();
 }
@@ -145,7 +145,24 @@ async function uploadProof(id){
 function sendGPS(){
 	if(!navigator.geolocation){ alert("Geolocation unavailable"); return; }
 	navigator.geolocation.getCurrentPosition(async (p) => {
-		await supabaseClient.from("drivers").update({ latitude:p.coords.latitude, longitude:p.coords.longitude, is_active:true }).eq("id", driverId);
+		const gpsPayload = {
+			latitude: p.coords.latitude,
+			longitude: p.coords.longitude,
+			is_active: true,
+			status: "Online",
+			last_seen: new Date().toISOString(),
+			updated_at: new Date().toISOString()
+		};
+		const { error } = await supabaseClient.from("drivers").update(gpsPayload).eq("id", driverId);
+		if(error && (error.message || "").toLowerCase().includes("updated_at")){
+			const retryPayload = { ...gpsPayload };
+			delete retryPayload.updated_at;
+			const { error: retryError } = await supabaseClient.from("drivers").update(retryPayload).eq("id", driverId);
+			if(retryError){ alert(retryError.message); return; }
+		}else if(error){
+			alert(error.message);
+			return;
+		}
 		alert("GPS sent");
 	});
 }

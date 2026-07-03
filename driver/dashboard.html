@@ -744,7 +744,7 @@ async function rejectDelivery(id){
     .update({
       driver_id: null,
       driver_name: null,
-      assignment_status: "Unassigned",
+      assignment_status: "Rejected",
       status: "Pending",
       driver_notes: "Driver rejected assignment"
     })

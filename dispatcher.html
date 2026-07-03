@@ -6,24 +6,36 @@
 <title>Dispatcher Console | C&A Quality Solutions</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&callback=initMap"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
 .header{background:#061b3a;color:#fff;padding:20px;text-align:center}
 .wrap{max-width:1300px;margin:20px auto;padding:0 16px}
-.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
+.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.08);margin-bottom:14px}
 table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}
 select{padding:8px;border:1px solid #d1d5db;border-radius:8px;width:100%}
 .btn{background:#d9b431;color:#071b33;border:0;padding:8px 12px;border-radius:8px;font-weight:bold;cursor:pointer}
+#map{width:100%;height:320px;border-radius:10px;background:#d1d5db}
+.mini{display:block;color:#64748b;font-size:12px;margin-top:4px}
+.pill{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:bold}
+.accepted{background:#dcfce7;color:#166534}
+.rejected{background:#fee2e2;color:#991b1b}
+.pending{background:#fef3c7;color:#92400e}
+.unassigned{background:#e5e7eb;color:#374151}
 </style>
 </head>
 <body>
 <div class="header"><h1>Dispatcher Console</h1></div>
 <div class="wrap">
 	<div class="card">
+		<h2>Live Driver GPS Map</h2>
+		<div id="map"></div>
+	</div>
+	<div class="card">
 		<h2>Delivery Assignment Board</h2>
 		<table>
-			<thead><tr><th>Tracking</th><th>Customer</th><th>Status</th><th>Driver</th><th>Assign</th><th>Action</th></tr></thead>
-			<tbody id="rows"><tr><td colspan="6">Loading...</td></tr></tbody>
+			<thead><tr><th>Tracking</th><th>Customer</th><th>Status</th><th>Assignment Status</th><th>Driver Response</th><th>Driver</th><th>Clock Status</th><th>Last GPS Seen</th><th>Assign</th><th>Action</th></tr></thead>
+			<tbody id="rows"><tr><td colspan="10">Loading...</td></tr></tbody>
 		</table>
 	</div>
 </div>
@@ -32,23 +44,96 @@ const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supab
 if(localStorage.getItem("role") !== "admin") window.location.href = "login.html";
 
 let drivers = [];
+let deliveries = [];
+let latestTimesheetByDriver = new Map();
+let map = null;
+let markers = [];
+
+function initMap(){
+	map = new google.maps.Map(document.getElementById("map"), {
+		center: { lat: 39.2904, lng: -76.6122 },
+		zoom: 9
+	});
+}
+
+function clearMarkers(){
+	markers.forEach(marker => marker.setMap(null));
+	markers = [];
+}
+
+function renderDriverMap(){
+	if(!map) return;
+	clearMarkers();
+	const gpsDrivers = drivers.filter(driver => Number.isFinite(Number(driver.latitude)) && Number.isFinite(Number(driver.longitude)));
+	if(!gpsDrivers.length) return;
+	const bounds = new google.maps.LatLngBounds();
+	gpsDrivers.forEach(driver => {
+		const position = { lat: Number(driver.latitude), lng: Number(driver.longitude) };
+		const marker = new google.maps.Marker({
+			map,
+			position,
+			title: driver.name || "Driver"
+		});
+		markers.push(marker);
+		bounds.extend(position);
+	});
+	map.fitBounds(bounds, 50);
+}
+
+function responseBadge(assignmentStatus){
+	const value = String(assignmentStatus || "Unassigned");
+	if(value === "Accepted") return '<span class="pill accepted">Accepted</span>';
+	if(value === "Rejected") return '<span class="pill rejected">Rejected</span>';
+	if(value === "Pending Acceptance") return '<span class="pill pending">Pending</span>';
+	return '<span class="pill unassigned">Unassigned</span>';
+}
+
+function clockStatus(driverId){
+	const timesheet = latestTimesheetByDriver.get(String(driverId));
+	if(!timesheet) return { label: "Off", detail: "No shift" };
+	if(timesheet.status === "Closed") return { label: "Clocked Out", detail: `Out: ${timesheet.clock_out_at ? new Date(timesheet.clock_out_at).toLocaleTimeString() : "--"}` };
+	if(timesheet.break_started_at && !timesheet.break_ended_at) return { label: "On Break", detail: `Started: ${new Date(timesheet.break_started_at).toLocaleTimeString()}` };
+	return { label: "Clocked In", detail: `In: ${timesheet.clock_in_at ? new Date(timesheet.clock_in_at).toLocaleTimeString() : "--"}` };
+}
+
+function lastGpsSeen(driver){
+	const value = driver.last_seen || driver.updated_at;
+	if(!value) return "Never";
+	return new Date(value).toLocaleString();
+}
 
 async function loadBoard(){
-	const [{data:d,error:e1},{data:drv,error:e2}] = await Promise.all([
+	const [{data:d,error:e1},{data:drv,error:e2},{data:ts,error:e3}] = await Promise.all([
 		supabaseClient.from("deliveries").select("id,tracking_number,customer_name,status,driver_id,driver_name,assignment_status").order("created_at",{ascending:false}),
-		supabaseClient.from("drivers").select("id,name,status").order("name")
+		supabaseClient.from("drivers").select("id,name,status,is_active,latitude,longitude,last_seen,updated_at").order("name"),
+		supabaseClient.from("timesheets").select("id,driver_id,status,clock_in_at,clock_out_at,break_started_at,break_ended_at,updated_at,created_at").order("created_at", { ascending: false }).limit(500)
 	]);
-	if(e1 || e2){ document.getElementById("rows").innerHTML = `<tr><td colspan="6">${(e1||e2).message}</td></tr>`; return; }
+	if(e1 || e2 || e3){ document.getElementById("rows").innerHTML = `<tr><td colspan="10">${(e1||e2||e3).message}</td></tr>`; return; }
 	drivers = drv || [];
-	const items = d || [];
-	if(!items.length){ document.getElementById("rows").innerHTML = '<tr><td colspan="6">No deliveries.</td></tr>'; return; }
-	document.getElementById("rows").innerHTML = items.map(item => {
+	deliveries = d || [];
+	latestTimesheetByDriver = new Map();
+	(ts || []).forEach(row => {
+		if(!row.driver_id) return;
+		const key = String(row.driver_id);
+		if(!latestTimesheetByDriver.has(key)) latestTimesheetByDriver.set(key, row);
+	});
+	if(!deliveries.length){ document.getElementById("rows").innerHTML = '<tr><td colspan="10">No deliveries.</td></tr>'; renderDriverMap(); return; }
+	document.getElementById("rows").innerHTML = deliveries.map(item => {
+		const driver = drivers.find(x => String(x.id) === String(item.driver_id));
+		const assignment = item.assignment_status || (item.driver_id ? "Assigned" : "Unassigned");
+		const response = responseBadge(assignment);
+		const clock = item.driver_id ? clockStatus(item.driver_id) : { label: "Off", detail: "No driver" };
+		const lastGps = driver ? lastGpsSeen(driver) : "No driver";
 		const options = ['<option value="">Select Driver</option>'].concat(drivers.map(dr=>`<option value="${dr.id}" ${item.driver_id===dr.id?'selected':''}>${dr.name}</option>`)).join('');
 		return `<tr>
 			<td>${item.tracking_number || ''}</td>
 			<td>${item.customer_name || ''}</td>
 			<td>${item.status || 'Pending'}</td>
-			<td>${item.driver_name || (drivers.find(x=>x.id===item.driver_id)||{}).name || 'Unassigned'}</td>
+			<td>${assignment}</td>
+			<td>${response}</td>
+			<td>${item.driver_name || (driver||{}).name || 'Unassigned'}</td>
+			<td>${clock.label}<span class="mini">${clock.detail}</span></td>
+			<td>${lastGps}</td>
 			<td><select id="driver_${item.id}">${options}</select></td>
 			<td>
 				<button class="btn" onclick="assign('${item.id}')">Assign</button>
@@ -56,6 +141,7 @@ async function loadBoard(){
 			</td>
 		</tr>`;
 	}).join('');
+	renderDriverMap();
 }
 
 async function assign(deliveryId){
@@ -85,6 +171,7 @@ async function unassign(deliveryId){
 }
 
 loadBoard();
+setInterval(loadBoard, 12000);
 </script>
 </body>
 </html>
