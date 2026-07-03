@@ -49,12 +49,23 @@ select,input{width:100%;padding:8px;border:1px solid #d1d5db;border-radius:8px}
 	</div>
 </div>
 <script>
-const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+if(!window.supabase || typeof window.supabase.createClient !== "function"){
+	console.error("Supabase client library failed to load.");
+	alert("Supabase failed to load. Refresh and try again.");
+	throw new Error("Supabase library is not available");
+}
+
+const supabaseClient = window.supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 const driverId = localStorage.getItem("driver_id");
 if(!driverId) window.location.href = "driver-login.html";
 document.getElementById("driverName").innerText = localStorage.getItem("driver_name") || "Driver";
 let activeTimesheetId = null;
 let activeBreakStartedAt = null;
+
+function requireSupabaseClient(){
+	if(!supabaseClient) throw new Error("Supabase client unavailable");
+	return supabaseClient;
+}
 
 function logout(){ localStorage.clear(); window.location.href = "driver-login.html"; }
 
@@ -82,41 +93,53 @@ async function loadJobs(){
 				<input id="proof_${j.id}" type="file" accept="image/*">
 			</td>
 			<td>
-				<button class="btn" onclick="acceptJob('${j.id}')">Accept</button>
-				<button class="btn btn4" onclick="rejectJob('${j.id}')">Reject</button>
-				<button class="btn btn2" onclick="updateStatus('${j.id}')">Update</button>
-				<button class="btn btn3" onclick="uploadProof('${j.id}')">Upload Proof</button>
+				<button class="btn" onclick="window.acceptJob('${j.id}')">Accept</button>
+				<button class="btn btn4" onclick="window.rejectJob('${j.id}')">Reject</button>
+				<button class="btn btn2" onclick="window.updateJobStatus('${j.id}')">Update</button>
+				<button class="btn btn3" onclick="window.uploadProof('${j.id}')">Upload Proof</button>
 			</td>
 		</tr>
 	`).join('');
 }
 
 async function acceptJob(id){
-	await supabaseClient.from("deliveries").update({ assignment_status:"Accepted", status:"Accepted" }).eq("id", id).eq("driver_id", driverId);
-	loadJobs();
+	if(!id) return;
+	const client = requireSupabaseClient();
+	const { error } = await client.from("deliveries").update({ assignment_status:"Accepted", status:"Accepted" }).eq("id", id).eq("driver_id", driverId);
+	if(error){ alert(error.message); return; }
+	await loadJobs();
 }
 async function rejectJob(id){
-	await supabaseClient.from("deliveries").update({ assignment_status:"Unassigned", status:"Pending", driver_id:null, driver_name:null }).eq("id", id).eq("driver_id", driverId);
-	loadJobs();
+	if(!id) return;
+	const client = requireSupabaseClient();
+	const { error } = await client.from("deliveries").update({ assignment_status:"Unassigned", status:"Pending", driver_id:null, driver_name:null }).eq("id", id).eq("driver_id", driverId);
+	if(error){ alert(error.message); return; }
+	await loadJobs();
 }
-async function updateStatus(id){
+async function updateJobStatus(id){
+	if(!id) return;
 	const status = document.getElementById(`status_${id}`).value;
 	const payload = { status };
 	if(status === "Delivered") payload.delivery_time = new Date().toISOString();
-	await supabaseClient.from("deliveries").update(payload).eq("id", id).eq("driver_id", driverId);
-	loadJobs();
+	const client = requireSupabaseClient();
+	const { error } = await client.from("deliveries").update(payload).eq("id", id).eq("driver_id", driverId);
+	if(error){ alert(error.message); return; }
+	await loadJobs();
 }
 async function uploadProof(id){
+	if(!id) return;
 	const input = document.getElementById(`proof_${id}`);
 	if(!input.files || !input.files.length) return;
 	const file = input.files[0];
 	const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
 	const path = `proofs/${id}_${Date.now()}.${ext}`;
-	const { error:upErr } = await supabaseClient.storage.from("proofs").upload(path, file, { upsert: true });
+	const client = requireSupabaseClient();
+	const { error:upErr } = await client.storage.from("proofs").upload(path, file, { upsert: true });
 	if(upErr){ alert(upErr.message); return; }
-	const { data } = supabaseClient.storage.from("proofs").getPublicUrl(path);
-	await supabaseClient.from("deliveries").update({ proof_of_delivery: data.publicUrl, proof_photo_url: data.publicUrl }).eq("id", id).eq("driver_id", driverId);
-	loadJobs();
+	const { data } = client.storage.from("proofs").getPublicUrl(path);
+	const { error } = await client.from("deliveries").update({ proof_of_delivery: data.publicUrl, proof_photo_url: data.publicUrl }).eq("id", id).eq("driver_id", driverId);
+	if(error){ alert(error.message); return; }
+	await loadJobs();
 }
 
 function sendGPS(){
@@ -128,12 +151,16 @@ function sendGPS(){
 }
 
 async function clockIn(){
-	const { data, error } = await supabaseClient.from("timesheets").insert([{ driver_id: driverId, clock_in_at: new Date().toISOString(), status: "Open" }]).select().single();
-	if(!error && data){ activeTimesheetId = data.id; document.getElementById("clockStatus").innerText = "On"; }
+	const client = requireSupabaseClient();
+	const { data, error } = await client.from("timesheets").insert([{ driver_id: driverId, clock_in_at: new Date().toISOString(), status: "Open" }]).select().single();
+	if(error){ alert(error.message); return; }
+	if(data){ activeTimesheetId = data.id; document.getElementById("clockStatus").innerText = "On"; }
 }
 async function clockOut(){
 	if(!activeTimesheetId){ return; }
-	await supabaseClient.from("timesheets").update({ clock_out_at: new Date().toISOString(), status: "Closed" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	const client = requireSupabaseClient();
+	const { error } = await client.from("timesheets").update({ clock_out_at: new Date().toISOString(), status: "Closed" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	if(error){ alert(error.message); return; }
 	activeTimesheetId = null;
 	activeBreakStartedAt = null;
 	document.getElementById("clockStatus").innerText = "Off";
@@ -143,15 +170,28 @@ async function breakStart(){
 	if(!activeTimesheetId){ await clockIn(); }
 	activeBreakStartedAt = new Date().toISOString();
 	if(activeTimesheetId){
-		await supabaseClient.from("timesheets").update({ break_started_at: activeBreakStartedAt, status: "On Break" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+		const client = requireSupabaseClient();
+		const { error } = await client.from("timesheets").update({ break_started_at: activeBreakStartedAt, status: "On Break" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+		if(error){ alert(error.message); return; }
 	}
 }
 
 async function breakEnd(){
 	if(!activeTimesheetId){ return; }
-	await supabaseClient.from("timesheets").update({ break_ended_at: new Date().toISOString(), status: "Clocked In" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	const client = requireSupabaseClient();
+	const { error } = await client.from("timesheets").update({ break_ended_at: new Date().toISOString(), status: "Open" }).eq("id", activeTimesheetId).eq("driver_id", driverId);
+	if(error){ alert(error.message); return; }
 	activeBreakStartedAt = null;
 }
+
+window.clockIn = clockIn;
+window.clockOut = clockOut;
+window.breakStart = breakStart;
+window.breakEnd = breakEnd;
+window.acceptJob = acceptJob;
+window.rejectJob = rejectJob;
+window.updateJobStatus = updateJobStatus;
+window.uploadProof = uploadProof;
 
 loadJobs();
 </script>
