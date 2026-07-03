@@ -70,6 +70,7 @@ input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border
       <div class="card"><h3>Active Drivers</h3><p id="activeDrivers">0</p></div>
       <div class="card"><h3>Pending Jobs</h3><p id="pendingJobs">0</p></div>
       <div class="card"><h3>Completed Today</h3><p id="completedToday">0</p></div>
+      <div class="card"><h3>Stripe Revenue (Paid)</h3><p id="paidRevenue">$0.00</p></div>
     </div>
 
     <div class="section">
@@ -110,6 +111,10 @@ function logout(){
   window.location.href = "/admin/login.html";
 }
 
+function asMoney(value){
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+}
+
 async function loadAdminStats(){
   const { data: deliveries } = await supabaseClient.from("deliveries").select("*");
   const { data: drivers } = await supabaseClient.from("drivers").select("*");
@@ -122,6 +127,11 @@ async function loadAdminStats(){
   document.getElementById("activeDrivers").innerText = driversList.filter(item => item.is_active === true).length;
   document.getElementById("pendingJobs").innerText = deliveriesList.filter(item => item.status === "Pending").length;
   document.getElementById("completedToday").innerText = deliveriesList.filter(item => item.status === "Delivered" && item.created_at && item.created_at.slice(0,10) === today).length;
+  document.getElementById("paidRevenue").innerText = asMoney(
+    deliveriesList
+      .filter(item => String(item.payment_status || "").toLowerCase() === "paid")
+      .reduce((sum, item) => sum + Number(item.total_amount || item.amount || item.delivery_fee || 0), 0)
+  );
 }
 
 async function addDriver(){
@@ -158,6 +168,13 @@ async function addDriver(){
 }
 
 loadAdminStats();
+setInterval(loadAdminStats, 15000);
+
+supabaseClient
+  .channel("admin-dashboard-live")
+  .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => loadAdminStats())
+  .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () => loadAdminStats())
+  .subscribe();
 </script>
 
 </body>

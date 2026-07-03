@@ -184,33 +184,31 @@ const logoUrl = "/assets/images/logo.jpeg";
   
 
   function getProgress(status) {
+    const current = normalizeCustomerStatus(status).toLowerCase();
+    const order = ["Pending", "Assigned", "Accepted", "Driver En Route", "Picked Up", "Delivered"];
+    const currentIndex = Math.max(0, order.findIndex(label => label.toLowerCase() === current));
+
+    return order.map((label, index) => `${index <= currentIndex ? "🟢" : "⚪"} ${label}`).join(" → ");
+  }
+
+  function normalizeCustomerStatus(status) {
     const current = (status || "").toLowerCase();
-
-    if (current === "picked up") {
-      return "🟢 Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
-    }
-
-    if (current === "in transit") {
-      return "🟢 Picked Up → 🟢 In Transit → ⚪ Out for Delivery → ⚪ Delivered";
-    }
-
-    if (current === "out for delivery") {
-      return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → ⚪ Delivered";
-    }
-
-    if (current === "delivered") {
-      return "🟢 Picked Up → 🟢 In Transit → 🟢 Out for Delivery → 🟢 Delivered";
-    }
-
-    return "⚪ Picked Up → ⚪ In Transit → ⚪ Out for Delivery → ⚪ Delivered";
+    if (current === "in transit" || current === "out for delivery") return "Driver En Route";
+    if (current === "assigned") return "Assigned";
+    if (current === "accepted") return "Accepted";
+    if (current === "picked up") return "Picked Up";
+    if (current === "delivered") return "Delivered";
+    return "Pending";
   }
 
   function getProgressSteps(status) {
-    const current = (status || "").toLowerCase();
+    const current = normalizeCustomerStatus(status).toLowerCase();
     const stages = [
-      ["Picked Up", current === "picked up" || current === "in transit" || current === "out for delivery" || current === "delivered"],
-      ["In Transit", current === "in transit" || current === "out for delivery" || current === "delivered"],
-      ["Out for Delivery", current === "out for delivery" || current === "delivered"],
+      ["Pending", true],
+      ["Assigned", ["assigned", "accepted", "driver en route", "picked up", "delivered"].includes(current)],
+      ["Accepted", ["accepted", "driver en route", "picked up", "delivered"].includes(current)],
+      ["Driver En Route", ["driver en route", "picked up", "delivered"].includes(current)],
+      ["Picked Up", ["picked up", "delivered"].includes(current)],
       ["Delivered", current === "delivered"]
     ];
 
@@ -279,7 +277,7 @@ const logoUrl = "/assets/images/logo.jpeg";
         <p>${getProgress(delivery.status)}</p>
 
         <p><strong>Status:</strong><br>
-          <span class="status">${delivery.status || "Pending"}</span>
+          <span class="status">${normalizeCustomerStatus(delivery.status)}</span>
         </p>
 
         <div class="tracking-grid">

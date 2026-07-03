@@ -255,6 +255,7 @@ let activeTimesheetId = null;
 let breakStartedAt = null;
 let gpsAutoIntervalId = null;
 let gpsSending = false;
+let realtimeDeliveryChannel = null;
 
 if (!driverId || (role && role !== "driver")) window.location.href = "/driver/login.html";
 document.getElementById("driverName").innerText = driverName || "Driver";
@@ -262,6 +263,7 @@ document.getElementById("driverName").innerText = driverName || "Driver";
 function badge(status){
   if(status==="Delivered") return `<span class="badge delivered">Delivered</span>`;
   if(status==="In Transit") return `<span class="badge transit">In Transit</span>`;
+  if(status==="Driver En Route") return `<span class="badge transit">Driver En Route</span>`;
   if(status==="Out for Delivery") return `<span class="badge out">Out for Delivery</span>`;
   if(status==="Picked Up") return `<span class="badge picked">Picked Up</span>`;
   return `<span class="badge pending">${status || "Pending"}</span>`;
@@ -576,7 +578,7 @@ function renderDesktopControls(d, assignmentStatus, isDelivered){
   return `
     <select id="status-${d.id}">
       <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
-      <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+      <option ${d.status==="Driver En Route"?"selected":""}>Driver En Route</option>
       <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
       <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
     </select>
@@ -601,7 +603,7 @@ function renderMobileControls(d, assignmentStatus, isDelivered){
     <div class="job-actions">
       <select id="status-${d.id}" class="full">
         <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
-        <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+        <option ${d.status==="Driver En Route"?"selected":""}>Driver En Route</option>
         <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
         <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
       </select>
@@ -666,7 +668,7 @@ function renderMobileCard(d){
           <div class="job-actions">
             <select id="status-${d.id}" class="full">
               <option ${d.status==="Picked Up"?"selected":""}>Picked Up</option>
-              <option ${d.status==="In Transit"?"selected":""}>In Transit</option>
+              <option ${d.status==="Driver En Route"?"selected":""}>Driver En Route</option>
               <option ${d.status==="Out for Delivery"?"selected":""}>Out for Delivery</option>
               <option ${d.status==="Delivered"?"selected":""}>Delivered</option>
             </select>
@@ -896,6 +898,21 @@ function setDriverOfflineBeacon(){
   }).catch(() => {});
 }
 
+function initDriverRealtime(){
+  if(realtimeDeliveryChannel){
+    supabaseClient.removeChannel(realtimeDeliveryChannel);
+  }
+
+  realtimeDeliveryChannel = supabaseClient
+    .channel(`driver-live-${driverId}`)
+    .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, payload => {
+      const row = payload.new || payload.old || {};
+      if(!row.driver_id || String(row.driver_id) !== String(driverId)) return;
+      loadDeliveries();
+    })
+    .subscribe();
+}
+
 function openMap(locationText){
   window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
 }
@@ -932,6 +949,7 @@ loadDriverProfile();
 loadDeliveries();
 loadTimeClock();
 startAutoGPS();
+initDriverRealtime();
 setInterval(loadDeliveries, 15000);
 setInterval(loadTimeClock, 30000);
 </script>

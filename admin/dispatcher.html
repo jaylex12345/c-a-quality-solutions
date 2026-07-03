@@ -173,6 +173,7 @@ let geocoder;
 let infoWindow;
 const geocodeCache = new Map();
 let notificationSnapshot = null;
+let realtimeChannel = null;
 
 function initMap(){
   map = new google.maps.Map(document.getElementById("map"), {
@@ -253,6 +254,7 @@ function normalizeStatus(status){
   const value = toText(status).toLowerCase();
   if(value === "out for delivery") return "Out for Delivery";
   if(value === "in transit") return "In Transit";
+  if(value === "driver en route") return "Driver En Route";
   if(value === "picked up") return "Picked Up";
   if(value === "delivered") return "Delivered";
   if(value === "accepted") return "Accepted";
@@ -266,7 +268,7 @@ function normalizeStatus(status){
 function statusBadge(status){
   const value = normalizeStatus(status);
   if(value === "Delivered" || value === "Completed") return `<span class="badge delivered">${value}</span>`;
-  if(value === "In Transit") return `<span class="badge transit">${value}</span>`;
+  if(value === "In Transit" || value === "Driver En Route") return `<span class="badge transit">${value}</span>`;
   if(value === "Out for Delivery") return `<span class="badge out">${value}</span>`;
   if(value === "Picked Up") return `<span class="badge picked">${value}</span>`;
   if(value === "Cancelled") return `<span class="badge cancelled">Cancelled</span>`;
@@ -528,6 +530,7 @@ async function loadDeliveries(){
     accepted: deliveries.filter(d => normalizeStatus(d.assignment_status) === "Accepted" || normalizeStatus(d.status) === "Accepted").length,
     pickedUp: deliveries.filter(d => normalizeStatus(d.status) === "Picked Up").length,
     inTransit: deliveries.filter(d => normalizeStatus(d.status) === "In Transit").length,
+    driverEnRoute: deliveries.filter(d => normalizeStatus(d.status) === "Driver En Route").length,
     outForDelivery: deliveries.filter(d => normalizeStatus(d.status) === "Out for Delivery").length,
     delivered: deliveries.filter(d => normalizeStatus(d.status) === "Delivered").length,
     rejected: deliveries.filter(d => normalizeStatus(d.assignment_status) === "Rejected").length,
@@ -536,7 +539,7 @@ async function loadDeliveries(){
   applyNotifications(counts);
 
   const revenue = deliveries
-    .filter(d => normalizeStatus(d.status) === "Delivered")
+    .filter(d => String(d.payment_status || "").toLowerCase() === "paid")
     .reduce((sum, d) => sum + Number(d.cod_amount || d.delivery_fee || d.total_amount || d.amount || 0), 0);
 
   const completedDurations = deliveries
@@ -547,7 +550,7 @@ async function loadDeliveries(){
   document.getElementById("pendingJobs").innerText = counts.pending;
   document.getElementById("assignedJobs").innerText = counts.assigned;
   document.getElementById("acceptedJobs").innerText = counts.accepted;
-  document.getElementById("activeJobs").innerText = counts.pickedUp + counts.inTransit;
+  document.getElementById("activeJobs").innerText = counts.pickedUp + counts.inTransit + counts.driverEnRoute;
   document.getElementById("outJobs").innerText = counts.outForDelivery;
   document.getElementById("completedJobs").innerText = counts.delivered;
   document.getElementById("rejectedJobs").innerText = counts.rejected;
@@ -777,7 +780,26 @@ function openDeliveryMap(locationText){
   window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
 }
 
+function initRealtime(){
+  if(realtimeChannel){
+    supabaseClient.removeChannel(realtimeChannel);
+  }
+
+  realtimeChannel = supabaseClient
+    .channel("dispatcher-live-updates")
+    .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => {
+      loadDashboard();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () => {
+      loadDrivers();
+      renderMap();
+    })
+    .subscribe();
+}
+
 setInterval(loadDashboard, 15000);
+initRealtime();
+loadDashboard();
 
 </script>
 

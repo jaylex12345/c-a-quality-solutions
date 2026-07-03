@@ -1,24 +1,38 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 exports.handler = async function (event) {
   try {
+    if (event.httpMethod !== "POST") {
+      return {
+        statusCode: 405,
+        body: JSON.stringify({ error: "Method not allowed" }),
+      };
+    }
+
     const body = JSON.parse(event.body || "{}");
 
     const amount = Number(body.amount);
-    const email = body.email;
-    const customerName = body.customerName;
-    const pickup = body.pickup;
-    const dropoff = body.dropoff;
-    const serviceType = body.serviceType;
-    const pickupDate = body.pickupDate;
-    const pickupTime = body.pickupTime;
+    const email = (body.email || "").trim();
+    const customerName = (body.customerName || "").trim();
+    const customerPhone = (body.customerPhone || "").trim();
+    const pickup = (body.pickup || "").trim();
+    const dropoff = (body.dropoff || "").trim();
+    const serviceType = (body.serviceType || "Standard Courier").trim();
+    const pickupDate = (body.pickupDate || "").trim();
+    const pickupTime = (body.pickupTime || "").trim();
+    const instructions = (body.instructions || "").trim();
+    const estimatedMiles = Number(body.estimatedMiles || 0);
+    const trackingNumber = (body.trackingNumber || "").trim();
+    const customerId = body.customerId ? String(body.customerId) : "";
+
+    if (!email || !customerName || !pickup || !dropoff || !pickupDate || !trackingNumber) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: "Missing required checkout fields" }),
+      };
+    }
 
     if (!amount || amount <= 0) {
-
-
       return {
         statusCode: 400,
         body: JSON.stringify({ error: "Invalid amount" }),
@@ -40,7 +54,9 @@ Date:
 ${pickupDate}
 
 Time:
-${pickupTime}`;
+${pickupTime || "N/A"}`;
+
+  const siteUrl = process.env.SITE_URL || "https://caqualitysolutions.com";
 
     const session = await stripe.checkout.sessions.create({
       customer_email: email,
@@ -60,64 +76,23 @@ ${pickupTime}`;
         },
       ],
       metadata: {
+        trackingNumber,
+        customerId,
         customerName,
+        customerPhone,
+        email,
         serviceType,
         pickup,
         dropoff,
         pickupDate,
         pickupTime,
+        instructions,
+        estimatedMiles: Number.isFinite(estimatedMiles) ? String(estimatedMiles) : "0",
+        amount: String(amount),
       },
-      success_url: "https://caqualitysolutions.com/success.html",
-      cancel_url: "https://caqualitysolutions.com/cancel.html",
+      success_url: `${siteUrl}/success.html?session_id={CHECKOUT_SESSION_ID}&tracking=${encodeURIComponent(trackingNumber)}`,
+      cancel_url: `${siteUrl}/cancel.html`,
     });
-
-const bookingHtml = `
-  <h2>C&A Quality Solutions Booking Confirmation</h2>
-
-  <p><strong>Customer:</strong> ${customerName}</p>
-  <p><strong>Email:</strong> ${email}</p>
-  <p><strong>Service:</strong> ${serviceType}</p>
-  <p><strong>Pickup Address:</strong> ${pickup}</p>
-  <p><strong>Drop-off Address:</strong> ${dropoff}</p>
-  <p><strong>Pickup Date:</strong> ${pickupDate}</p>
-  <p><strong>Pickup Time:</strong> ${pickupTime}</p>
-  <p><strong>Amount:</strong> $${amount}</p>
-
-  <hr>
-
-  <p>Thank you for choosing C&A Quality Solutions LLC.</p>
-  <p>Phone: 410-878-5949</p>
-  <p>Email: james@caqualitysolutions.com</p>
-`;
-
-try {
-  console.log("Starting Resend email send...");
-
-  await resend.emails.send({
-    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-    to: email,
-    subject: "Your C&A Quality Solutions Booking Confirmation",
-    html: bookingHtml,
-  });
-
-  await resend.emails.send({
-    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-    to: "james@caqualitysolutions.com",
-    subject: "New Booking Received - C&A Quality Solutions",
-    html: bookingHtml,
-  });
-
-  await resend.emails.send({
-    from: "C&A Quality Solutions <bookings@caqualitysolutions.com>",
-    to: "alexisbright@caqualitysolutions.com",
-    subject: "New Booking Received - C&A Quality Solutions",
-    html: bookingHtml,
-  });
-
-  console.log("Resend emails sent successfully.");
-} catch (emailError) {
-  console.error("Email sending failed:", emailError);
-}
 
     return {
       statusCode: 200,

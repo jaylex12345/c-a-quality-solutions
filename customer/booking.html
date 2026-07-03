@@ -201,40 +201,53 @@ document.getElementById("bookingForm").addEventListener("submit", async (e) => {
   }
 
   try{
+    const submitBtn = document.querySelector("#bookingForm button[type='submit']");
+    if(submitBtn){
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Redirecting to Checkout...";
+    }
+
     const customerId = await upsertCustomer();
     const rate = servicePricing(document.getElementById("serviceType").value);
     const estimatedPrice = rate.base + (latestMiles * rate.mile);
     const tracking = trackingNumber();
 
-    const payload = {
-      customer_id: customerId,
-      tracking_number: tracking,
-      customer_name: document.getElementById("customerName").value.trim(),
-      customer_email: document.getElementById("customerEmail").value.trim(),
-      customer_phone: document.getElementById("customerPhone").value.trim(),
-      package_type: document.getElementById("serviceType").value,
-      pickup_address: document.getElementById("pickup_address").value.trim(),
-      destination_address: document.getElementById("dropoff_address").value.trim(),
-      estimated_distance_miles: latestMiles,
-      delivery_date: document.getElementById("pickupDate").value,
-      notes: document.getElementById("instructions").value.trim(),
-      status: "Pending",
-      payment_status: "Pending",
-      estimated_price: Number(estimatedPrice.toFixed(2)),
-      source: "website"
+    const checkoutPayload = {
+      amount: Number(estimatedPrice.toFixed(2)),
+      email: document.getElementById("customerEmail").value.trim(),
+      customerName: document.getElementById("customerName").value.trim(),
+      customerPhone: document.getElementById("customerPhone").value.trim(),
+      serviceType: document.getElementById("serviceType").value,
+      pickup: document.getElementById("pickup_address").value.trim(),
+      dropoff: document.getElementById("dropoff_address").value.trim(),
+      pickupDate: document.getElementById("pickupDate").value,
+      pickupTime: "",
+      instructions: document.getElementById("instructions").value.trim(),
+      estimatedMiles: latestMiles,
+      trackingNumber: tracking,
+      customerId
     };
 
-    const { error } = await supabaseClient.from("bookings").insert([payload]);
-    document.getElementById("msg").innerText = error ? error.message : `Booking submitted. Tracking: ${tracking}`;
+    const response = await fetch("/.netlify/functions/create-checkout", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(checkoutPayload)
+    });
 
-    if(!error){
-      document.getElementById("bookingForm").reset();
-      latestMiles = 0;
-      document.getElementById("milesText").innerText = "Estimated Miles: --";
-      document.getElementById("result").innerText = "Estimated Price: $0.00";
+    const checkout = await response.json();
+    if(!response.ok || !checkout.url){
+      throw new Error(checkout.error || "Unable to start checkout");
     }
+
+    document.getElementById("msg").innerText = `Redirecting to secure payment. Tracking: ${tracking}`;
+    window.location.href = checkout.url;
   }catch(error){
     document.getElementById("msg").innerText = error.message;
+    const submitBtn = document.querySelector("#bookingForm button[type='submit']");
+    if(submitBtn){
+      submitBtn.disabled = false;
+      submitBtn.innerText = "Submit Booking";
+    }
   }
 });
 </script>
