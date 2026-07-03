@@ -193,6 +193,9 @@ const logoUrl = "/assets/images/logo.jpeg";
 
   function normalizeCustomerStatus(status) {
     const current = (status || "").toLowerCase();
+    if (current === "completed") return "Delivered";
+    if (current === "pending dispatch") return "Pending";
+    if (current === "pending acceptance") return "Assigned";
     if (current === "in transit" || current === "out for delivery") return "Driver En Route";
     if (current === "assigned") return "Assigned";
     if (current === "accepted") return "Accepted";
@@ -242,6 +245,8 @@ const logoUrl = "/assets/images/logo.jpeg";
       .from("deliveries")
       .select("*")
       .eq("tracking_number", trackingNumber)
+      .order("delivery_time", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
       .limit(1);
 
     if (error) {

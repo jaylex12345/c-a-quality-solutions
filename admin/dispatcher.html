@@ -252,6 +252,7 @@ function applyNotifications(counts){
 }
 function normalizeStatus(status){
   const value = toText(status).toLowerCase();
+  if(value === "completed") return "Delivered";
   if(value === "out for delivery") return "Out for Delivery";
   if(value === "in transit") return "In Transit";
   if(value === "driver en route") return "Driver En Route";
@@ -263,6 +264,26 @@ function normalizeStatus(status){
   if(value === "cancelled" || value === "canceled") return "Cancelled";
   if(value === "pending acceptance") return "Pending Acceptance";
   return status || "Pending";
+}
+
+function latestDeliveriesByTracking(rows){
+  const sorted = [...rows].sort((a, b) => {
+    const aTime = new Date(a.delivery_time || a.updated_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.delivery_time || b.updated_at || b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+
+  const seen = new Set();
+  const deduped = [];
+
+  for(const row of sorted){
+    const key = String(row.tracking_number || row.id || "");
+    if(!key || seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(row);
+  }
+
+  return deduped;
 }
 
 function statusBadge(status){
@@ -521,7 +542,7 @@ async function loadDeliveries(){
     return;
   }
 
-  deliveries = data || [];
+  deliveries = latestDeliveriesByTracking(data || []);
 
   const counts = {
     total: deliveries.length,

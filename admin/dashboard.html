@@ -115,18 +115,45 @@ function asMoney(value){
   return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
 }
 
+function normalizeDeliveryStatus(status){
+  const value = String(status || "").toLowerCase();
+  if(value === "completed") return "Delivered";
+  if(value === "in transit") return "Driver En Route";
+  if(value === "pending acceptance") return "Assigned";
+  if(value === "") return "Pending";
+  return status;
+}
+
+function latestByTracking(deliveries){
+  const sorted = [...deliveries].sort((a, b) => {
+    const aTime = new Date(a.delivery_time || a.updated_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.delivery_time || b.updated_at || b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+
+  const seen = new Set();
+  const result = [];
+  for(const item of sorted){
+    const key = String(item.tracking_number || item.id || "");
+    if(!key || seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
 async function loadAdminStats(){
   const { data: deliveries } = await supabaseClient.from("deliveries").select("*");
   const { data: drivers } = await supabaseClient.from("drivers").select("*");
 
-  const deliveriesList = deliveries || [];
+  const deliveriesList = latestByTracking(deliveries || []);
   const driversList = drivers || [];
   const today = new Date().toISOString().slice(0,10);
 
   document.getElementById("todayDeliveries").innerText = deliveriesList.filter(item => item.created_at && item.created_at.slice(0,10) === today).length;
-  document.getElementById("activeDrivers").innerText = driversList.filter(item => item.is_active === true).length;
-  document.getElementById("pendingJobs").innerText = deliveriesList.filter(item => item.status === "Pending").length;
-  document.getElementById("completedToday").innerText = deliveriesList.filter(item => item.status === "Delivered" && item.created_at && item.created_at.slice(0,10) === today).length;
+  document.getElementById("activeDrivers").innerText = driversList.filter(item => item.is_active === true && String(item.status || "").toLowerCase() !== "offline").length;
+  document.getElementById("pendingJobs").innerText = deliveriesList.filter(item => normalizeDeliveryStatus(item.status) !== "Delivered" && normalizeDeliveryStatus(item.status) !== "Cancelled").length;
+  document.getElementById("completedToday").innerText = deliveriesList.filter(item => normalizeDeliveryStatus(item.status) === "Delivered" && item.delivery_time && item.delivery_time.slice(0,10) === today).length;
   document.getElementById("paidRevenue").innerText = asMoney(
     deliveriesList
       .filter(item => String(item.payment_status || "").toLowerCase() === "paid")
