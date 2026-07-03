@@ -43,19 +43,58 @@ table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;paddi
 const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
 const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
 const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
+const customerId=localStorage.getItem('customer_id');
 const customerEmail=localStorage.getItem('customer_email');
 const customerName=localStorage.getItem('customer_name');
 if(!customerEmail){window.location.href='customer-login.html';}
 
+function mergeRows(...lists){
+  const map = new Map();
+  lists.flat().forEach(item => {
+    if(!item) return;
+    const key = item.id || `${item.tracking_number || ''}-${item.invoice_number || ''}-${item.created_at || ''}`;
+    map.set(String(key), item);
+  });
+  return Array.from(map.values());
+}
+
 async function loadData(){
-  const [bookingsRes, deliveriesRes, invoicesRes] = await Promise.all([
+  const [
+    bookingsByCustomerEmail,
+    bookingsByLegacyEmail,
+    deliveriesByEmail,
+    deliveriesByName,
+    invoicesByEmail,
+    invoicesByName,
+    invoicesByCustomerId
+  ] = await Promise.all([
     supabaseClient.from('bookings').select('*').eq('customer_email', customerEmail),
-    supabaseClient.from('deliveries').select('*').or(`customer_email.eq.${customerEmail},customer_name.eq.${customerName||''}`),
-    supabaseClient.from('invoices').select('*').or(`customer_email.eq.${customerEmail},customer_name.eq.${customerName||''}`)
+    supabaseClient.from('bookings').select('*').eq('email', customerEmail),
+    supabaseClient.from('deliveries').select('*').eq('customer_email', customerEmail),
+    supabaseClient.from('deliveries').select('*').eq('customer_name', customerName || ''),
+    supabaseClient.from('invoices').select('*').eq('customer_email', customerEmail),
+    supabaseClient.from('invoices').select('*').eq('customer_name', customerName || ''),
+    customerId ? supabaseClient.from('invoices').select('*').eq('customer_id', customerId) : Promise.resolve({ data: [], error: null })
   ]);
-  const bookings = bookingsRes.data || [];
-  const deliveries = deliveriesRes.data || [];
-  const invoices = invoicesRes.data || [];
+
+  const firstError = [
+    bookingsByCustomerEmail.error,
+    bookingsByLegacyEmail.error,
+    deliveriesByEmail.error,
+    deliveriesByName.error,
+    invoicesByEmail.error,
+    invoicesByName.error,
+    invoicesByCustomerId.error
+  ].find(Boolean);
+
+  if(firstError){
+    document.getElementById('activity').innerHTML = `<tr><td colspan="4">${firstError.message}</td></tr>`;
+    return;
+  }
+
+  const bookings = mergeRows(bookingsByCustomerEmail.data || [], bookingsByLegacyEmail.data || []);
+  const deliveries = mergeRows(deliveriesByEmail.data || [], deliveriesByName.data || []);
+  const invoices = mergeRows(invoicesByEmail.data || [], invoicesByName.data || [], invoicesByCustomerId.data || []);
   document.getElementById('bookingCount').innerText = bookings.length;
   document.getElementById('deliveryCount').innerText = deliveries.length;
   document.getElementById('invoiceCount').innerText = invoices.length;

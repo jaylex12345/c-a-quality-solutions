@@ -30,6 +30,7 @@ table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;paddi
 const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
 const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
 const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
+const customerId=localStorage.getItem('customer_id');
 const customerEmail=localStorage.getItem('customer_email');
 const customerName=localStorage.getItem('customer_name');
 if(!customerEmail){window.location.href='customer-login.html';}
@@ -41,9 +42,17 @@ function badge(status){
 }
 
 async function loadInvoices(){
-  const {data,error}=await supabaseClient.from('invoices').select('*').or(`customer_email.eq.${customerEmail},customer_name.eq.${customerName||''}`).order('created_at',{ascending:false});
+  const [byEmail, byName, byCustomerId] = await Promise.all([
+    supabaseClient.from('invoices').select('*').eq('customer_email', customerEmail),
+    supabaseClient.from('invoices').select('*').eq('customer_name', customerName || ''),
+    customerId ? supabaseClient.from('invoices').select('*').eq('customer_id', customerId) : Promise.resolve({ data: [], error: null })
+  ]);
+  const error = byEmail.error || byName.error || byCustomerId.error;
   if(error){document.getElementById('rows').innerHTML=`<tr><td colspan="5">${error.message}</td></tr>`;return;}
-  const rows=data||[];
+
+  const map = new Map();
+  (byEmail.data || []).concat(byName.data || [], byCustomerId.data || []).forEach(item => map.set(String(item.id), item));
+  const rows = Array.from(map.values()).sort((a,b)=>new Date(b.created_at||0)-new Date(a.created_at||0));
   if(!rows.length){document.getElementById('rows').innerHTML='<tr><td colspan="5">No invoices found.</td></tr>';return;}
   document.getElementById('rows').innerHTML=rows.map(i=>`<tr><td>${i.invoice_number||''}</td><td>$${Number(i.amount||0).toFixed(2)}</td><td>${i.due_date?new Date(i.due_date).toLocaleDateString():''}</td><td>${badge(i.status)}</td><td>${Array.isArray(i.delivery_ids)?i.delivery_ids.join(', '):(i.delivery_ids||'')}</td></tr>`).join('');
 }

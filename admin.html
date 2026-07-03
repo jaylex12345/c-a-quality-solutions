@@ -14,7 +14,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
 .side a{display:block;color:#fff;text-decoration:none;padding:10px;border-radius:8px;margin:6px 0}
 .side a.active,.side a:hover{background:#d9b431;color:#071b33}
 .main{padding:24px}
-.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.cards{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
 .value{font-size:30px;color:#d9b431;font-weight:bold}
 input{width:100%;padding:10px;margin:6px 0;border:1px solid #d1d5db;border-radius:8px}
@@ -41,6 +41,7 @@ input{width:100%;padding:10px;margin:6px 0;border:1px solid #d1d5db;border-radiu
 			<div class="card"><h3>Deliveries</h3><div class="value" id="deliveriesCount">0</div></div>
 			<div class="card"><h3>Pending</h3><div class="value" id="pendingCount">0</div></div>
 			<div class="card"><h3>Drivers</h3><div class="value" id="driversCount">0</div></div>
+			<div class="card"><h3>Customers</h3><div class="value" id="customersCount">0</div></div>
 			<div class="card"><h3>Revenue</h3><div class="value" id="revenue">$0</div></div>
 		</div>
 		<div class="card" style="margin-top:14px;">
@@ -52,6 +53,25 @@ input{width:100%;padding:10px;margin:6px 0;border:1px solid #d1d5db;border-radiu
 			<button class="btn" onclick="addDriver()">Create Driver</button>
 			<p id="msg"></p>
 		</div>
+		<div class="card" style="margin-top:14px;">
+			<h2>Recent Customers</h2>
+			<div style="overflow:auto;">
+				<table style="width:100%;border-collapse:collapse;min-width:760px;">
+					<thead>
+						<tr>
+							<th style="text-align:left;background:#061b3a;color:#fff;padding:10px;">Business</th>
+							<th style="text-align:left;background:#061b3a;color:#fff;padding:10px;">Contact</th>
+							<th style="text-align:left;background:#061b3a;color:#fff;padding:10px;">Email</th>
+							<th style="text-align:left;background:#061b3a;color:#fff;padding:10px;">Phone</th>
+							<th style="text-align:left;background:#061b3a;color:#fff;padding:10px;">Status</th>
+						</tr>
+					</thead>
+					<tbody id="customersTableBody">
+						<tr><td colspan="5" style="padding:10px;">Loading customers...</td></tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
 	</main>
 </div>
 <script>
@@ -61,16 +81,48 @@ if(localStorage.getItem("role") !== "admin") window.location.href = "login.html"
 function logout(){ localStorage.clear(); window.location.href = "login.html"; }
 
 async function loadStats(){
-	const [{data:deliveries},{data:drivers}] = await Promise.all([
+	const [{data:deliveries},{data:drivers},{data:customers}] = await Promise.all([
 		supabaseClient.from("deliveries").select("status,total_price"),
-		supabaseClient.from("drivers").select("id")
+		supabaseClient.from("drivers").select("id"),
+		supabaseClient.from("customers").select("id")
 	]);
 	const d = deliveries || [];
 	document.getElementById("deliveriesCount").innerText = d.length;
 	document.getElementById("pendingCount").innerText = d.filter(x => (x.status || "").toLowerCase() === "pending").length;
 	document.getElementById("driversCount").innerText = (drivers || []).length;
+	document.getElementById("customersCount").innerText = (customers || []).length;
 	const total = d.reduce((n,x)=>n + Number(x.total_price || 0),0);
 	document.getElementById("revenue").innerText = `$${total.toFixed(2)}`;
+}
+
+async function loadRecentCustomers(){
+	const { data, error } = await supabaseClient
+		.from("customers")
+		.select("business_name,contact_person,email,phone,account_status,created_at")
+		.order("created_at", { ascending: false })
+		.limit(8);
+
+	const body = document.getElementById("customersTableBody");
+	if(error){
+		body.innerHTML = `<tr><td colspan="5" style="padding:10px;">${error.message}</td></tr>`;
+		return;
+	}
+
+	const rows = data || [];
+	if(!rows.length){
+		body.innerHTML = '<tr><td colspan="5" style="padding:10px;">No customers found.</td></tr>';
+		return;
+	}
+
+	body.innerHTML = rows.map(customer => `
+		<tr>
+			<td style="padding:10px;border-bottom:1px solid #e5e7eb;">${customer.business_name || ""}</td>
+			<td style="padding:10px;border-bottom:1px solid #e5e7eb;">${customer.contact_person || ""}</td>
+			<td style="padding:10px;border-bottom:1px solid #e5e7eb;">${customer.email || ""}</td>
+			<td style="padding:10px;border-bottom:1px solid #e5e7eb;">${customer.phone || ""}</td>
+			<td style="padding:10px;border-bottom:1px solid #e5e7eb;">${customer.account_status || "Active"}</td>
+		</tr>
+	`).join("");
 }
 
 async function addDriver(){
@@ -92,6 +144,7 @@ async function addDriver(){
 }
 
 loadStats();
+loadRecentCustomers();
 </script>
 </body>
 </html>
