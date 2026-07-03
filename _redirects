@@ -1,0 +1,23 @@
+# Force canonical host and HTTPS
+http://www.caqualitysolutions.com/* https://caqualitysolutions.com/:splat 301!
+http://caqualitysolutions.com/* https://caqualitysolutions.com/:splat 301!
+https://www.caqualitysolutions.com/* https://caqualitysolutions.com/:splat 301!
+
+# Duplicate URL consolidation
+/booking.html /customer/booking.html 301
+/track.html /customer/tracking.html 301
+/driver-login.html /driver/login.html 301
+/driver-dashboard.html /driver/dashboard.html 301
+/driver-history.html /driver/history.html 301
+/driver-profile.html /driver/profile.html 301
+/customer-invoices.html /customer/invoices.html 301
+/customer-profile.html /customer/profile.html 301
+/admin.html /admin/dashboard.html 301
+/dispatcher.html /admin/dispatcher.html 301
+/login.html /admin/login.html 301
+/customers.html /admin/customers.html 301
+/employees.html /admin/employees.html 301
+/invoices.html /admin/invoices.html 301
+/payroll.html /admin/payroll.html 301
+/reports.html /admin/reports.html 301
+/settings.html /admin/settings.html 301

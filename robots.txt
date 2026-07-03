@@ -1,0 +1,28 @@
+User-agent: *
+Allow: /
+
+# Private or non-search pages
+Disallow: /admin/
+Disallow: /driver/
+Disallow: /customer/invoices.html
+Disallow: /customer/profile.html
+Disallow: /customer-dashboard.html
+Disallow: /customer-invoices.html
+Disallow: /customer-profile.html
+Disallow: /admin.html
+Disallow: /dispatcher.html
+Disallow: /login.html
+Disallow: /customers.html
+Disallow: /deliveries.html
+Disallow: /drivers.html
+Disallow: /employees.html
+Disallow: /invoices.html
+Disallow: /payroll.html
+Disallow: /proofs.html
+Disallow: /reports.html
+Disallow: /settings.html
+Disallow: /success.html
+Disallow: /cancel.html
+Disallow: /thanks.html
+
+Sitemap: https://caqualitysolutions.com/sitemap.xml
