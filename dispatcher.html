@@ -97,7 +97,7 @@ function clockStatus(driverId){
 }
 
 function lastGpsSeen(driver){
-	const value = driver.last_seen || driver.updated_at;
+	const value = driver.last_seen;
 	if(!value) return "Never";
 	return new Date(value).toLocaleString();
 }
@@ -105,7 +105,7 @@ function lastGpsSeen(driver){
 async function loadBoard(){
 	const [{data:d,error:e1},{data:drv,error:e2},{data:ts,error:e3}] = await Promise.all([
 		supabaseClient.from("deliveries").select("id,tracking_number,customer_name,status,driver_id,driver_name,assignment_status").order("created_at",{ascending:false}),
-		supabaseClient.from("drivers").select("id,name,status,is_active,latitude,longitude,last_seen,updated_at").order("name"),
+		supabaseClient.from("drivers").select("id,name,status,is_active,latitude,longitude,last_seen").order("name"),
 		supabaseClient.from("timesheets").select("id,driver_id,status,clock_in_at,clock_out_at,break_started_at,break_ended_at,updated_at,created_at").order("created_at", { ascending: false }).limit(500)
 	]);
 	if(e1 || e2 || e3){ document.getElementById("rows").innerHTML = `<tr><td colspan="10">${(e1||e2||e3).message}</td></tr>`; return; }
