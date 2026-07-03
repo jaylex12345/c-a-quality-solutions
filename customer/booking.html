@@ -4,139 +4,42 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Book Now | C&A Quality Solutions</title>
-
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries=places&callback=initAutocomplete" async defer></script>
 <style>
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,sans-serif;
-}
-
-body{
-background:#f4f6f9;
-color:#111;
-}
-
-header{
-background:#061f45;
-color:white;
-padding:20px;
-text-align:center;
-}
-
-header h1{
-font-size:32px;
-}
-
-header p{
-color:#f2b632;
-margin-top:8px;
-}
-
-.container{
-max-width:1000px;
-margin:40px auto;
-padding:20px;
-}
-
-.card{
-background:white;
-padding:30px;
-border-radius:15px;
-box-shadow:0 10px 30px rgba(0,0,0,0.1);
-}
-
-h2{
-color:#061f45;
-margin-bottom:20px;
-}
-
-label{
-display:block;
-margin-top:15px;
-font-weight:bold;
-}
-
-input, select, textarea{
-width:100%;
-padding:15px;
-margin-top:8px;
-border:1px solid #ccc;
-border-radius:8px;
-font-size:16px;
-}
-
-button{
-width:100%;
-padding:16px;
-margin-top:20px;
-border:none;
-border-radius:10px;
-font-size:18px;
-font-weight:bold;
-cursor:pointer;
-}
-
-.calculate{
-background:#f2b632;
-color:#061f45;
-}
-
-.submit{
-background:#061f45;
-color:white;
-}
-
-.price-box{
-margin-top:20px;
-padding:20px;
-background:#061f45;
-color:white;
-font-size:24px;
-text-align:center;
-border-radius:12px;
-font-weight:bold;
-}
-
-.whatsapp{
-display:block;
-text-align:center;
-margin-top:20px;
-padding:16px;
-background:#25D366;
-color:white;
-text-decoration:none;
-border-radius:10px;
-font-weight:bold;
-font-size:18px;
-}
-
-footer{
-text-align:center;
-padding:20px;
-margin-top:40px;
-background:#061f45;
-color:white;
-}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#f4f6f9;color:#111}
+header{background:#061f45;color:white;padding:20px;text-align:center}
+header h1{font-size:32px}
+header p{color:#f2b632;margin-top:8px}
+nav{margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+nav a{color:#fff;text-decoration:none;font-weight:bold}
+nav a.book{color:#f2b632}
+.container{max-width:1000px;margin:40px auto;padding:20px}
+.card{background:white;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+h2{color:#061f45;margin-bottom:20px}
+input, select, textarea{width:100%;padding:15px;margin-top:8px;border:1px solid #ccc;border-radius:8px;font-size:16px}
+button{width:100%;padding:16px;margin-top:20px;border:none;border-radius:10px;font-size:18px;font-weight:bold;cursor:pointer}
+.calculate{background:#f2b632;color:#061f45}
+.submit{background:#061f45;color:white}
+.price-box{margin-top:20px;padding:20px;background:#061f45;color:white;font-size:24px;text-align:center;border-radius:12px;font-weight:bold}
+.footer{text-align:center;padding:20px;margin-top:40px;background:#061f45;color:white}
+.meta{margin-top:10px;color:#061f45;font-weight:bold}
+@media(max-width:900px){nav{gap:10px}.container{margin:20px auto;padding:12px}}
 </style>
 </head>
-
 <body>
 <header>
   <h1>C&A Quality Solutions</h1>
   <p>Professional Courier & Transportation Booking</p>
-
   <nav>
-    <a href="index.html">Home</a>
-    <a href="services.html">Services</a>
-    <a href="pricing.html">Pricing</a>
-    <a href="about.html">About Us</a>
-    <a href="contact.html">Contact</a>
-    <a href="/customer/booking.html">Request Quote</a>
+    <a href="/">Home</a>
+    <a href="/services.html">Services</a>
+    <a href="/pricing.html">Pricing</a>
+    <a href="/about.html">About Us</a>
+    <a href="/contact.html">Contact</a>
+    <a class="book" href="/booking">Request Quote / Book</a>
   </nav>
 </header>
 
@@ -144,120 +47,179 @@ color:white;
   <div class="card">
     <h2>Request a Quote / Book Service</h2>
 
-    <form id="bookingForm" action="https://formspree.io/f/xredagoj" method="POST">
+    <form id="bookingForm">
       <label>Full Name</label>
-      <input type="text" name="Customer Name" required>
+      <input id="customerName" type="text" required>
 
       <label>Phone Number</label>
-      <input type="text" name="Phone Number" required>
+      <input id="customerPhone" type="text" required>
+
       <label>Email Address</label>
-<input
-  type="email"
-  id="customerEmail"
-  name="Email Address"
-  required
->
+      <input type="email" id="customerEmail" required>
 
       <label>Service Type</label>
-      <select name="Service Type" required>
+      <select id="serviceType" required>
         <option>Standard Courier</option>
-<option>Priority / Same-Day Delivery</option>
-<option>Medical Courier</option>
-<option>Legal Courier</option>
-<option>Property Services</option>
-<option>Dedicated Route / Monthly Contract</option>
+        <option>Priority / Same-Day Delivery</option>
+        <option>Medical Courier</option>
+        <option>Legal Courier</option>
+        <option>Property Services</option>
+        <option>Dedicated Route / Monthly Contract</option>
       </select>
 
       <label>Pickup Address</label>
-      <input type="text" id="pickup" name="Pickup Address" required>
+      <input type="text" id="pickup_address" required>
 
       <label>Drop-off Address</label>
-      <input type="text" id="dropoff" name="Drop-off Address" required>
-      
+      <input type="text" id="dropoff_address" required>
 
-      <input type="hidden" id="miles" name="Estimated Miles">
+      <input type="hidden" id="estimatedMiles">
+      <div id="milesText" class="meta">Estimated Miles: --</div>
 
       <label>Pickup Date</label>
-<input type="date" name="Pickup Date" required>
-
-<label>Pickup Time</label>
-<input type="time" name="Pickup Time" required>
+      <input type="date" id="pickupDate" required>
 
       <label>Special Instructions</label>
-      <textarea name="Instructions"></textarea>
+      <textarea id="instructions"></textarea>
 
-      <button type="button" onclick="calculateDistanceAndPrice()" class="calculate-btn">Calculate Price</button>
-  
+      <div id="result" class="price-box">Estimated Price: $0.00</div>
+      <p id="msg"></p>
 
-
-      <div id="result" class="result">Estimated Price: $0.00</div>
-
-    
-
-      <input type="hidden" id="estimatedPriceInput" name="Estimated Price">
-
-    
-        <div class="policy-notice">
-Full payment is required to confirm your booking. Customers may receive a full refund if cancellation occurs more than 24 hours before pickup. Cancellation fees may apply within 24 hours of pickup. No refunds will be issued once a driver has been dispatched. To cancel or reschedule, contact C&A Quality Solutions immediately at 410-878-5949 or james@caqualitysolutions.com. Approved refunds are processed back to the original payment method within 5–8 business days.
-
-    
-<input type="hidden" name="_subject" value="New C&A Delivery Booking Request">
-<input type="hidden" name="_redirect" value="https://caqualitysolutions.com/thanks.html">
-
-      <button type="button" class="pay-now-btn" onclick="payFullAmount()">
-  Complete Booking & Payment
-</button>
+      <button type="submit" class="submit">Submit Booking</button>
     </form>
   </div>
 </div>
 
 <footer class="footer">
-  <div class="footer-container">
-
-    <div class="footer-box">
-      <h3>C&A Quality Solutions LLC</h3>
-      <p>
-📍 20 S Charles St STE 403, Baltimore, MD 21201
-</p>
-      <p>Professional Courier & Transportation Services</p>
-      <p>Serving Maryland, Washington DC & Virginia</p>
-    </div>
-
-    <div class="footer-box">
-      <h3>Contact</h3>
-      <p>Phone: <a href="tel:4108785949">(410) 878-5949</a></p>
-      <p>Email: <a href="mailto:contact@caqualitysolutions.com">contact@caqualitysolutions.com</a></p>
-      <p>Website: <a href="https://caqualitysolutions.com">caqualitysolutions.com</a></p>
-    </div>
-
-    <div class="footer-box">
-      <h3>Services</h3>
-      <p>Same-Day Courier</p>
-      <p>Medical Courier</p>
-      <p>Rush / Priority Delivery</p>
-      <p>Long-Distance Delivery</p>
-    </div>
-
-  </div>
-
-  <div class="footer-bottom">
-    <p>© 2026 C&A Quality Solutions LLC. All Rights Reserved.</p>
-  </div>
+  <p>© 2026 C&A Quality Solutions LLC. All Rights Reserved.</p>
 </footer>
 
 <script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 let pickupAutocomplete;
 let dropoffAutocomplete;
+let distanceService;
+let latestMiles = 0;
 
-function initAutocomplete() {
-  pickupAutocomplete = new google.maps.places.Autocomplete(
-    document.getElementById("pickup")
-  );
-
-  dropoffAutocomplete = new google.maps.places.Autocomplete(
-    document.getElementById("dropoff")
-  );
+function initAutocomplete(){
+  pickupAutocomplete = new google.maps.places.Autocomplete(document.getElementById("pickup_address"));
+  dropoffAutocomplete = new google.maps.places.Autocomplete(document.getElementById("dropoff_address"));
+  distanceService = new google.maps.DistanceMatrixService();
+  pickupAutocomplete.addListener("place_changed", calculateAutoMiles);
+  dropoffAutocomplete.addListener("place_changed", calculateAutoMiles);
 }
+
+function servicePricing(type){
+  if(type === "Priority / Same-Day Delivery") return { base: 70, mile: 2.5 };
+  if(type === "Medical Courier") return { base: 75, mile: 2.5 };
+  if(type === "Legal Courier") return { base: 65, mile: 2.25 };
+  if(type === "Property Services") return { base: 65, mile: 2.25 };
+  return { base: 45, mile: 2.25 };
+}
+
+function updatePrice(){
+  if(!latestMiles){
+    document.getElementById("result").innerText = "Estimated Price: $0.00";
+    return;
+  }
+  const rate = servicePricing(document.getElementById("serviceType").value);
+  const price = rate.base + (latestMiles * rate.mile);
+  document.getElementById("result").innerText = `Estimated Price: $${price.toFixed(2)}`;
+  window.currentEstimatedPrice = price;
+}
+
+function calculateAutoMiles(){
+  const pickup = document.getElementById("pickup_address").value.trim();
+  const dropoff = document.getElementById("dropoff_address").value.trim();
+  if(!pickup || !dropoff || !distanceService) return;
+  distanceService.getDistanceMatrix({
+    origins:[pickup],
+    destinations:[dropoff],
+    travelMode: google.maps.TravelMode.DRIVING,
+    unitSystem: google.maps.UnitSystem.IMPERIAL
+  }, (response, status) => {
+    if(status !== "OK") return;
+    const element = response.rows[0].elements[0];
+    if(!element || element.status !== "OK") return;
+    latestMiles = Number((element.distance.value / 1609.344).toFixed(1));
+    document.getElementById("estimatedMiles").value = String(latestMiles);
+    document.getElementById("milesText").innerText = `Estimated Miles: ${latestMiles}`;
+    updatePrice();
+  });
+}
+
+document.getElementById("serviceType").addEventListener("change", updatePrice);
+
+function trackingNumber(){
+  const seed = Date.now().toString().slice(-6);
+  return `CAQ-${seed}-${Math.floor(Math.random()*900+100)}`;
+}
+
+async function upsertCustomer(){
+  const email = document.getElementById("customerEmail").value.trim();
+  const customerPayload = {
+    business_name: document.getElementById("customerName").value.trim(),
+    contact_person: document.getElementById("customerName").value.trim(),
+    phone: document.getElementById("customerPhone").value.trim(),
+    email,
+    password: email,
+    address: document.getElementById("pickup_address").value.trim(),
+    billing_address: document.getElementById("pickup_address").value.trim(),
+    account_status: "Active"
+  };
+  const { data: existing } = await supabaseClient.from("customers").select("id").eq("email", email).limit(1);
+  if(existing && existing.length){
+    const { error } = await supabaseClient.from("customers").update(customerPayload).eq("id", existing[0].id);
+    if(error) throw error;
+    return existing[0].id;
+  }
+  const { data, error } = await supabaseClient.from("customers").insert([customerPayload]).select("id").single();
+  if(error) throw error;
+  return data.id;
+}
+
+document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if(!latestMiles){
+    document.getElementById("msg").innerText = "Select pickup and drop-off addresses to calculate miles automatically.";
+    return;
+  }
+  try{
+    const customerId = await upsertCustomer();
+    const rate = servicePricing(document.getElementById("serviceType").value);
+    const estimatedPrice = rate.base + (latestMiles * rate.mile);
+    const tracking = trackingNumber();
+    const payload = {
+      customer_id: customerId,
+      customer_name: document.getElementById("customerName").value.trim(),
+      customer_email: document.getElementById("customerEmail").value.trim(),
+      customer_phone: document.getElementById("customerPhone").value.trim(),
+      service_type: document.getElementById("serviceType").value,
+      pickup_address: document.getElementById("pickup_address").value.trim(),
+      dropoff_address: document.getElementById("dropoff_address").value.trim(),
+      estimated_miles: latestMiles,
+      pickup_date: document.getElementById("pickupDate").value,
+      instructions: document.getElementById("instructions").value.trim(),
+      status: "Pending",
+      payment_status: "Pending",
+      estimated_price: Number(estimatedPrice.toFixed(2)),
+      tracking_number: tracking
+    };
+    const { error } = await supabaseClient.from("bookings").insert([payload]);
+    document.getElementById("msg").innerText = error ? error.message : `Booking submitted. Tracking: ${tracking}`;
+    if(!error){
+      document.getElementById("bookingForm").reset();
+      latestMiles = 0;
+      document.getElementById("milesText").innerText = "Estimated Miles: --";
+      document.getElementById("result").innerText = "Estimated Price: $0.00";
+    }
+  }catch(error){
+    document.getElementById("msg").innerText = error.message;
+  }
+});
+</script>
+</body>
+</html>
 
 function calculateDistanceAndPrice() {
   const pickup = document.getElementById("pickup").value;

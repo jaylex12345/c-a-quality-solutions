@@ -35,7 +35,7 @@ let drivers = [];
 
 async function loadBoard(){
 	const [{data:d,error:e1},{data:drv,error:e2}] = await Promise.all([
-		supabaseClient.from("deliveries").select("id,tracking_number,customer_name,status,driver_id").order("created_at",{ascending:false}),
+		supabaseClient.from("deliveries").select("id,tracking_number,customer_name,status,driver_id,driver_name,assignment_status").order("created_at",{ascending:false}),
 		supabaseClient.from("drivers").select("id,name,status").order("name")
 	]);
 	if(e1 || e2){ document.getElementById("rows").innerHTML = `<tr><td colspan="6">${(e1||e2).message}</td></tr>`; return; }
@@ -48,17 +48,38 @@ async function loadBoard(){
 			<td>${item.tracking_number || ''}</td>
 			<td>${item.customer_name || ''}</td>
 			<td>${item.status || 'Pending'}</td>
-			<td>${(drivers.find(x=>x.id===item.driver_id)||{}).name || 'Unassigned'}</td>
+			<td>${item.driver_name || (drivers.find(x=>x.id===item.driver_id)||{}).name || 'Unassigned'}</td>
 			<td><select id="driver_${item.id}">${options}</select></td>
-			<td><button class="btn" onclick="assign('${item.id}')">Assign</button></td>
+			<td>
+				<button class="btn" onclick="assign('${item.id}')">Assign</button>
+				<button class="btn" onclick="unassign('${item.id}')" style="margin-left:6px;background:#0b5ed7;color:#fff;">Unassign</button>
+			</td>
 		</tr>`;
 	}).join('');
 }
 
 async function assign(deliveryId){
-	const driverId = document.getElementById(`driver_${deliveryId}`).value;
+	const driverSelect = document.getElementById(`driver_${deliveryId}`);
+	const driverId = driverSelect.value;
 	if(!driverId) return;
-	const { error } = await supabaseClient.from("deliveries").update({ driver_id: driverId, assignment_status: "Pending Acceptance", status: "Assigned" }).eq("id", deliveryId);
+	const driver = drivers.find(item => String(item.id) === String(driverId));
+	const { error } = await supabaseClient.from("deliveries").update({
+		driver_id: driverId,
+		driver_name: driver ? driver.name : null,
+		assignment_status: "Pending Acceptance",
+		status: "Assigned"
+	}).eq("id", deliveryId);
+	if(error){ alert(error.message); return; }
+	loadBoard();
+}
+
+async function unassign(deliveryId){
+	const { error } = await supabaseClient.from("deliveries").update({
+		driver_id: null,
+		driver_name: null,
+		assignment_status: "Unassigned",
+		status: "Pending"
+	}).eq("id", deliveryId);
 	if(error){ alert(error.message); return; }
 	loadBoard();
 }

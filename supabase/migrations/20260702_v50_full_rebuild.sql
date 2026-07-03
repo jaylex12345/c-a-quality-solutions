@@ -197,6 +197,26 @@ drop policy if exists "Allow timesheets select" on public.timesheets;
 drop policy if exists "Allow timesheets insert" on public.timesheets;
 drop policy if exists "Allow timesheets update" on public.timesheets;
 
+drop policy if exists "public timesheets select" on public.timesheets;
+drop policy if exists "public timesheets insert" on public.timesheets;
+drop policy if exists "public timesheets update" on public.timesheets;
+
+create policy "public timesheets select"
+on public.timesheets
+for select
+using (true);
+
+create policy "public timesheets insert"
+on public.timesheets
+for insert
+with check (true);
+
+create policy "public timesheets update"
+on public.timesheets
+for update
+using (true)
+with check (true);
+
 create policy "Allow timesheets select"
 on public.timesheets
 for select
