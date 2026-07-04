@@ -34,10 +34,15 @@ button{width:100%;padding:12px;background:#0b2d52;color:#fff;border:none;border-
 	<input id="password" type="password" placeholder="Password">
 	<button onclick="login()">Login</button>
 	<p id="msg"></p>
+  <p><a href="#" onclick="event.preventDefault();forgotPassword()">Forgot Password?</a></p>
   <p><a href="/admin-signup.html">Create admin account</a></p>
 </div>
 <script>
 const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+const OWNER_EMAILS = new Set([
+  "james@caqualitysolutions.com",
+  "alexisbright@caqualitysolutions.com"
+]);
 async function login(){
 	const email = document.getElementById("email").value.trim();
 	const password = document.getElementById("password").value.trim();
@@ -62,9 +67,39 @@ async function login(){
     .from("admin_users")
     .select("id, role")
     .eq("id", user.id)
-    .eq("role", "admin")
+    .in("role", ["admin", "super_admin"])
     .limit(1)
     .maybeSingle();
+
+  if((adminProfile.error || !adminProfile.data) && OWNER_EMAILS.has(String(user.email || "").toLowerCase())){
+    const fallbackName = String(user.user_metadata?.full_name || user.email || "Owner");
+    const upsertOwner = await supabaseClient
+      .from("admin_users")
+      .upsert([
+        {
+          id: user.id,
+          full_name: fallbackName,
+          email: String(user.email || "").toLowerCase(),
+          role: "super_admin"
+        }
+      ], { onConflict: "id" });
+
+    if(!upsertOwner.error){
+      const retryProfile = await supabaseClient
+        .from("admin_users")
+        .select("id, role")
+        .eq("id", user.id)
+        .in("role", ["admin", "super_admin"])
+        .limit(1)
+        .maybeSingle();
+
+      if(!retryProfile.error && retryProfile.data){
+        localStorage.setItem("role", retryProfile.data.role || "super_admin");
+        window.location.href = "/admin";
+        return;
+      }
+    }
+  }
 
   if(adminProfile.error || !adminProfile.data){
     await supabaseClient.auth.signOut();
@@ -72,8 +107,24 @@ async function login(){
     return;
   }
 
-  localStorage.setItem("role", "admin");
-  window.location.href = "admin.html";
+  localStorage.setItem("role", adminProfile.data.role || "admin");
+  window.location.href = "/admin";
+}
+
+async function forgotPassword(){
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const msg = document.getElementById("msg");
+
+  if(!email){
+    msg.innerText = "Enter your email first.";
+    return;
+  }
+
+  await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/admin-reset-password.html`
+  });
+
+  msg.innerText = "If this account exists, a reset link has been sent.";
 }
 </script>
 </body>

@@ -4,9 +4,15 @@
   }
 })();
 
+const SUPER_ADMIN_OWNER_EMAILS = [
+  "james@caqualitysolutions.com",
+  "alexisbright@caqualitysolutions.com",
+];
+
 async function requireAdminAuth(options) {
   const supabaseClient = options && options.supabaseClient;
   const loginPath = (options && options.loginPath) || "/login.html";
+  const allowedRoles = ["admin", "super_admin"];
 
   if (!supabaseClient) {
     window.location.href = loginPath;
@@ -26,7 +32,7 @@ async function requireAdminAuth(options) {
       .from("admin_users")
       .select("id, full_name, email, role")
       .eq("id", session.user.id)
-      .eq("role", "admin")
+      .in("role", allowedRoles)
       .limit(1)
       .maybeSingle();
 
@@ -37,7 +43,7 @@ async function requireAdminAuth(options) {
     }
 
     window.__adminUser = adminLookup.data;
-    localStorage.setItem("role", "admin");
+    localStorage.setItem("role", adminLookup.data.role || "admin");
     if (!document.getElementById("admin-logout-floating")) {
       const button = document.createElement("button");
       button.id = "admin-logout-floating";
@@ -85,4 +91,34 @@ async function adminLogout(loginPath) {
   localStorage.removeItem("role");
   window.location.href = redirectPath;
   return false;
+}
+
+async function requireSuperAdminAuth(options) {
+  const loginPath = (options && options.loginPath) || "/login.html";
+  const ok = await requireAdminAuth(options || {});
+  if (!ok) return false;
+
+  const role =
+    window.__adminUser && window.__adminUser.role
+      ? String(window.__adminUser.role)
+      : "";
+  const email =
+    window.__adminUser && window.__adminUser.email
+      ? String(window.__adminUser.email).toLowerCase()
+      : "";
+
+  if (role !== "super_admin" || !SUPER_ADMIN_OWNER_EMAILS.includes(email)) {
+    try {
+      if (window.supabaseClient && window.supabaseClient.auth) {
+        await window.supabaseClient.auth.signOut();
+      }
+    } catch (_) {
+      // no-op
+    }
+    localStorage.removeItem("role");
+    window.location.href = loginPath;
+    return false;
+  }
+
+  return true;
 }
