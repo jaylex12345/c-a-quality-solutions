@@ -36,6 +36,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Official drivers page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/drivers.html">
   <meta name="robots" content="noindex, follow">
@@ -92,32 +93,17 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
     <div class="section">
       <h2>Add Driver</h2>
       <div class="form-grid">
-        <input id="driverPhoto" placeholder="Photo URL">
         <input id="driverName" placeholder="Driver full name">
         <input id="driverPhone" placeholder="Phone number">
         <input id="driverEmail" type="email" placeholder="Email address">
-        <input id="driverPassword" type="text" placeholder="Password">
-        <input id="driverVehicle" placeholder="Vehicle">
-        <input id="driverPlate" placeholder="License plate">
-        <input id="driverInsuranceExpiry" type="date" placeholder="Insurance expiration">
-        <input id="driverLicenseExpiry" type="date" placeholder="License expiration">
-        <input id="driverAvailability" placeholder="Availability">
-        <input id="driverCurrentJob" placeholder="Current job tracking #">
-        <input id="driverCompletedToday" type="number" min="0" placeholder="Completed today">
-        <input id="driverRating" type="number" step="0.1" min="0" max="5" placeholder="Rating">
-        <input id="driverBattery" placeholder="Battery level e.g. 85%">
+        <input id="driverRole" value="Driver" disabled>
         <select id="driverStatus">
-          <option value="Available">Available</option>
-          <option value="On Duty">On Duty</option>
-          <option value="Offline">Offline</option>
-        </select>
-        <select id="driverActive">
-          <option value="true">Active</option>
-          <option value="false">Inactive</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
         </select>
       </div>
       <div class="actions" style="margin-top:12px;">
-        <button class="btn" onclick="addDriver()">Save Driver</button>
+        <button class="btn" onclick="addDriver()">Create Driver</button>
       </div>
       <p id="message" class="muted"></p>
     </div>
@@ -127,26 +113,19 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
       <table>
         <thead>
           <tr>
-            <th>Photo</th>
             <th>Name</th>
             <th>Phone</th>
             <th>Email</th>
-            <th>Vehicle</th>
-            <th>Plate</th>
-            <th>Insurance</th>
-            <th>License</th>
-            <th>Availability</th>
-            <th>Current Job</th>
-            <th>Completed Today</th>
-            <th>Rating</th>
-            <th>Battery</th>
+            <th>Role</th>
             <th>Status</th>
-            <th>Active</th>
+            <th>Account</th>
+            <th>Last Login</th>
             <th>Created</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody id="driversTable">
-          <tr><td colspan="16" class="muted">Loading drivers...</td></tr>
+          <tr><td colspan="9" class="muted">Loading drivers...</td></tr>
         </tbody>
       </table>
     </div>
@@ -156,11 +135,9 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
 
-const currentRole = localStorage.getItem("role");
-if(currentRole !== "admin"){
-  window.location.href = "login.html";
-}
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 function formatDateTime(value){
   return value ? new Date(value).toLocaleString() : "";
@@ -168,6 +145,66 @@ function formatDateTime(value){
 
 function activeBadge(active){
   return active ? '<span class="status active">Active</span>' : '<span class="status inactive">Inactive</span>';
+}
+
+function accountBadge(accountStatus){
+  const status = accountStatus || "Pending Activation";
+  if(status === "Active") return '<span class="status active">Active</span>';
+  if(status === "Suspended") return '<span class="status inactive">Suspended</span>';
+  return '<span class="status" style="background:#fef3c7;color:#92400e;">Pending Activation</span>';
+}
+
+async function adminAction(action, payload){
+  const response = await fetch("/.netlify/functions/driver-account-admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action, ...payload })
+  });
+
+  const result = await response.json();
+  if(!response.ok){
+    throw new Error(result.error || "Request failed");
+  }
+  return result;
+}
+
+async function resendInvite(id){
+  try{
+    const result = await adminAction("resend_invite", { driverId: id });
+    document.getElementById("message").innerText = result.message || "Invite sent.";
+    loadDrivers();
+  }catch(error){
+    document.getElementById("message").innerText = error.message;
+  }
+}
+
+async function forceReset(id){
+  try{
+    const result = await adminAction("force_password_reset", { driverId: id });
+    document.getElementById("message").innerText = result.message || "Password reset email sent.";
+    loadDrivers();
+  }catch(error){
+    document.getElementById("message").innerText = error.message;
+  }
+}
+
+async function toggleDriver(id, isActive){
+  try{
+    const result = await adminAction("set_activation", { driverId: id, isActive });
+    document.getElementById("message").innerText = result.message || "Driver updated.";
+    loadDrivers();
+  }catch(error){
+    document.getElementById("message").innerText = error.message;
+  }
+}
+
+async function logoutAllDevices(id){
+  try{
+    const result = await adminAction("logout_all_devices", { driverId: id });
+    document.getElementById("message").innerText = result.message || "Driver sessions revoked.";
+  }catch(error){
+    document.getElementById("message").innerText = error.message;
+  }
 }
 
 async function loadDrivers(){
@@ -178,7 +215,7 @@ async function loadDrivers(){
     .order("created_at", { ascending: false });
 
   if(error){
-    table.innerHTML = `<tr><td colspan="16">${error.message}</td></tr>`;
+    table.innerHTML = `<tr><td colspan="9">${error.message}</td></tr>`;
     return;
   }
 
@@ -188,96 +225,63 @@ async function loadDrivers(){
   document.getElementById("inactiveDrivers").innerText = drivers.filter(driver => driver.is_active === false).length;
 
   if(!drivers.length){
-    table.innerHTML = `<tr><td colspan="16" class="muted">No drivers found in Supabase.</td></tr>`;
+    table.innerHTML = `<tr><td colspan="9" class="muted">No drivers found in Supabase.</td></tr>`;
     return;
   }
 
   table.innerHTML = drivers.map(driver => `
     <tr>
-      <td>${driver.photo_url ? `<img src="${driver.photo_url}" alt="${driver.name || "Driver"}" style="width:48px;height:48px;border-radius:10px;object-fit:cover;">` : '<span class="muted">N/A</span>'}</td>
       <td><strong>${driver.name || ""}</strong></td>
       <td>${driver.phone || ""}</td>
       <td>${driver.email || ""}</td>
-      <td>${driver.vehicle || driver.vehicle_type || ""}</td>
-      <td>${driver.license_plate || ""}</td>
-      <td>${driver.insurance_expiration || driver.insurance_expiry || ""}</td>
-      <td>${driver.license_expiration || ""}</td>
-      <td>${driver.availability || ""}</td>
-      <td>${driver.current_job || ""}</td>
-      <td>${driver.completed_today || 0}</td>
-      <td>${driver.rating || "5.0"}</td>
-      <td>${driver.battery_level || ""}</td>
-      <td>${driver.status || ""}</td>
+      <td>${driver.role || "Driver"}</td>
       <td>${activeBadge(driver.is_active === true)}</td>
+      <td>${accountBadge(driver.account_status)}</td>
+      <td>${formatDateTime(driver.last_login_at)}</td>
       <td>${formatDateTime(driver.created_at)}</td>
+      <td>
+        <div class="actions">
+          <button class="btn" onclick="resendInvite('${driver.id}')">Resend Setup Email</button>
+          <button class="btn btn-secondary" onclick="forceReset('${driver.id}')">Force Reset</button>
+          <button class="btn btn-secondary" onclick="logoutAllDevices('${driver.id}')">Log Out Devices</button>
+          ${driver.is_active === true
+            ? `<button class="btn" style="background:#dc2626;color:#fff;" onclick="toggleDriver('${driver.id}', false)">Suspend</button>`
+            : `<button class="btn" style="background:#16a34a;color:#fff;" onclick="toggleDriver('${driver.id}', true)">Reactivate</button>`
+          }
+        </div>
+      </td>
     </tr>
   `).join("");
 }
 
 async function addDriver(){
-  const photoUrl = document.getElementById("driverPhoto").value.trim();
   const name = document.getElementById("driverName").value.trim();
   const phone = document.getElementById("driverPhone").value.trim();
   const email = document.getElementById("driverEmail").value.trim();
-  const password = document.getElementById("driverPassword").value.trim();
-  const vehicle = document.getElementById("driverVehicle").value.trim();
-  const licensePlate = document.getElementById("driverPlate").value.trim();
-  const insuranceExpiration = document.getElementById("driverInsuranceExpiry").value || null;
-  const licenseExpiration = document.getElementById("driverLicenseExpiry").value || null;
-  const availability = document.getElementById("driverAvailability").value.trim();
-  const currentJob = document.getElementById("driverCurrentJob").value.trim();
-  const completedToday = Number(document.getElementById("driverCompletedToday").value || 0);
-  const rating = Number(document.getElementById("driverRating").value || 5);
-  const batteryLevel = document.getElementById("driverBattery").value.trim();
-  const status = document.getElementById("driverStatus").value;
-  const isActive = document.getElementById("driverActive").value === "true";
+  const isActive = document.getElementById("driverStatus").value === "active";
 
-  if(!name || !phone || !email || !password){
+  if(!name || !phone || !email){
     document.getElementById("message").innerText = "Fill in all driver fields.";
     return;
   }
 
-  const { error } = await supabaseClient.from("drivers").insert([{
-    photo_url: photoUrl || null,
-    name,
-    phone,
-    email,
-    password,
-    status,
-    is_active: isActive,
-    vehicle,
-    vehicle_type: vehicle,
-    license_plate: licensePlate || null,
-    insurance_expiration: insuranceExpiration,
-    insurance_expiry: insuranceExpiration,
-    license_expiration: licenseExpiration,
-    availability: availability || status,
-    current_job: currentJob || null,
-    completed_today: completedToday,
-    rating,
-    battery_level: batteryLevel || null
-  }]);
-
-  if(error){
+  try{
+    const result = await adminAction("create_invite", {
+      name,
+      phone,
+      email,
+      isActive
+    });
+    document.getElementById("message").innerText = result.message || "Driver invitation sent.";
+  }catch(error){
     document.getElementById("message").innerText = error.message;
     return;
   }
 
-  document.getElementById("message").innerText = "Driver saved successfully.";
-  document.getElementById("driverPhoto").value = "";
   document.getElementById("driverName").value = "";
   document.getElementById("driverPhone").value = "";
   document.getElementById("driverEmail").value = "";
-  document.getElementById("driverPassword").value = "";
-  document.getElementById("driverVehicle").value = "";
-  document.getElementById("driverPlate").value = "";
-  document.getElementById("driverInsuranceExpiry").value = "";
-  document.getElementById("driverLicenseExpiry").value = "";
-  document.getElementById("driverAvailability").value = "";
-  document.getElementById("driverCurrentJob").value = "";
-  document.getElementById("driverCompletedToday").value = "";
-  document.getElementById("driverRating").value = "";
-  document.getElementById("driverBattery").value = "";
+  document.getElementById("driverStatus").value = "active";
   loadDrivers();
 }
 

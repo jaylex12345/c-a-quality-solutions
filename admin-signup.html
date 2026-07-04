@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Signup | C&A Quality Solutions LLC</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
+.card{background:#fff;padding:30px;width:380px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border-radius:8px;box-sizing:border-box}
+button{width:100%;padding:12px;background:#0b2d52;color:#fff;border:none;border-radius:8px;cursor:pointer;font-weight:bold}
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>Create Admin Account</h2>
+  <input id="fullName" placeholder="Full Name">
+  <input id="email" type="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <input id="confirmPassword" type="password" placeholder="Confirm Password">
+  <button onclick="signup()">Create Account</button>
+  <p id="msg"></p>
+  <p><a href="/login.html">Back to admin login</a></p>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+
+async function signup(){
+  const fullName = document.getElementById("fullName").value.trim();
+  const email = document.getElementById("email").value.trim().toLowerCase();
+  const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+  const msg = document.getElementById("msg");
+
+  if(!fullName || !email || !password || !confirmPassword){
+    msg.innerText = "All fields are required.";
+    return;
+  }
+
+  if(password !== confirmPassword){
+    msg.innerText = "Passwords do not match.";
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: fullName } }
+  });
+
+  if(error){
+    msg.innerText = error.message;
+    return;
+  }
+
+  const userResult = await supabaseClient.auth.getUser();
+  const user = userResult && userResult.data ? userResult.data.user : null;
+
+  if(!user){
+    msg.innerText = "Account created. If email confirmation is enabled, confirm your email, then log in.";
+    return;
+  }
+
+  const upsertResult = await supabaseClient
+    .from("admin_users")
+    .upsert([{ id: user.id, full_name: fullName, email, role: "admin" }], { onConflict: "id" });
+
+  if(upsertResult.error){
+    msg.innerText = upsertResult.error.message;
+    return;
+  }
+
+  localStorage.setItem("role", "admin");
+  msg.innerText = "Admin account created. Redirecting...";
+  setTimeout(() => {
+    window.location.href = "/admin.html";
+  }, 700);
+}
+</script>
+</body>
+</html>

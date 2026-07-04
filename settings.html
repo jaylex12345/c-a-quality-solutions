@@ -28,6 +28,8 @@ textarea{min-height:100px;resize:vertical;}
 .actions{display:flex;gap:8px;flex-wrap:wrap;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Legacy URL retained for redirects: settings. Use the preferred canonical URL for this C&A Quality Solutions page.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/settings.html">
   <meta name="robots" content="noindex, follow">
@@ -121,10 +123,12 @@ textarea{min-height:100px;resize:vertical;}
   </main>
 </div>
 <script>
-const currentRole = localStorage.getItem("role");
-if(currentRole !== "admin"){
-  window.location.href = "login.html";
-}
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
+
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 const SETTINGS_KEY = "ca_v5_settings";
 const defaultSettings = {

@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Admin Dispatcher | C&A Quality Solutions LLC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/admin-auth.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries&callback=initMap"></script>
 
@@ -50,7 +51,23 @@ select{padding:8px;border-radius:8px;width:100%}
 .driver-card{border:1px solid #e5e7eb;border-radius:12px;padding:13px;margin-bottom:10px}
 .online{color:#16a34a;font-weight:bold}
 .footer{text-align:center;color:#6b7280;margin:25px}
-@media(max-width:950px){.grid,.main{grid-template-columns:1fr}}
+.delivery-mobile{display:none}
+.delivery-cards{display:grid;gap:12px}
+.delivery-card{border:1px solid #dbe3ed;border-radius:14px;padding:14px;background:#fff}
+.delivery-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.delivery-card .label{font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+.delivery-card .value{font-weight:bold;word-break:break-word}
+.delivery-card-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+.delivery-card-actions .btn,.delivery-card-actions select{width:100%;min-height:48px}
+.mini{display:block;color:#64748b;font-size:12px;margin-top:4px}
+@media(max-width:950px){
+  .grid,.main{grid-template-columns:1fr}
+  .container{padding:0 12px}
+  .nav button,.btn{min-height:48px;padding:12px 14px;font-size:16px}
+  .delivery-desktop{display:none}
+  .delivery-mobile{display:block}
+  .delivery-card-grid{grid-template-columns:1fr}
+}
 </style>
   <meta name="description" content="Official admin dispatcher page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/dispatcher.html">
@@ -96,7 +113,7 @@ select{padding:8px;border-radius:8px;width:100%}
     <div class="card"><h3>Rejected</h3><div class="big" id="rejectedJobs">0</div><div class="metric-sub">Returned to dispatch</div></div>
     <div class="card"><h3>Cancelled</h3><div class="big" id="cancelledJobs">0</div><div class="metric-sub">Stopped jobs</div></div>
     <div class="card"><h3>Driver Online</h3><div class="big" id="activeDrivers">0</div><div class="metric-sub">Live GPS online</div></div>
-    <div class="card"><h3>Today Revenue</h3><div class="big" id="todayRevenue">$0</div><div class="metric-sub">COD / order total</div></div>
+    <div class="card"><h3>Clocked In</h3><div class="big" id="clockedInDrivers">0</div><div class="metric-sub">Active driver shifts</div></div>
     <div class="card"><h3>Avg Delivery Time</h3><div class="big" id="avgDeliveryTime">0m</div><div class="metric-sub">Created to delivered</div></div>
   </div>
 
@@ -114,23 +131,33 @@ select{padding:8px;border-radius:8px;width:100%}
   <div class="main">
     <div class="card">
       <h2>📦 Delivery Assignment Board</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Tracking</th>
-            <th>Customer</th>
-            <th>Status</th>
-            <th>Assignment Status</th>
-            <th>Proof</th>
-            <th>Driver</th>
-            <th>Assign</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="deliveryTable">
-          <tr><td colspan="8">Loading deliveries...</td></tr>
-        </tbody>
-      </table>
+      <div class="delivery-desktop">
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Assignment Status</th>
+              <th>Driver Response</th>
+              <th>Clock Status</th>
+              <th>Timeline</th>
+              <th>Customer Phone</th>
+              <th>Driver Phone</th>
+              <th>Proof</th>
+              <th>Driver</th>
+              <th>Assign</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="deliveryTable">
+            <tr><td colspan="13">Loading deliveries...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="delivery-mobile" id="deliveryCards">
+        <div class="empty">Loading deliveries...</div>
+      </div>
     </div>
 
     <div>
@@ -159,11 +186,9 @@ Maryland • DC • Virginia
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
   const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
 
-const currentRole = localStorage.getItem("role");
-if(currentRole !== "admin"){
-  window.location.href = "login.html";
-}
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 let drivers = [];
 let deliveries = [];
@@ -172,6 +197,7 @@ let markers = [];
 let geocoder;
 let infoWindow;
 const geocodeCache = new Map();
+let latestTimesheetByDriver = new Map();
 let notificationSnapshot = null;
 let realtimeChannel = null;
 
@@ -198,10 +224,6 @@ function markerIcon(color){
 
 function toText(value){
   return value == null ? "" : String(value).trim();
-}
-
-function money(value){
-  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
 }
 
 function minutesBetween(startValue, endValue){
@@ -331,6 +353,30 @@ function assignmentBadge(status){
   if(value === "Assigned") return `<span class="assignment-badge assigned-badge">Assigned</span>`;
   if(value === "Cancelled") return `<span class="assignment-badge unassigned-badge">Cancelled</span>`;
   return `<span class="assignment-badge unassigned-badge">Unassigned</span>`;
+}
+
+function responseText(status){
+  const value = normalizeStatus(status || "Unassigned");
+  if(value === "Accepted") return "Accepted";
+  if(value === "Rejected") return "Rejected";
+  if(value === "Pending Acceptance") return "Pending";
+  return "Unassigned";
+}
+
+function clockStatusForDriver(driverId){
+  if(!driverId) return { label: "Off", detail: "No active shift" };
+  const row = latestTimesheetByDriver.get(String(driverId));
+  if(!row) return { label: "Off", detail: "No active shift" };
+  if(row.status === "Closed") return { label: "Clocked Out", detail: row.clock_out_at ? new Date(row.clock_out_at).toLocaleTimeString() : "--" };
+  if(row.break_started_at && !row.break_ended_at) return { label: "On Break", detail: row.break_started_at ? new Date(row.break_started_at).toLocaleTimeString() : "--" };
+  return { label: "Clocked In", detail: row.clock_in_at ? new Date(row.clock_in_at).toLocaleTimeString() : "--" };
+}
+
+function deliveryTimeline(delivery){
+  const created = delivery.created_at ? new Date(delivery.created_at).toLocaleString() : "--";
+  const updated = delivery.updated_at ? new Date(delivery.updated_at).toLocaleString() : "--";
+  const delivered = delivery.delivery_time ? new Date(delivery.delivery_time).toLocaleString() : "Pending";
+  return `Created: ${created}<span class="mini">Updated: ${updated}</span><span class="mini">Delivered: ${delivered}</span>`;
 }
 
 async function geocodeAddress(address){
@@ -487,6 +533,63 @@ function assignmentBadge(status){
   return `<span class="assignment-badge unassigned-badge">Unassigned</span>`;
 }
 
+function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, driverOptions, rowActions, assignmentStatus, response, clock){
+  return `
+    <article class="delivery-card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div class="label">Tracking</div>
+          <div class="value">${delivery.tracking_number || ""}</div>
+        </div>
+        <div>${statusBadge(delivery.status)}</div>
+      </div>
+
+      <div class="delivery-card-grid">
+        <div>
+          <div class="label">Customer</div>
+          <div class="value">${delivery.customer_name || ""}</div>
+        </div>
+        <div>
+          <div class="label">Assignment</div>
+          <div class="value">${isDelivered ? `<span class="assignment-badge completed-badge">Completed</span>` : assignmentBadge(delivery.assignment_status || (delivery.driver_id ? "Assigned" : "Unassigned"))}</div>
+        </div>
+        <div>
+          <div class="label">Response</div>
+          <div class="value">${response}</div>
+        </div>
+        <div>
+          <div class="label">Clock Status</div>
+          <div class="value">${clock.label}<span class="mini">${clock.detail}</span></div>
+        </div>
+        <div>
+          <div class="label">Timeline</div>
+          <div class="value">${deliveryTimeline(delivery)}</div>
+        </div>
+        <div>
+          <div class="label">Customer Phone</div>
+          <div class="value">${delivery.recipient_phone || delivery.customer_phone || "N/A"}</div>
+        </div>
+        <div>
+          <div class="label">Driver Phone</div>
+          <div class="value">${currentDriver?.phone || "N/A"}</div>
+        </div>
+        <div>
+          <div class="label">Driver</div>
+          <div class="value">${currentDriver ? currentDriver.name : "Unassigned"}</div>
+        </div>
+        <div>
+          <div class="label">Proof</div>
+          <div class="value">${proofHtml}</div>
+        </div>
+      </div>
+
+      ${isDelivered ? "" : `<div style="margin-top:10px;"><select id="driver-${delivery.id}">${driverOptions}</select></div>`}
+
+      <div class="delivery-card-actions">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(delivery.delivery_location || delivery.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div>
+    </article>
+  `;
+}
+
 async function loadDashboard(){
   requestNotifyPermission();
   await loadDrivers();
@@ -532,15 +635,27 @@ async function loadDrivers(){
 }
 
 async function loadDeliveries(){
-  const { data, error } = await supabaseClient
-    .from("deliveries")
-    .select("*")
-    .order("created_at", { ascending:false });
+  const tableBody = document.getElementById("deliveryTable");
+  const cardsBox = document.getElementById("deliveryCards");
 
-  if(error){
-    document.getElementById("deliveryTable").innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`;
+  const [{ data, error }, { data: timesheets, error: tsError }] = await Promise.all([
+    supabaseClient.from("deliveries").select("*").order("created_at", { ascending:false }),
+    supabaseClient.from("timesheets").select("id,driver_id,status,clock_in_at,clock_out_at,break_started_at,break_ended_at,created_at").order("created_at", { ascending: false }).limit(800)
+  ]);
+
+  if(error || tsError){
+    const message = (error || tsError).message;
+    tableBody.innerHTML = `<tr><td colspan="13">${message}</td></tr>`;
+    cardsBox.innerHTML = `<div class="empty">${message}</div>`;
     return;
   }
+
+  latestTimesheetByDriver = new Map();
+  (timesheets || []).forEach(row => {
+    if(!row.driver_id) return;
+    const key = String(row.driver_id);
+    if(!latestTimesheetByDriver.has(key)) latestTimesheetByDriver.set(key, row);
+  });
 
   deliveries = latestDeliveriesByTracking(data || []);
 
@@ -559,13 +674,15 @@ async function loadDeliveries(){
   };
   applyNotifications(counts);
 
-  const revenue = deliveries
-    .filter(d => String(d.payment_status || "").toLowerCase() === "paid")
-    .reduce((sum, d) => sum + Number(d.cod_amount || d.delivery_fee || d.total_amount || d.amount || 0), 0);
-
   const completedDurations = deliveries
     .filter(d => normalizeStatus(d.status) === "Delivered" && d.delivery_time && d.created_at)
     .map(d => minutesBetween(d.created_at, d.delivery_time));
+
+  const clockedInDrivers = new Set(
+    Array.from(latestTimesheetByDriver.values())
+      .filter(row => row.status !== "Closed")
+      .map(row => String(row.driver_id))
+  ).size;
 
   document.getElementById("totalJobs").innerText = counts.total;
   document.getElementById("pendingJobs").innerText = counts.pending;
@@ -577,13 +694,21 @@ async function loadDeliveries(){
   document.getElementById("rejectedJobs").innerText = counts.rejected;
   document.getElementById("cancelledJobs").innerText = counts.cancelled;
   document.getElementById("activeDrivers").innerText = drivers.filter(isDriverOnline).length;
-  document.getElementById("todayRevenue").innerText = money(revenue);
+  document.getElementById("clockedInDrivers").innerText = clockedInDrivers;
   document.getElementById("avgDeliveryTime").innerText = completedDurations.length ? `${Math.round(completedDurations.reduce((a,b) => a + b, 0) / completedDurations.length)}m` : "0m";
 
-  document.getElementById("deliveryTable").innerHTML = deliveries.length
-    ? deliveries.map(d => {
+  if(!deliveries.length){
+    tableBody.innerHTML = `<tr><td colspan="13">No deliveries found.</td></tr>`;
+    cardsBox.innerHTML = `<div class="empty">No deliveries found.</div>`;
+    await renderMap();
+    return;
+  }
+
+  const desktopRows = deliveries.map(d => {
         const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
         const assignmentStatus = d.assignment_status || (d.driver_id ? "Assigned" : "Unassigned");
+        const response = responseText(assignmentStatus);
+        const clock = clockStatusForDriver(d.driver_id);
         const isDelivered = normalizeStatus(d.status) === "Delivered";
         const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
         const proofHtml = proofUrl
@@ -614,14 +739,52 @@ async function loadDeliveries(){
             <td>${d.customer_name || ""}</td>
             <td>${statusBadge(d.status)}</td>
             <td>${isDelivered ? `<span class="assignment-badge completed-badge">Completed</span>` : assignmentBadge(assignmentStatus)}</td>
+            <td>${response}</td>
+            <td>${clock.label}<span class="mini">${clock.detail}</span></td>
+            <td>${deliveryTimeline(d)}</td>
+            <td>${d.recipient_phone || d.customer_phone || "N/A"}</td>
+            <td>${currentDriver?.phone || "N/A"}</td>
             <td>${proofHtml}</td>
             <td>${currentDriver ? currentDriver.name : "Unassigned"}</td>
             <td>${isDelivered ? "" : `<select id="driver-${d.id}">${driverOptions}</select>`}</td>
             <td><div style="display:flex;gap:8px;flex-wrap:wrap;">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(d.delivery_location || d.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div></td>
           </tr>
         `;
-      }).join("")
-    : `<tr><td colspan="8">No deliveries found.</td></tr>`;
+      }).join("");
+
+  const mobileCards = deliveries.map(d => {
+    const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
+    const assignmentStatus = d.assignment_status || (d.driver_id ? "Assigned" : "Unassigned");
+    const response = responseText(assignmentStatus);
+    const clock = clockStatusForDriver(d.driver_id);
+    const isDelivered = normalizeStatus(d.status) === "Delivered";
+    const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
+    const proofHtml = proofUrl
+      ? `<div class="proof-preview"><a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a><a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a></div>`
+      : `<span class="muted">No proof</span>`;
+    const driverOptions = drivers.map(driver => `<option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>${driver.name || "Driver"}</option>`).join("");
+
+    const rowActions = isDelivered
+      ? `
+        <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+        <button class="btn btn-dark" onclick="printDeliveryTicket('${d.id}')">Print</button>
+        <button class="btn btn-blue" onclick="downloadDeliveryPdf('${d.id}')">Download PDF</button>
+        <button class="btn btn-green" onclick="emailCustomer('${d.id}')">Email Customer</button>
+        <button class="btn btn-green" onclick="smsCustomer('${d.id}')">SMS Customer</button>
+      `
+      : `
+        <button class="btn" onclick="assignDriver('${d.id}')">${d.driver_id ? "Reassign" : "Assign"}</button>
+        ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${d.id}')">Unassign</button>` : ""}
+        <button class="btn btn-red" onclick="cancelDelivery('${d.id}')">Cancel</button>
+        <button class="btn btn-dark" onclick="duplicateDelivery('${d.id}')">Duplicate</button>
+        <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+      `;
+
+    return renderDeliveryCard(d, currentDriver, isDelivered, proofHtml, driverOptions, rowActions, assignmentStatus, response, clock);
+  }).join("");
+
+  tableBody.innerHTML = desktopRows;
+  cardsBox.innerHTML = `<div class="delivery-cards">${mobileCards}</div>`;
 
   await renderMap();
 }

@@ -46,6 +46,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Legacy URL retained for redirects: reports. Use the preferred canonical URL for this C&A Quality Solutions page.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/reports.html">
   <meta name="robots" content="noindex, follow">
@@ -147,11 +148,9 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
 
-const currentRole = localStorage.getItem("role");
-if(currentRole !== "admin"){
-  window.location.href = "login.html";
-}
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 function statusRow(label, count, statusClass){
   return `<tr><td><span class="status ${statusClass}">${label}</span></td><td>${count}</td></tr>`;

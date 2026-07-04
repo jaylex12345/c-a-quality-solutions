@@ -34,16 +34,46 @@ button{width:100%;padding:12px;background:#0b2d52;color:#fff;border:none;border-
 	<input id="password" type="password" placeholder="Password">
 	<button onclick="login()">Login</button>
 	<p id="msg"></p>
+  <p><a href="/admin-signup.html">Create admin account</a></p>
 </div>
 <script>
 const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 async function login(){
 	const email = document.getElementById("email").value.trim();
 	const password = document.getElementById("password").value.trim();
-	const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-	if(error){ document.getElementById("msg").innerText = error.message; return; }
-	localStorage.setItem("role", "admin");
-	window.location.href = "admin.html";
+  const msg = document.getElementById("msg");
+  if(!email || !password){
+    msg.innerText = "Enter email and password.";
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if(error){ msg.innerText = error.message; return; }
+
+  const userResult = await supabaseClient.auth.getUser();
+  const user = userResult && userResult.data ? userResult.data.user : null;
+  if(!user){
+    await supabaseClient.auth.signOut();
+    msg.innerText = "Unable to load account profile.";
+    return;
+  }
+
+  const adminProfile = await supabaseClient
+    .from("admin_users")
+    .select("id, role")
+    .eq("id", user.id)
+    .eq("role", "admin")
+    .limit(1)
+    .maybeSingle();
+
+  if(adminProfile.error || !adminProfile.data){
+    await supabaseClient.auth.signOut();
+    msg.innerText = "Access denied. This account is not an admin.";
+    return;
+  }
+
+  localStorage.setItem("role", "admin");
+  window.location.href = "admin.html";
 }
 </script>
 </body>

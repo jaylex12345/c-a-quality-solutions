@@ -19,6 +19,64 @@
   <meta name="twitter:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
   <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpeg">
   <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}</style>
+  <style>
+    html, body {
+      max-width: 100%;
+      overflow-x: hidden;
+    }
+
+    .nav-container,
+    .logo-area,
+    nav,
+    .hero,
+    .hero-content,
+    .hero-buttons,
+    .section,
+    .services-preview,
+    .stats,
+    .reviews,
+    .pricing-strip,
+    .why-section,
+    .cta-section,
+    .contact-section,
+    .footer,
+    .footer-container {
+      max-width: 100%;
+    }
+
+    nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .logo-area h1 {
+      font-size: clamp(1.4rem, 4.8vw, 2.6rem);
+      line-height: 1.2;
+      word-break: break-word;
+    }
+
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    @media (max-width: 768px) {
+      .logo-area {
+        flex-wrap: wrap;
+        justify-content: center;
+        text-align: center;
+        padding: 10px;
+      }
+
+      .logo-area h1 {
+        white-space: normal !important;
+      }
+    }
+  </style>
   <script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"C&A Quality Solutions LLC","url":"https://caqualitysolutions.com/","telephone":"+1-410-878-5949","email":"contact@caqualitysolutions.com","image":"https://caqualitysolutions.com/assets/images/logo.jpeg","address":{"@type":"PostalAddress","streetAddress":"20 S Charles St STE 403","addressLocality":"Baltimore","addressRegion":"MD","postalCode":"21201","addressCountry":"US"},"areaServed":["Maryland","Washington DC","Virginia"],"sameAs":["https://caqualitysolutions.com/"]}</script>
 </head>
 

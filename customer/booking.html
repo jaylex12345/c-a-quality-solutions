@@ -14,7 +14,7 @@ header{background:#061f45;color:white;padding:20px;text-align:center}
 header h1{font-size:32px}
 header p{color:#f2b632;margin-top:8px}
 nav{margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-nav a{color:#fff;text-decoration:none;font-weight:bold}
+nav a{color:#fff;text-decoration:none;font-weight:bold;padding:8px 10px;border-radius:8px}
 nav a.book{color:#f2b632}
 .container{max-width:1000px;margin:40px auto;padding:20px}
 .card{background:white;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
@@ -24,7 +24,15 @@ button{width:100%;padding:16px;margin-top:20px;border:none;border-radius:10px;fo
 .price-box{margin-top:20px;padding:20px;background:#061f45;color:white;font-size:24px;text-align:center;border-radius:12px;font-weight:bold}
 .footer{text-align:center;padding:20px;margin-top:40px;background:#061f45;color:white}
 .meta{margin-top:10px;color:#061f45;font-weight:bold}
-@media(max-width:900px){nav{gap:10px}.container{margin:20px auto;padding:12px}}
+@media(max-width:900px){
+  header h1{font-size:24px}
+  nav{gap:8px}
+  nav a{font-size:14px;padding:10px 12px}
+  .container{margin:20px auto;padding:12px}
+  .card{padding:18px}
+  input,select,textarea{font-size:16px;min-height:48px}
+  button{min-height:50px}
+}
 </style>
   <meta name="description" content="Book a courier delivery with automatic mileage and pricing. Submit pickup and drop-off details online with C&A Quality Solutions LLC.">
   <link rel="canonical" href="https://caqualitysolutions.com/customer/booking.html">

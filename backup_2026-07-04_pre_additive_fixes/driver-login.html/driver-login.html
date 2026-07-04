@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Legacy URL: driver login | C&A Quality Solutions LLC</title>
+	<script>
+	window.location.replace("/driver/login.html");
+	</script>
+	<meta http-equiv="refresh" content="0;url=/driver/login.html">
+	<link rel="stylesheet" href="/assets/css/style.css">
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<style>
+		body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh}
+		.card{background:#fff;padding:28px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);width:360px}
+		input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;margin:8px 0}
+		button{width:100%;padding:12px;background:#d9b431;color:#071b33;border:0;border-radius:8px;font-weight:bold;cursor:pointer}
+	</style>
+  <meta name="description" content="Legacy URL retained for redirects: driver login. Use the preferred canonical URL for this C&A Quality Solutions page.">
+  <link rel="canonical" href="https://caqualitysolutions.com/driver/login.html">
+  <meta name="robots" content="noindex, follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Driver Login | C&A Quality Solutions LLC">
+  <meta property="og:description" content="Official driver login page for C&A Quality Solutions LLC operations and customer support.">
+  <meta property="og:url" content="https://caqualitysolutions.com/driver/login.html">
+  <meta property="og:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Driver Login | C&A Quality Solutions LLC">
+  <meta name="twitter:description" content="Official driver login page for C&A Quality Solutions LLC operations and customer support.">
+  <meta name="twitter:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
+  <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpeg">
+  <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}</style>
+</head>
+<body>
+<h1 class="sr-only">Driver login redirect</h1>
+<div class="card">
+	<h2>Driver Login</h2>
+	<input id="email" placeholder="Driver Email">
+	<input id="password" type="password" placeholder="Password">
+	<button onclick="driverLogin()">Login</button>
+	<p id="message"></p>
+</div>
+<script>
+const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+async function driverLogin(){
+	const email = document.getElementById("email").value.trim();
+	const password = document.getElementById("password").value.trim();
+	const { data, error } = await supabaseClient.from("drivers").select("*").eq("email", email).eq("password", password).limit(1);
+	if(error || !data || !data.length){ document.getElementById("message").innerText = "Invalid credentials."; return; }
+	const driver = data[0];
+	localStorage.setItem("driver_id", driver.id);
+	localStorage.setItem("driver_name", driver.name || "Driver");
+	localStorage.setItem("role", "driver");
+	window.location.href = "driver-dashboard.html";
+}
+</script>
+</body>
+</html>

@@ -2,190 +2,990 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Legacy URL: dispatcher | C&A Quality Solutions LLC</title>
-<link rel="stylesheet" href="/assets/css/style.css">
+<title>Admin Dispatcher | C&A Quality Solutions LLC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&callback=initMap"></script>
+<script src="/assets/js/admin-auth.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries&callback=initMap"></script>
+
 <style>
+*{box-sizing:border-box}
 body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
-.header{background:#061b3a;color:#fff;padding:20px;text-align:center}
-.wrap{max-width:1300px;margin:20px auto;padding:0 16px}
-.card{background:#fff;border-radius:12px;padding:16px;box-shadow:0 8px 20px rgba(0,0,0,.08);margin-bottom:14px}
-table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;padding:10px;text-align:left}td{padding:10px;border-bottom:1px solid #e5e7eb}
-select{padding:8px;border:1px solid #d1d5db;border-radius:8px;width:100%}
-.btn{background:#d9b431;color:#071b33;border:0;padding:8px 12px;border-radius:8px;font-weight:bold;cursor:pointer}
-#map{width:100%;height:320px;border-radius:10px;background:#d1d5db}
+.header{background:linear-gradient(135deg,#061b3a,#0b2d52);color:white;text-align:center;padding:24px}
+.header img{width:80px;border-radius:14px;background:white;padding:6px}
+.header h1{margin:10px 0 3px}.header h2{margin:0;color:#d9b431}
+.nav{background:#071b33;text-align:center;padding:12px}
+.nav button,.btn{background:#d9b431;color:#061b3a;border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;margin:3px}
+.btn-green{background:#16a34a;color:white}.btn-blue{background:#0b5ed7;color:white}
+.btn-red{background:#dc2626;color:white}
+.btn-dark{background:#061b3a;color:white}
+.container{max-width:1400px;margin:25px auto;padding:0 18px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.card{background:white;border-radius:18px;padding:20px;margin-bottom:20px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
+.big{font-size:30px;font-weight:bold;color:#d9b431}
+.main{display:grid;grid-template-columns:2fr 1fr;gap:20px}
+#map{width:100%;height:420px;border-radius:16px}
+table{width:100%;border-collapse:collapse}
+th{background:#061b3a;color:white;padding:13px;text-align:left}
+td{padding:12px;border-bottom:1px solid #e5e7eb}
+select{padding:8px;border-radius:8px;width:100%}
+.badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:13px}
+.delivered{background:#dcfce7;color:#166534}.pending{background:#fee2e2;color:#991b1b}
+.transit{background:#fef3c7;color:#92400e}.picked{background:#dbeafe;color:#1d4ed8}.out{background:#ede9fe;color:#6d28d9}
+.cancelled{background:#e5e7eb;color:#374151}.rejected{background:#fee2e2;color:#991b1b}.accepted{background:#dcfce7;color:#166534}
+.assignment-badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:12px;display:inline-block}
+.completed-badge{background:#dcfce7;color:#166534}
+.assigned-badge{background:#dbeafe;color:#1d4ed8}
+.pending-acceptance-badge{background:#fef3c7;color:#92400e}
+.accepted-badge{background:#dcfce7;color:#166534}
+.rejected-badge{background:#fee2e2;color:#991b1b}
+.unassigned-badge{background:#e5e7eb;color:#374151}
+.proof-preview{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap}
+.proof-preview img{width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid #cbd5e1;background:#fff}
+.proof-link{color:#0b5ed7;font-weight:bold;text-decoration:none}
+.map-legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+.legend-pill{display:inline-flex;align-items:center;gap:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:999px;padding:8px 12px;font-size:13px}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.map-dot-driver{background:#0b5ed7}.map-dot-pickup{background:#16a34a}.map-dot-destination{background:#dc2626}.map-dot-customer{background:#d97706}
+.metric-sub{color:#6b7280;font-size:13px;margin-top:8px}
+.driver-card{border:1px solid #e5e7eb;border-radius:12px;padding:13px;margin-bottom:10px}
+.online{color:#16a34a;font-weight:bold}
+.footer{text-align:center;color:#6b7280;margin:25px}
+.delivery-mobile{display:none}
+.delivery-cards{display:grid;gap:12px}
+.delivery-card{border:1px solid #dbe3ed;border-radius:14px;padding:14px;background:#fff}
+.delivery-card-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.delivery-card .label{font-size:12px;color:#6b7280;text-transform:uppercase;letter-spacing:.04em}
+.delivery-card .value{font-weight:bold;word-break:break-word}
+.delivery-card-actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:12px}
+.delivery-card-actions .btn,.delivery-card-actions select{width:100%;min-height:48px}
 .mini{display:block;color:#64748b;font-size:12px;margin-top:4px}
-.pill{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:bold}
-.accepted{background:#dcfce7;color:#166534}
-.rejected{background:#fee2e2;color:#991b1b}
-.pending{background:#fef3c7;color:#92400e}
-.unassigned{background:#e5e7eb;color:#374151}
+@media(max-width:950px){
+  .grid,.main{grid-template-columns:1fr}
+  .container{padding:0 12px}
+  .nav button,.btn{min-height:48px;padding:12px 14px;font-size:16px}
+  .delivery-desktop{display:none}
+  .delivery-mobile{display:block}
+  .delivery-card-grid{grid-template-columns:1fr}
+}
 </style>
-  <meta name="description" content="Legacy URL retained for redirects: dispatcher. Use the preferred canonical URL for this C&A Quality Solutions page.">
+  <meta name="description" content="Official admin dispatcher page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/dispatcher.html">
   <meta name="robots" content="noindex, follow">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Dispatcher | C&A Quality Solutions LLC">
-  <meta property="og:description" content="Official dispatcher page for C&A Quality Solutions LLC operations and customer support.">
+  <meta property="og:title" content="Admin Dispatcher | C&A Quality Solutions LLC">
+  <meta property="og:description" content="Official admin dispatcher page for C&A Quality Solutions LLC operations and customer support.">
   <meta property="og:url" content="https://caqualitysolutions.com/admin/dispatcher.html">
   <meta property="og:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Dispatcher | C&A Quality Solutions LLC">
-  <meta name="twitter:description" content="Official dispatcher page for C&A Quality Solutions LLC operations and customer support.">
+  <meta name="twitter:title" content="Admin Dispatcher | C&A Quality Solutions LLC">
+  <meta name="twitter:description" content="Official admin dispatcher page for C&A Quality Solutions LLC operations and customer support.">
   <meta name="twitter:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
   <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpeg">
   <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}</style>
 </head>
+
 <body>
-<div class="header"><h1>Dispatcher</h1></div>
-<div class="wrap">
-	<div class="card">
-		<h2>Live Driver GPS Map</h2>
-		<div id="map"></div>
-	</div>
-	<div class="card">
-		<h2>Delivery Assignment Board</h2>
-		<table>
-			<thead><tr><th>Tracking</th><th>Customer</th><th>Status</th><th>Assignment Status</th><th>Driver Response</th><th>Driver</th><th>Clock Status</th><th>Last GPS Seen</th><th>Assign</th><th>Action</th></tr></thead>
-			<tbody id="rows"><tr><td colspan="10">Loading...</td></tr></tbody>
-		</table>
-	</div>
+
+<div class="header">
+  <img src="/assets/images/logo.jpeg">
+  <h1>Admin Dispatcher</h1>
+  <h2>Live Dispatcher Operations Console</h2>
 </div>
+
+<div class="nav">
+  <button onclick="loadDashboard()">Refresh Board</button>
+  <button onclick="location.href='/admin/dashboard.html'">Admin</button>
+  <button onclick="location.href='/driver/dashboard.html'">Driver View</button>
+  <button onclick="location.href='/customer/tracking.html'">Tracking</button>
+</div>
+
+<div class="container">
+
+  <div class="grid">
+    <div class="card"><h3>Total Deliveries</h3><div class="big" id="totalJobs">0</div></div>
+    <div class="card"><h3>Pending</h3><div class="big" id="pendingJobs">0</div><div class="metric-sub">Waiting for dispatch</div></div>
+    <div class="card"><h3>Assigned</h3><div class="big" id="assignedJobs">0</div><div class="metric-sub">Queued to drivers</div></div>
+    <div class="card"><h3>Accepted</h3><div class="big" id="acceptedJobs">0</div><div class="metric-sub">Driver confirmed</div></div>
+    <div class="card"><h3>Picked / Transit</h3><div class="big" id="activeJobs">0</div><div class="metric-sub">On the road</div></div>
+    <div class="card"><h3>Out For Delivery</h3><div class="big" id="outJobs">0</div><div class="metric-sub">Final mile</div></div>
+    <div class="card"><h3>Delivered</h3><div class="big" id="completedJobs">0</div><div class="metric-sub">Finished deliveries</div></div>
+    <div class="card"><h3>Rejected</h3><div class="big" id="rejectedJobs">0</div><div class="metric-sub">Returned to dispatch</div></div>
+    <div class="card"><h3>Cancelled</h3><div class="big" id="cancelledJobs">0</div><div class="metric-sub">Stopped jobs</div></div>
+    <div class="card"><h3>Driver Online</h3><div class="big" id="activeDrivers">0</div><div class="metric-sub">Live GPS online</div></div>
+    <div class="card"><h3>Clocked In</h3><div class="big" id="clockedInDrivers">0</div><div class="metric-sub">Active driver shifts</div></div>
+    <div class="card"><h3>Avg Delivery Time</h3><div class="big" id="avgDeliveryTime">0m</div><div class="metric-sub">Created to delivered</div></div>
+  </div>
+
+  <div class="card">
+    <h2>🗺️ Live Driver GPS Map</h2>
+    <div id="map"></div>
+    <div class="map-legend">
+      <span class="legend-pill"><span class="legend-dot map-dot-driver"></span>Driver</span>
+      <span class="legend-pill"><span class="legend-dot map-dot-pickup"></span>Pickup</span>
+      <span class="legend-pill"><span class="legend-dot map-dot-destination"></span>Destination</span>
+      <span class="legend-pill"><span class="legend-dot map-dot-customer"></span>Customer</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="card">
+      <h2>📦 Delivery Assignment Board</h2>
+      <div class="delivery-desktop">
+        <table>
+          <thead>
+            <tr>
+              <th>Tracking</th>
+              <th>Customer</th>
+              <th>Status</th>
+              <th>Assignment Status</th>
+              <th>Driver Response</th>
+              <th>Clock Status</th>
+              <th>Timeline</th>
+              <th>Customer Phone</th>
+              <th>Driver Phone</th>
+              <th>Proof</th>
+              <th>Driver</th>
+              <th>Assign</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="deliveryTable">
+            <tr><td colspan="13">Loading deliveries...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="delivery-mobile" id="deliveryCards">
+        <div class="empty">Loading deliveries...</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>🚚 Drivers Online</h2>
+        <div id="driversList">Loading drivers...</div>
+      </div>
+
+      <div class="card">
+        <h2>📍 Dispatcher Tools</h2>
+        <button class="btn btn-blue" onclick="location.href='/admin/dashboard.html'">+ Add Delivery</button>
+        <button class="btn btn-green" onclick="loadDashboard()">Refresh</button>
+        <button class="btn" onclick="location.href='/customer/tracking.html'">Track Package</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+C&A Quality Solutions LLC<br>
+Licensed • Insured • Bonded<br>
+Maryland • DC • Virginia
+</div>
+
 <script>
-const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
-if(localStorage.getItem("role") !== "admin") window.location.href = "login.html";
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+  const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
+
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 let drivers = [];
 let deliveries = [];
-let latestTimesheetByDriver = new Map();
-let map = null;
+let map;
 let markers = [];
+let geocoder;
+let infoWindow;
+const geocodeCache = new Map();
+let latestTimesheetByDriver = new Map();
+let notificationSnapshot = null;
+let realtimeChannel = null;
 
 function initMap(){
-	map = new google.maps.Map(document.getElementById("map"), {
-		center: { lat: 39.2904, lng: -76.6122 },
-		zoom: 9
-	});
+  map = new google.maps.Map(document.getElementById("map"), {
+    center: { lat: 39.2904, lng: -76.6122 },
+    zoom: 9
+  });
+  geocoder = new google.maps.Geocoder();
+  infoWindow = new google.maps.InfoWindow();
 }
 
 function clearMarkers(){
-	markers.forEach(marker => marker.setMap(null));
-	markers = [];
+  markers.forEach(m => m.setMap(null));
+  markers = [];
 }
 
-function renderDriverMap(){
-	if(!map) return;
-	clearMarkers();
-	const gpsDrivers = drivers.filter(driver => Number.isFinite(Number(driver.latitude)) && Number.isFinite(Number(driver.longitude)));
-	if(!gpsDrivers.length) return;
-	const bounds = new google.maps.LatLngBounds();
-	gpsDrivers.forEach(driver => {
-		const position = { lat: Number(driver.latitude), lng: Number(driver.longitude) };
-		const marker = new google.maps.Marker({
-			map,
-			position,
-			title: driver.name || "Driver"
-		});
-		markers.push(marker);
-		bounds.extend(position);
-	});
-	map.fitBounds(bounds, 50);
+function markerIcon(color){
+  return {
+    url: `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" viewBox="0 0 34 34"><circle cx="17" cy="17" r="11" fill="${color}" stroke="white" stroke-width="3" /></svg>`)}`,
+    scaledSize: new google.maps.Size(34, 34)
+  };
 }
 
-function responseBadge(assignmentStatus){
-	const value = String(assignmentStatus || "Unassigned");
-	if(value === "Accepted") return '<span class="pill accepted">Accepted</span>';
-	if(value === "Rejected") return '<span class="pill rejected">Rejected</span>';
-	if(value === "Pending Acceptance") return '<span class="pill pending">Pending</span>';
-	return '<span class="pill unassigned">Unassigned</span>';
+function toText(value){
+  return value == null ? "" : String(value).trim();
 }
 
-function clockStatus(driverId){
-	const timesheet = latestTimesheetByDriver.get(String(driverId));
-	if(!timesheet) return { label: "Off", detail: "No shift" };
-	if(timesheet.status === "Closed") return { label: "Clocked Out", detail: `Out: ${timesheet.clock_out_at ? new Date(timesheet.clock_out_at).toLocaleTimeString() : "--"}` };
-	if(timesheet.break_started_at && !timesheet.break_ended_at) return { label: "On Break", detail: `Started: ${new Date(timesheet.break_started_at).toLocaleTimeString()}` };
-	return { label: "Clocked In", detail: `In: ${timesheet.clock_in_at ? new Date(timesheet.clock_in_at).toLocaleTimeString() : "--"}` };
+function minutesBetween(startValue, endValue){
+  const start = new Date(startValue).getTime();
+  const end = new Date(endValue).getTime();
+  if(!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return 0;
+  return Math.round((end - start) / 60000);
 }
 
-function lastGpsSeen(driver){
-	const value = driver.last_seen;
-	if(!value) return "Never";
-	return new Date(value).toLocaleString();
+function canNotify(){
+  return typeof Notification !== "undefined" && Notification.permission === "granted";
 }
 
-async function loadBoard(){
-	const [{data:d,error:e1},{data:drv,error:e2},{data:ts,error:e3}] = await Promise.all([
-		supabaseClient.from("deliveries").select("id,tracking_number,customer_name,status,driver_id,driver_name,assignment_status").order("created_at",{ascending:false}),
-		supabaseClient.from("drivers").select("id,name,status,is_active,latitude,longitude,last_seen").order("name"),
-		supabaseClient.from("timesheets").select("id,driver_id,status,clock_in_at,clock_out_at,break_started_at,break_ended_at,updated_at,created_at").order("created_at", { ascending: false }).limit(500)
-	]);
-	if(e1 || e2 || e3){ document.getElementById("rows").innerHTML = `<tr><td colspan="10">${(e1||e2||e3).message}</td></tr>`; return; }
-	drivers = drv || [];
-	deliveries = d || [];
-	latestTimesheetByDriver = new Map();
-	(ts || []).forEach(row => {
-		if(!row.driver_id) return;
-		const key = String(row.driver_id);
-		if(!latestTimesheetByDriver.has(key)) latestTimesheetByDriver.set(key, row);
-	});
-	if(!deliveries.length){ document.getElementById("rows").innerHTML = '<tr><td colspan="10">No deliveries.</td></tr>'; renderDriverMap(); return; }
-	document.getElementById("rows").innerHTML = deliveries.map(item => {
-		const driver = drivers.find(x => String(x.id) === String(item.driver_id));
-		const assignment = item.assignment_status || (item.driver_id ? "Assigned" : "Unassigned");
-		const response = responseBadge(assignment);
-		const clock = item.driver_id ? clockStatus(item.driver_id) : { label: "Off", detail: "No driver" };
-		const lastGps = driver ? lastGpsSeen(driver) : "No driver";
-		const options = ['<option value="">Select Driver</option>'].concat(drivers.map(dr=>`<option value="${dr.id}" ${item.driver_id===dr.id?'selected':''}>${dr.name}</option>`)).join('');
-		return `<tr>
-			<td>${item.tracking_number || ''}</td>
-			<td>${item.customer_name || ''}</td>
-			<td>${item.status || 'Pending'}</td>
-			<td>${assignment}</td>
-			<td>${response}</td>
-			<td>${item.driver_name || (driver||{}).name || 'Unassigned'}</td>
-			<td>${clock.label}<span class="mini">${clock.detail}</span></td>
-			<td>${lastGps}</td>
-			<td><select id="driver_${item.id}">${options}</select></td>
-			<td>
-				<button class="btn" onclick="assign('${item.id}')">Assign</button>
-				<button class="btn" onclick="unassign('${item.id}')" style="margin-left:6px;background:#0b5ed7;color:#fff;">Unassign</button>
-			</td>
-		</tr>`;
-	}).join('');
-	renderDriverMap();
+function requestNotifyPermission(){
+  if(typeof Notification === "undefined") return;
+  if(Notification.permission === "default"){
+    Notification.requestPermission().catch(() => {});
+  }
 }
 
-async function assign(deliveryId){
-	const driverSelect = document.getElementById(`driver_${deliveryId}`);
-	const driverId = driverSelect.value;
-	if(!driverId) return;
-	const driver = drivers.find(item => String(item.id) === String(driverId));
-	const { error } = await supabaseClient.from("deliveries").update({
-		driver_id: driverId,
-		driver_name: driver ? driver.name : null,
-		assignment_status: "Pending Acceptance",
-		status: "Assigned"
-	}).eq("id", deliveryId);
-	if(error){ alert(error.message); return; }
-	loadBoard();
+function sendNotification(title, body){
+  if(!canNotify()) return;
+  try {
+    new Notification(title, { body, icon: "/assets/images/logo.jpeg" });
+  } catch (_) {}
 }
 
-async function unassign(deliveryId){
-	const { error } = await supabaseClient.from("deliveries").update({
-		driver_id: null,
-		driver_name: null,
-		assignment_status: "Unassigned",
-		status: "Pending"
-	}).eq("id", deliveryId);
-	if(error){ alert(error.message); return; }
-	loadBoard();
+function applyNotifications(counts){
+  if(!notificationSnapshot){
+    notificationSnapshot = counts;
+    return;
+  }
+
+  if(counts.total > notificationSnapshot.total){
+    sendNotification("New delivery", `${counts.total - notificationSnapshot.total} new delivery record(s) added.`);
+  }
+  if(counts.accepted > notificationSnapshot.accepted){
+    sendNotification("Driver accepted", `${counts.accepted - notificationSnapshot.accepted} delivery accepted.`);
+  }
+  if(counts.rejected > notificationSnapshot.rejected){
+    sendNotification("Driver rejected", `${counts.rejected - notificationSnapshot.rejected} delivery rejected.`);
+  }
+  if(counts.delivered > notificationSnapshot.delivered){
+    sendNotification("Driver delivered", `${counts.delivered - notificationSnapshot.delivered} delivery completed.`);
+  }
+
+  notificationSnapshot = counts;
+}
+function normalizeStatus(status){
+  const value = toText(status).toLowerCase();
+  if(value === "completed") return "Delivered";
+  if(value === "out for delivery") return "Out for Delivery";
+  if(value === "in transit") return "In Transit";
+  if(value === "driver en route") return "Driver En Route";
+  if(value === "picked up") return "Picked Up";
+  if(value === "delivered") return "Delivered";
+  if(value === "accepted") return "Accepted";
+  if(value === "assigned") return "Assigned";
+  if(value === "rejected") return "Rejected";
+  if(value === "cancelled" || value === "canceled") return "Cancelled";
+  if(value === "pending acceptance") return "Pending Acceptance";
+  return status || "Pending";
 }
 
-loadBoard();
-setInterval(loadBoard, 12000);
+function latestDeliveriesByTracking(rows){
+  const sorted = [...rows].sort((a, b) => {
+    const aTime = new Date(a.delivery_time || a.updated_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.delivery_time || b.updated_at || b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+
+  const seen = new Set();
+  const deduped = [];
+
+  for(const row of sorted){
+    const key = String(row.tracking_number || row.id || "");
+    if(!key || seen.has(key)) continue;
+    seen.add(key);
+    deduped.push(row);
+  }
+
+  return deduped;
+}
+
+function statusBadge(status){
+  const value = normalizeStatus(status);
+  if(value === "Delivered" || value === "Completed") return `<span class="badge delivered">${value}</span>`;
+  if(value === "In Transit" || value === "Driver En Route") return `<span class="badge transit">${value}</span>`;
+  if(value === "Out for Delivery") return `<span class="badge out">${value}</span>`;
+  if(value === "Picked Up") return `<span class="badge picked">${value}</span>`;
+  if(value === "Cancelled") return `<span class="badge cancelled">Cancelled</span>`;
+  if(value === "Rejected") return `<span class="badge rejected">Rejected</span>`;
+  if(value === "Accepted") return `<span class="badge accepted">Accepted</span>`;
+  return `<span class="badge pending">${value}</span>`;
+}
+
+function isDriverOnline(driver){
+  if(driver.is_active === false) return false;
+  if((driver.status || "").toLowerCase() === "online") return true;
+  if(!driver.last_seen) return !!driver.is_active;
+  const delta = Date.now() - new Date(driver.last_seen).getTime();
+  return Number.isFinite(delta) && delta < 15 * 60 * 1000;
+}
+
+function driverSummary(driver){
+  return [
+    `Phone: ${driver.phone || "N/A"}`,
+    `Email: ${driver.email || "N/A"}`,
+    `Vehicle: ${driver.vehicle || driver.vehicle_type || "N/A"}`,
+    `Plate: ${driver.license_plate || "N/A"}`,
+    `Insurance Expiry: ${driver.insurance_expiration || driver.insurance_expiry || "N/A"}`,
+    `License Expiry: ${driver.license_expiration || "N/A"}`,
+    `Availability: ${driver.availability || driver.status || (driver.is_active ? "Active" : "Inactive")}`,
+    `Current Job: ${driver.current_job || "N/A"}`,
+    `Completed Today: ${driver.completed_today || 0}`,
+    `Rating: ${driver.rating || "5.0"}`,
+    `GPS: ${driver.latitude && driver.longitude ? "Live" : "Offline"}`,
+    `Battery: ${driver.battery_level || "N/A"}`
+  ].join("<br>");
+}
+
+function assignmentBadge(status){
+  const value = normalizeStatus(status);
+  if(value === "Pending Acceptance") return `<span class="assignment-badge pending-acceptance-badge">Pending Acceptance</span>`;
+  if(value === "Accepted") return `<span class="assignment-badge accepted-badge">Accepted</span>`;
+  if(value === "Rejected") return `<span class="assignment-badge rejected-badge">Rejected</span>`;
+  if(value === "Assigned") return `<span class="assignment-badge assigned-badge">Assigned</span>`;
+  if(value === "Cancelled") return `<span class="assignment-badge unassigned-badge">Cancelled</span>`;
+  return `<span class="assignment-badge unassigned-badge">Unassigned</span>`;
+}
+
+function responseText(status){
+  const value = normalizeStatus(status || "Unassigned");
+  if(value === "Accepted") return "Accepted";
+  if(value === "Rejected") return "Rejected";
+  if(value === "Pending Acceptance") return "Pending";
+  return "Unassigned";
+}
+
+function clockStatusForDriver(driverId){
+  if(!driverId) return { label: "Off", detail: "No active shift" };
+  const row = latestTimesheetByDriver.get(String(driverId));
+  if(!row) return { label: "Off", detail: "No active shift" };
+  if(row.status === "Closed") return { label: "Clocked Out", detail: row.clock_out_at ? new Date(row.clock_out_at).toLocaleTimeString() : "--" };
+  if(row.break_started_at && !row.break_ended_at) return { label: "On Break", detail: row.break_started_at ? new Date(row.break_started_at).toLocaleTimeString() : "--" };
+  return { label: "Clocked In", detail: row.clock_in_at ? new Date(row.clock_in_at).toLocaleTimeString() : "--" };
+}
+
+function deliveryTimeline(delivery){
+  const created = delivery.created_at ? new Date(delivery.created_at).toLocaleString() : "--";
+  const updated = delivery.updated_at ? new Date(delivery.updated_at).toLocaleString() : "--";
+  const delivered = delivery.delivery_time ? new Date(delivery.delivery_time).toLocaleString() : "Pending";
+  return `Created: ${created}<span class="mini">Updated: ${updated}</span><span class="mini">Delivered: ${delivered}</span>`;
+}
+
+async function geocodeAddress(address){
+  const value = toText(address);
+  if(!value) return null;
+  if(geocodeCache.has(value)) return geocodeCache.get(value);
+
+  const result = await new Promise(resolve => {
+    if(!geocoder){
+      resolve(null);
+      return;
+    }
+
+    geocoder.geocode({ address: value }, (results, status) => {
+      if(status === "OK" && results && results[0]){
+        resolve(results[0].geometry.location);
+      }else{
+        resolve(null);
+      }
+    });
+  });
+
+  geocodeCache.set(value, result);
+  return result;
+}
+
+function driverInfo(driver){
+  return `
+    <div style="min-width:220px">
+      <strong>${driver.name || "Driver"}</strong><br>
+      ${driverSummary(driver)}
+    </div>
+  `;
+}
+
+function deliveryInfo(delivery){
+  return `
+    <div style="min-width:240px">
+      <strong>${delivery.tracking_number || "Delivery"}</strong><br>
+      Customer: ${delivery.customer_name || "N/A"}<br>
+      Status: ${normalizeStatus(delivery.status)}<br>
+      Assignment: ${normalizeStatus(delivery.assignment_status || (delivery.driver_id ? "Assigned" : "Unassigned"))}<br>
+      Driver: ${delivery.driver_name || "Unassigned"}<br>
+      Pickup: ${delivery.pickup_location || "N/A"}<br>
+      Destination: ${delivery.delivery_location || "N/A"}
+    </div>
+  `;
+}
+
+async function addMarker(position, color, title, html){
+  if(!position || !map) return null;
+  const marker = new google.maps.Marker({ position, map, title, icon: markerIcon(color) });
+  marker.addListener("click", () => {
+    infoWindow.setContent(html);
+    infoWindow.open(map, marker);
+  });
+  markers.push(marker);
+  return marker;
+}
+
+function centerDriver(lat, lng){
+  if(!map) return;
+  const position = new google.maps.LatLng(Number(lat), Number(lng));
+  map.setCenter(position);
+  map.setZoom(14);
+}
+
+async function renderMap(){
+  if(!map || !geocoder) return;
+  clearMarkers();
+  const bounds = new google.maps.LatLngBounds();
+  let placed = false;
+
+  for(const driver of drivers){
+    if(driver.latitude && driver.longitude){
+      const position = { lat: Number(driver.latitude), lng: Number(driver.longitude) };
+      const marker = await addMarker(position, "#0b5ed7", driver.name || "Driver", driverInfo(driver));
+      if(marker){ bounds.extend(position); placed = true; }
+    }
+  }
+
+  for(const delivery of deliveries){
+    const pickup = await geocodeAddress(delivery.pickup_location);
+    if(pickup){
+      const position = { lat: pickup.lat(), lng: pickup.lng() };
+      const marker = await addMarker(position, "#16a34a", `${delivery.tracking_number || "Pickup"} Pickup`, deliveryInfo(delivery));
+      if(marker){ bounds.extend(position); placed = true; }
+    }
+
+    const destination = await geocodeAddress(delivery.delivery_location);
+    if(destination){
+      const position = { lat: destination.lat(), lng: destination.lng() };
+      const marker = await addMarker(position, "#dc2626", `${delivery.tracking_number || "Destination"} Destination`, deliveryInfo(delivery));
+      if(marker){ bounds.extend(position); placed = true; }
+    }
+  }
+
+  if(placed){
+    map.fitBounds(bounds, 60);
+  }else{
+    map.setCenter({ lat: 39.2904, lng: -76.6122 });
+    map.setZoom(9);
+  }
+}
+
+function addDriverMarkers(){
+  clearMarkers();
+
+  drivers.forEach(driver => {
+    if(driver.latitude && driver.longitude){
+      const marker = new google.maps.Marker({
+        position: {
+          lat: Number(driver.latitude),
+          lng: Number(driver.longitude)
+        },
+        map,
+        title: driver.name || "Driver"
+      });
+
+      const info = new google.maps.InfoWindow({
+        content: `
+          <strong>${driver.name}</strong><br>
+          Phone: ${driver.phone || ""}<br>
+          Status: ${driver.status || "Available"}<br>
+          Last Seen: ${driver.last_seen ? new Date(driver.last_seen).toLocaleString() : "N/A"}
+        `
+      });
+
+      marker.addListener("click", () => info.open(map, marker));
+      markers.push(marker);
+    }
+  });
+
+  if(markers.length){
+    map.setCenter(markers[0].getPosition());
+  }
+}
+
+function badge(status){
+  if(status==="Delivered") return `<span class="badge delivered">Delivered</span>`;
+  if(status==="In Transit") return `<span class="badge transit">In Transit</span>`;
+  if(status==="Out for Delivery") return `<span class="badge out">Out for Delivery</span>`;
+  if(status==="Picked Up") return `<span class="badge picked">Picked Up</span>`;
+  return `<span class="badge pending">${status || "Pending"}</span>`;
+}
+
+function assignmentBadge(status){
+  const value = status || "Unassigned";
+
+  if(value === "Pending Acceptance") return `<span class="assignment-badge pending-acceptance-badge">Pending Acceptance</span>`;
+  if(value === "Accepted") return `<span class="assignment-badge accepted-badge">Accepted</span>`;
+  if(value === "Rejected") return `<span class="assignment-badge rejected-badge">Rejected</span>`;
+  if(value === "Assigned") return `<span class="assignment-badge assigned-badge">Assigned</span>`;
+  return `<span class="assignment-badge unassigned-badge">Unassigned</span>`;
+}
+
+function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, driverOptions, rowActions, assignmentStatus, response, clock){
+  return `
+    <article class="delivery-card">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+        <div>
+          <div class="label">Tracking</div>
+          <div class="value">${delivery.tracking_number || ""}</div>
+        </div>
+        <div>${statusBadge(delivery.status)}</div>
+      </div>
+
+      <div class="delivery-card-grid">
+        <div>
+          <div class="label">Customer</div>
+          <div class="value">${delivery.customer_name || ""}</div>
+        </div>
+        <div>
+          <div class="label">Assignment</div>
+          <div class="value">${isDelivered ? `<span class="assignment-badge completed-badge">Completed</span>` : assignmentBadge(delivery.assignment_status || (delivery.driver_id ? "Assigned" : "Unassigned"))}</div>
+        </div>
+        <div>
+          <div class="label">Response</div>
+          <div class="value">${response}</div>
+        </div>
+        <div>
+          <div class="label">Clock Status</div>
+          <div class="value">${clock.label}<span class="mini">${clock.detail}</span></div>
+        </div>
+        <div>
+          <div class="label">Timeline</div>
+          <div class="value">${deliveryTimeline(delivery)}</div>
+        </div>
+        <div>
+          <div class="label">Customer Phone</div>
+          <div class="value">${delivery.recipient_phone || delivery.customer_phone || "N/A"}</div>
+        </div>
+        <div>
+          <div class="label">Driver Phone</div>
+          <div class="value">${currentDriver?.phone || "N/A"}</div>
+        </div>
+        <div>
+          <div class="label">Driver</div>
+          <div class="value">${currentDriver ? currentDriver.name : "Unassigned"}</div>
+        </div>
+        <div>
+          <div class="label">Proof</div>
+          <div class="value">${proofHtml}</div>
+        </div>
+      </div>
+
+      ${isDelivered ? "" : `<div style="margin-top:10px;"><select id="driver-${delivery.id}">${driverOptions}</select></div>`}
+
+      <div class="delivery-card-actions">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(delivery.delivery_location || delivery.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div>
+    </article>
+  `;
+}
+
+async function loadDashboard(){
+  requestNotifyPermission();
+  await loadDrivers();
+  await loadDeliveries();
+  await renderMap();
+}
+
+async function loadDrivers(){
+  const { data, error } = await supabaseClient
+    .from("drivers")
+    .select("*")
+    .eq("is_active", true)
+    .order("name", { ascending:true });
+
+  if(error){
+    document.getElementById("driversList").innerHTML = error.message;
+    return;
+  }
+
+  drivers = data || [];
+  document.getElementById("activeDrivers").innerText = drivers.filter(isDriverOnline).length;
+
+  const box = document.getElementById("driversList");
+  box.innerHTML = "";
+
+  if(!drivers.length){
+    box.innerHTML = "No active drivers.";
+    return;
+  }
+
+  drivers.forEach(d => {
+    box.innerHTML += `
+      <div class="driver-card">
+        <strong>${d.name || "Driver"}</strong><br>
+        ${driverSummary(d)}<br>
+        <span class="online">● ${d.status || (isDriverOnline(d) ? "Online" : "Offline")}</span><br>
+        ${d.latitude && d.longitude ? `<button class="btn btn-blue" onclick="centerDriver(${d.latitude},${d.longitude})">View GPS</button>` : "No GPS yet"}
+      </div>
+    `;
+  });
+
+  addDriverMarkers();
+}
+
+async function loadDeliveries(){
+  const tableBody = document.getElementById("deliveryTable");
+  const cardsBox = document.getElementById("deliveryCards");
+
+  const [{ data, error }, { data: timesheets, error: tsError }] = await Promise.all([
+    supabaseClient.from("deliveries").select("*").order("created_at", { ascending:false }),
+    supabaseClient.from("timesheets").select("id,driver_id,status,clock_in_at,clock_out_at,break_started_at,break_ended_at,created_at").order("created_at", { ascending: false }).limit(800)
+  ]);
+
+  if(error || tsError){
+    const message = (error || tsError).message;
+    tableBody.innerHTML = `<tr><td colspan="13">${message}</td></tr>`;
+    cardsBox.innerHTML = `<div class="empty">${message}</div>`;
+    return;
+  }
+
+  latestTimesheetByDriver = new Map();
+  (timesheets || []).forEach(row => {
+    if(!row.driver_id) return;
+    const key = String(row.driver_id);
+    if(!latestTimesheetByDriver.has(key)) latestTimesheetByDriver.set(key, row);
+  });
+
+  deliveries = latestDeliveriesByTracking(data || []);
+
+  const counts = {
+    total: deliveries.length,
+    pending: deliveries.filter(d => normalizeStatus(d.status) === "Pending").length,
+    assigned: deliveries.filter(d => normalizeStatus(d.status) === "Assigned").length,
+    accepted: deliveries.filter(d => normalizeStatus(d.assignment_status) === "Accepted" || normalizeStatus(d.status) === "Accepted").length,
+    pickedUp: deliveries.filter(d => normalizeStatus(d.status) === "Picked Up").length,
+    inTransit: deliveries.filter(d => normalizeStatus(d.status) === "In Transit").length,
+    driverEnRoute: deliveries.filter(d => normalizeStatus(d.status) === "Driver En Route").length,
+    outForDelivery: deliveries.filter(d => normalizeStatus(d.status) === "Out for Delivery").length,
+    delivered: deliveries.filter(d => normalizeStatus(d.status) === "Delivered").length,
+    rejected: deliveries.filter(d => normalizeStatus(d.assignment_status) === "Rejected").length,
+    cancelled: deliveries.filter(d => normalizeStatus(d.status) === "Cancelled").length,
+  };
+  applyNotifications(counts);
+
+  const completedDurations = deliveries
+    .filter(d => normalizeStatus(d.status) === "Delivered" && d.delivery_time && d.created_at)
+    .map(d => minutesBetween(d.created_at, d.delivery_time));
+
+  const clockedInDrivers = new Set(
+    Array.from(latestTimesheetByDriver.values())
+      .filter(row => row.status !== "Closed")
+      .map(row => String(row.driver_id))
+  ).size;
+
+  document.getElementById("totalJobs").innerText = counts.total;
+  document.getElementById("pendingJobs").innerText = counts.pending;
+  document.getElementById("assignedJobs").innerText = counts.assigned;
+  document.getElementById("acceptedJobs").innerText = counts.accepted;
+  document.getElementById("activeJobs").innerText = counts.pickedUp + counts.inTransit + counts.driverEnRoute;
+  document.getElementById("outJobs").innerText = counts.outForDelivery;
+  document.getElementById("completedJobs").innerText = counts.delivered;
+  document.getElementById("rejectedJobs").innerText = counts.rejected;
+  document.getElementById("cancelledJobs").innerText = counts.cancelled;
+  document.getElementById("activeDrivers").innerText = drivers.filter(isDriverOnline).length;
+  document.getElementById("clockedInDrivers").innerText = clockedInDrivers;
+  document.getElementById("avgDeliveryTime").innerText = completedDurations.length ? `${Math.round(completedDurations.reduce((a,b) => a + b, 0) / completedDurations.length)}m` : "0m";
+
+  if(!deliveries.length){
+    tableBody.innerHTML = `<tr><td colspan="13">No deliveries found.</td></tr>`;
+    cardsBox.innerHTML = `<div class="empty">No deliveries found.</div>`;
+    await renderMap();
+    return;
+  }
+
+  const desktopRows = deliveries.map(d => {
+        const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
+        const assignmentStatus = d.assignment_status || (d.driver_id ? "Assigned" : "Unassigned");
+        const response = responseText(assignmentStatus);
+        const clock = clockStatusForDriver(d.driver_id);
+        const isDelivered = normalizeStatus(d.status) === "Delivered";
+        const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
+        const proofHtml = proofUrl
+          ? `<div class="proof-preview"><a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a><a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a></div>`
+          : `<span class="muted">No proof</span>`;
+
+        const driverOptions = drivers.map(driver => `<option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>${driver.name || "Driver"}</option>`).join("");
+
+        const rowActions = isDelivered
+          ? `
+            <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+            <button class="btn btn-dark" onclick="printDeliveryTicket('${d.id}')">Print</button>
+            <button class="btn btn-blue" onclick="downloadDeliveryPdf('${d.id}')">Download PDF</button>
+            <button class="btn btn-green" onclick="emailCustomer('${d.id}')">Email Customer</button>
+            <button class="btn btn-green" onclick="smsCustomer('${d.id}')">SMS Customer</button>
+          `
+          : `
+            <button class="btn" onclick="assignDriver('${d.id}')">${d.driver_id ? "Reassign" : "Assign"}</button>
+            ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${d.id}')">Unassign</button>` : ""}
+            <button class="btn btn-red" onclick="cancelDelivery('${d.id}')">Cancel</button>
+            <button class="btn btn-dark" onclick="duplicateDelivery('${d.id}')">Duplicate</button>
+            <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+          `;
+
+        return `
+          <tr>
+            <td><strong>${d.tracking_number || ""}</strong></td>
+            <td>${d.customer_name || ""}</td>
+            <td>${statusBadge(d.status)}</td>
+            <td>${isDelivered ? `<span class="assignment-badge completed-badge">Completed</span>` : assignmentBadge(assignmentStatus)}</td>
+            <td>${response}</td>
+            <td>${clock.label}<span class="mini">${clock.detail}</span></td>
+            <td>${deliveryTimeline(d)}</td>
+            <td>${d.recipient_phone || d.customer_phone || "N/A"}</td>
+            <td>${currentDriver?.phone || "N/A"}</td>
+            <td>${proofHtml}</td>
+            <td>${currentDriver ? currentDriver.name : "Unassigned"}</td>
+            <td>${isDelivered ? "" : `<select id="driver-${d.id}">${driverOptions}</select>`}</td>
+            <td><div style="display:flex;gap:8px;flex-wrap:wrap;">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(d.delivery_location || d.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div></td>
+          </tr>
+        `;
+      }).join("");
+
+  const mobileCards = deliveries.map(d => {
+    const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
+    const assignmentStatus = d.assignment_status || (d.driver_id ? "Assigned" : "Unassigned");
+    const response = responseText(assignmentStatus);
+    const clock = clockStatusForDriver(d.driver_id);
+    const isDelivered = normalizeStatus(d.status) === "Delivered";
+    const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
+    const proofHtml = proofUrl
+      ? `<div class="proof-preview"><a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a><a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a></div>`
+      : `<span class="muted">No proof</span>`;
+    const driverOptions = drivers.map(driver => `<option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>${driver.name || "Driver"}</option>`).join("");
+
+    const rowActions = isDelivered
+      ? `
+        <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+        <button class="btn btn-dark" onclick="printDeliveryTicket('${d.id}')">Print</button>
+        <button class="btn btn-blue" onclick="downloadDeliveryPdf('${d.id}')">Download PDF</button>
+        <button class="btn btn-green" onclick="emailCustomer('${d.id}')">Email Customer</button>
+        <button class="btn btn-green" onclick="smsCustomer('${d.id}')">SMS Customer</button>
+      `
+      : `
+        <button class="btn" onclick="assignDriver('${d.id}')">${d.driver_id ? "Reassign" : "Assign"}</button>
+        ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${d.id}')">Unassign</button>` : ""}
+        <button class="btn btn-red" onclick="cancelDelivery('${d.id}')">Cancel</button>
+        <button class="btn btn-dark" onclick="duplicateDelivery('${d.id}')">Duplicate</button>
+        <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+      `;
+
+    return renderDeliveryCard(d, currentDriver, isDelivered, proofHtml, driverOptions, rowActions, assignmentStatus, response, clock);
+  }).join("");
+
+  tableBody.innerHTML = desktopRows;
+  cardsBox.innerHTML = `<div class="delivery-cards">${mobileCards}</div>`;
+
+  await renderMap();
+}
+
+async function assignDriver(deliveryId) {
+  const selectedDriverId = document.getElementById("driver-" + deliveryId).value;
+
+  if (!selectedDriverId) {
+    alert("Select a driver before assigning.");
+    return;
+  }
+
+  const driver = drivers.find(d => String(d.id) === String(selectedDriverId));
+
+  if (!driver) {
+    alert("Driver not found.");
+    return;
+  }
+
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .update({
+      driver_id: driver.id,
+      driver_name: driver.name,
+      assignment_status: "Pending Acceptance",
+      status: "Assigned"
+    })
+    .eq("id", deliveryId);
+
+  if (error) return alert(error.message);
+
+  alert("Driver assigned successfully.");
+  loadDashboard();
+}
+
+async function unassignDelivery(deliveryId) {
+  const { error } = await supabaseClient
+    .from("deliveries")
+    .update({
+      driver_id: null,
+      driver_name: null,
+      assignment_status: "Unassigned",
+      status: "Pending"
+    })
+    .eq("id", deliveryId);
+
+  if (error) return alert(error.message);
+
+  alert("Delivery unassigned.");
+  loadDashboard();
+}
+
+async function cancelDelivery(deliveryId){
+  const { error } = await supabaseClient.from("deliveries").update({
+    driver_id: null,
+    driver_name: null,
+    assignment_status: "Cancelled",
+    status: "Cancelled"
+  }).eq("id", deliveryId);
+
+  if(error) return alert(error.message);
+  loadDashboard();
+}
+
+async function duplicateDelivery(deliveryId){
+  const delivery = deliveries.find(item => String(item.id) === String(deliveryId));
+  if(!delivery) return;
+
+  const clone = {
+    tracking_number: `CQA-${Date.now()}`,
+    customer_name: delivery.customer_name,
+    pickup_location: delivery.pickup_location || null,
+    delivery_location: delivery.delivery_location || null,
+    special_instructions: delivery.special_instructions || null,
+    recipient_phone: delivery.recipient_phone || null,
+    recipient_email: delivery.recipient_email || null,
+    priority: delivery.priority || "Standard",
+    package_weight: delivery.package_weight || null,
+    assignment_status: "Unassigned",
+    status: "Pending",
+    driver_id: null,
+    driver_name: null
+  };
+
+  const { error } = await supabaseClient.from("deliveries").insert([clone]);
+  if(error) return alert(error.message);
+  loadDashboard();
+}
+
+async function editDelivery(deliveryId){
+  const delivery = deliveries.find(item => String(item.id) === String(deliveryId));
+  if(!delivery) return;
+
+  const customer_name = prompt("Customer name", delivery.customer_name || "");
+  if(customer_name === null) return;
+  const pickup_location = prompt("Pickup address", delivery.pickup_location || "");
+  if(pickup_location === null) return;
+  const delivery_location = prompt("Delivery address", delivery.delivery_location || "");
+  if(delivery_location === null) return;
+  const special_instructions = prompt("Special instructions", delivery.special_instructions || "");
+  if(special_instructions === null) return;
+  const recipient_phone = prompt("Recipient phone", delivery.recipient_phone || "");
+  if(recipient_phone === null) return;
+
+  const { error } = await supabaseClient.from("deliveries").update({
+    customer_name,
+    pickup_location,
+    delivery_location,
+    special_instructions,
+    recipient_phone
+  }).eq("id", deliveryId);
+
+  if(error) return alert(error.message);
+  loadDashboard();
+}
+
+function printDeliveryTicket(deliveryId){
+  const delivery = deliveries.find(item => String(item.id) === String(deliveryId));
+  if(!delivery) return;
+
+  const win = window.open("", "_blank", "width=900,height=700");
+  win.document.write(`
+    <html><head><title>Delivery Ticket</title><style>
+      body{font-family:Arial,sans-serif;padding:30px;color:#061b3a}
+      h1{color:#0b2d52}
+      .box{border:1px solid #dbe3ed;border-radius:12px;padding:18px;margin:12px 0}
+    </style></head><body>
+      <h1>C&A Delivery Ticket</h1>
+      <div class="box"><strong>Tracking:</strong> ${delivery.tracking_number || ""}<br><strong>Customer:</strong> ${delivery.customer_name || ""}<br><strong>Status:</strong> ${normalizeStatus(delivery.status)}</div>
+      <div class="box"><strong>Pickup:</strong> ${delivery.pickup_location || ""}<br><strong>Destination:</strong> ${delivery.delivery_location || ""}</div>
+      <div class="box"><strong>Driver:</strong> ${delivery.driver_name || "Unassigned"}<br><strong>Instructions:</strong> ${delivery.special_instructions || ""}</div>
+    </body></html>
+  `);
+  win.document.close();
+  win.focus();
+  win.print();
+}
+
+function downloadDeliveryPdf(deliveryId){
+  const delivery = deliveries.find(item => String(item.id) === String(deliveryId));
+  if(!delivery || !window.jspdf) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  doc.setFontSize(18);
+  doc.text("C&A Delivery Ticket", 20, 20);
+  doc.setFontSize(12);
+  doc.text(`Tracking: ${delivery.tracking_number || ""}`, 20, 40);
+  doc.text(`Customer: ${delivery.customer_name || ""}`, 20, 50);
+  doc.text(`Pickup: ${delivery.pickup_location || ""}`, 20, 60, { maxWidth: 170 });
+  doc.text(`Destination: ${delivery.delivery_location || ""}`, 20, 75, { maxWidth: 170 });
+  doc.text(`Driver: ${delivery.driver_name || "Unassigned"}`, 20, 90);
+  doc.text(`Status: ${normalizeStatus(delivery.status)}`, 20, 100);
+  doc.text(`Notes: ${delivery.special_instructions || ""}`, 20, 115, { maxWidth: 170 });
+  doc.save(`${delivery.tracking_number || "delivery"}.pdf`);
+}
+
+function emailCustomer(deliveryId){
+  const delivery = deliveries.find(item => String(item.id) === String(deliveryId));
+  if(!delivery) return;
+  const email = delivery.customer_email || delivery.recipient_email || delivery.email;
+  if(!email) return alert("No customer email found on this record.");
+  const subject = encodeURIComponent(`Update for ${delivery.tracking_number || "your delivery"}`);
+  const body = encodeURIComponent(`Hello ${delivery.customer_name || "Customer"},\n\nYour delivery status is currently ${normalizeStatus(delivery.status)}.`);
+  window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+
+function smsCustomer(deliveryId){
+  const delivery = deliveries.find(item => String(item.id) === String(deliveryId));
+  if(!delivery) return;
+  const phone = delivery.recipient_phone || delivery.customer_phone || delivery.phone;
+  if(!phone) return alert("No customer phone found on this record.");
+  window.location.href = `sms:${encodeURIComponent(phone)}`;
+}
+
+function openDeliveryMap(locationText){
+  if(!locationText) return;
+  window.open("https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(locationText), "_blank");
+}
+
+function initRealtime(){
+  if(realtimeChannel){
+    supabaseClient.removeChannel(realtimeChannel);
+  }
+
+  realtimeChannel = supabaseClient
+    .channel("dispatcher-live-updates")
+    .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => {
+      loadDashboard();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "drivers" }, () => {
+      loadDrivers();
+      renderMap();
+    })
+    .subscribe();
+}
+
+setInterval(loadDashboard, 15000);
+initRealtime();
+loadDashboard();
+
 </script>
+
 </body>
 </html>

@@ -37,6 +37,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 @media(max-width:1100px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Legacy URL retained for redirects: payroll. Use the preferred canonical URL for this C&A Quality Solutions page.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/payroll.html">
   <meta name="robots" content="noindex, follow">
@@ -125,11 +126,9 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
 
-const role = localStorage.getItem("role");
-if(role !== "admin" && role !== "dispatcher"){
-  window.location.href = "login.html";
-}
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 let payrollRows = [];
 

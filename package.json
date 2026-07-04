@@ -21,5 +21,8 @@
   "dependencies": {
     "resend": "^6.12.4",
     "stripe": "^22.2.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^26.1.0"
   }
 }

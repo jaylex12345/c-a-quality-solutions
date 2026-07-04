@@ -40,6 +40,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Official deliveries page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/deliveries.html">
   <meta name="robots" content="noindex, follow">
@@ -177,11 +178,9 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
 
-const currentRole = localStorage.getItem("role");
-if(currentRole !== "admin"){
-  window.location.href = "login.html";
-}
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 function formatDateTime(value){
   return value ? new Date(value).toLocaleString() : "";

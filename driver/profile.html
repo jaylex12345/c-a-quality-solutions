@@ -5,6 +5,20 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Driver Profile | C&A Quality Solutions LLC</title>
 <link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{margin:0;background:#f3f6fb;color:#071b33;font-family:Arial,sans-serif}
+main{max-width:920px;margin:28px auto;padding:18px}
+.card{background:#fff;border-radius:14px;padding:22px;box-shadow:0 8px 24px rgba(0,0,0,.08);margin-bottom:18px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+input{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px;box-sizing:border-box}
+button{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:pointer;background:#d9b431;color:#071b33}
+.muted{color:#64748b}
+.ok{color:#166534;font-weight:bold}
+.err{color:#991b1b;font-weight:bold}
+.photo{width:96px;height:96px;border-radius:14px;object-fit:cover;border:1px solid #cbd5e1;background:#fff}
+@media(max-width:760px){.row{grid-template-columns:1fr}}
+</style>
   <meta name="description" content="Official driver profile page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/driver/profile.html">
   <meta name="robots" content="noindex, follow">
@@ -22,10 +36,255 @@
 </head>
 <body>
   <main style="max-width:900px;margin:40px auto;padding:20px;">
-    <h1>Driver Profile</h1>
-    <p>Driver profile details are available in the dashboard.</p>
-    <p><a href="/driver/dashboard.html">Open Dashboard</a></p>
+    <h1>My Profile</h1>
+    <p class="muted">Manage your account and security settings.</p>
+
+    <section class="card">
+      <h2>Profile Details</h2>
+      <p><img id="profilePhotoPreview" class="photo" src="/assets/images/logo.jpeg" alt="Driver profile photo"></p>
+      <div class="row">
+        <div>
+          <label>Phone Number</label>
+          <input id="phone" placeholder="Phone number">
+        </div>
+        <div>
+          <label>Emergency Contact</label>
+          <input id="emergencyContact" placeholder="Emergency contact">
+        </div>
+      </div>
+      <p style="margin-top:12px;">
+        <label>Upload Profile Photo</label>
+        <input id="profilePhoto" type="file" accept="image/*">
+      </p>
+      <p><button onclick="saveProfile()">Save Profile</button></p>
+    </section>
+
+    <section class="card">
+      <h2>Change Password</h2>
+      <div class="row">
+        <input id="newPassword" type="password" placeholder="New password">
+        <input id="confirmPassword" type="password" placeholder="Confirm password">
+      </div>
+      <p class="muted">Minimum 8 chars, uppercase, lowercase, number, and special character.</p>
+      <p><button onclick="changePassword()">Update Password</button></p>
+    </section>
+
+    <section class="card">
+      <h2>Security Controls</h2>
+      <p><button onclick="logoutAllDevices()">Log Out of All Devices</button></p>
+      <p><button onclick="enable2FA()">Enable Two-Factor Authentication (Optional)</button></p>
+      <p id="mfaHelp" class="muted"></p>
+    </section>
+
+    <p id="message" class="muted"></p>
+    <p><a href="/driver/dashboard.html">Back to Dashboard</a></p>
   </main>
+
+<script>
+const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+let driverRecord = null;
+
+function setMessage(text, isError){
+  const el = document.getElementById("message");
+  el.className = isError ? "err" : "ok";
+  el.innerText = text;
+}
+
+function validPassword(value){
+  return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).{8,}$/.test(value || "");
+}
+
+async function requireSession(){
+  const { data } = await supabaseClient.auth.getSession();
+  if(!data.session){
+    window.location.href = "/driver/login.html";
+    return null;
+  }
+  return data.session;
+}
+
+async function loadProfile(){
+  const session = await requireSession();
+  if(!session) return;
+
+  const user = session.user;
+  const byUserId = await supabaseClient
+    .from("drivers")
+    .select("*")
+    .eq("auth_user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  driverRecord = byUserId.data;
+  if(!driverRecord && user.email){
+    const byEmail = await supabaseClient
+      .from("drivers")
+      .select("*")
+      .eq("email", user.email)
+      .limit(1)
+      .maybeSingle();
+    driverRecord = byEmail.data;
+  }
+
+  if(!driverRecord){
+    setMessage("Driver profile not found.", true);
+    return;
+  }
+
+  localStorage.setItem("driver_id", driverRecord.id);
+  localStorage.setItem("driver_name", driverRecord.name || "Driver");
+  localStorage.setItem("role", "driver");
+
+  document.getElementById("phone").value = driverRecord.phone || "";
+  document.getElementById("emergencyContact").value = driverRecord.emergency_contact || "";
+  if(driverRecord.profile_photo_url){
+    document.getElementById("profilePhotoPreview").src = driverRecord.profile_photo_url;
+  }
+}
+
+async function uploadProfilePhoto(){
+  const fileInput = document.getElementById("profilePhoto");
+  const file = fileInput.files && fileInput.files[0];
+  if(!file || !driverRecord) return driverRecord?.profile_photo_url || null;
+
+  const fileName = `driver-profiles/${driverRecord.id}/${Date.now()}-${file.name}`;
+  const { error: uploadError } = await supabaseClient.storage
+    .from("proofs")
+    .upload(fileName, file, { upsert: true });
+
+  if(uploadError){
+    throw new Error(uploadError.message);
+  }
+
+  const { data } = supabaseClient.storage.from("proofs").getPublicUrl(fileName);
+  return data.publicUrl;
+}
+
+async function saveProfile(){
+  if(!driverRecord){
+    setMessage("Profile is still loading.", true);
+    return;
+  }
+
+  try{
+    const photoUrl = await uploadProfilePhoto();
+    const phone = document.getElementById("phone").value.trim();
+    const emergencyContact = document.getElementById("emergencyContact").value.trim();
+
+    const updates = {
+      phone,
+      emergency_contact: emergencyContact
+    };
+
+    if(photoUrl){
+      updates.profile_photo_url = photoUrl;
+      updates.photo_url = photoUrl;
+    }
+
+    const { error } = await supabaseClient
+      .from("drivers")
+      .update(updates)
+      .eq("id", driverRecord.id);
+
+    if(error) throw new Error(error.message);
+
+    if(photoUrl){
+      document.getElementById("profilePhotoPreview").src = photoUrl;
+    }
+    setMessage("Profile updated.", false);
+    loadProfile();
+  }catch(error){
+    setMessage(error.message || "Unable to save profile.", true);
+  }
+}
+
+async function changePassword(){
+  const newPassword = document.getElementById("newPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if(!validPassword(newPassword)){
+    setMessage("Password does not meet requirements.", true);
+    return;
+  }
+
+  if(newPassword !== confirmPassword){
+    setMessage("Passwords do not match.", true);
+    return;
+  }
+
+  const { error } = await supabaseClient.auth.updateUser({ password: newPassword });
+  if(error){
+    setMessage(error.message, true);
+    return;
+  }
+
+  if(driverRecord){
+    await supabaseClient
+      .from("drivers")
+      .update({ force_password_reset: false })
+      .eq("id", driverRecord.id);
+  }
+
+  document.getElementById("newPassword").value = "";
+  document.getElementById("confirmPassword").value = "";
+  setMessage("Password updated successfully.", false);
+}
+
+async function logoutAllDevices(){
+  if(!driverRecord){
+    setMessage("Profile not loaded.", true);
+    return;
+  }
+
+  try{
+    const response = await fetch("/.netlify/functions/driver-account-admin", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout_all_devices", driverId: driverRecord.id })
+    });
+
+    const payload = await response.json();
+    if(!response.ok) throw new Error(payload.error || "Unable to log out devices.");
+
+    setMessage(payload.message || "All sessions ended.", false);
+    await supabaseClient.auth.signOut();
+    localStorage.clear();
+    setTimeout(() => {
+      window.location.href = "/driver/login.html";
+    }, 700);
+  }catch(error){
+    setMessage(error.message, true);
+  }
+}
+
+async function enable2FA(){
+  const help = document.getElementById("mfaHelp");
+
+  try{
+    const enrolled = await supabaseClient.auth.mfa.enroll({
+      factorType: "totp",
+      friendlyName: "Driver Mobile Authenticator"
+    });
+
+    const qr = enrolled && enrolled.data && enrolled.data.totp && enrolled.data.totp.qr_code;
+    if(qr){
+      help.innerHTML = `Scan this QR in your authenticator app, then verify in the Supabase-authenticated app flow.<br><img src="${qr}" alt="TOTP QR" style="max-width:220px;border:1px solid #cbd5e1;border-radius:8px;padding:8px;background:#fff;">`;
+      setMessage("2FA enrollment started.", false);
+      return;
+    }
+
+    help.innerText = "2FA enrollment started. Complete verification in your authenticator app.";
+    setMessage("2FA enrollment started.", false);
+  }catch(error){
+    help.innerText = "2FA is optional and may require additional project MFA settings in Supabase.";
+    setMessage(error.message || "Unable to enable 2FA right now.", true);
+  }
+}
+
+loadProfile();
+</script>
 </body>
 </html>
 

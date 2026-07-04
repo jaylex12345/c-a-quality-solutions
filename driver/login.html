@@ -36,6 +36,7 @@
       Login
     </button>
 
+    <p style="margin:8px 0 0;"><a href="#" onclick="event.preventDefault();forgotPassword()">Forgot Password?</a></p>
     <p id="message" style="margin-top:15px;font-weight:bold;"></p>
   </div>
 </section>
@@ -58,29 +59,114 @@ async function driverLogin() {
     return;
   }
 
-  const { data, error } = await supabaseClient
-  .from("drivers")
-  .select("*")
-  .eq("email", emailOrPhone)
-  .eq("password", password)
-  .limit(1);
+  let loginEmail = emailOrPhone.toLowerCase();
 
-console.log("DATA:", data);
-console.log("ERROR:", error);
+  if(!emailOrPhone.includes("@")){
+    const lookup = await supabaseClient
+      .from("drivers")
+      .select("email")
+      .eq("phone", emailOrPhone)
+      .limit(1)
+      .maybeSingle();
 
-if (error || !data || data.length === 0) {
-  message.innerText = "Invalid login.";
-  message.style.color = "red";
-  return;
+    if(!lookup.error && lookup.data && lookup.data.email){
+      loginEmail = String(lookup.data.email).toLowerCase();
+    }
+  }
+
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: loginEmail,
+    password
+  });
+
+  if(error){
+    message.innerText = "Invalid login.";
+    message.style.color = "red";
+    return;
+  }
+
+  const driverResult = await supabaseClient
+    .from("drivers")
+    .select("*")
+    .eq("email", loginEmail)
+    .limit(1)
+    .maybeSingle();
+
+  if(driverResult.error || !driverResult.data){
+    await supabaseClient.auth.signOut();
+    message.innerText = "Driver profile not found.";
+    message.style.color = "red";
+    return;
+  }
+
+  const driver = driverResult.data;
+
+  if(driver.account_status === "Suspended" || driver.is_active === false){
+    await supabaseClient.auth.signOut();
+    message.innerText = "This account is suspended. Contact dispatch.";
+    message.style.color = "red";
+    return;
+  }
+
+  if(driver.force_password_reset){
+    await supabaseClient.auth.resetPasswordForEmail(loginEmail, {
+      redirectTo: `${window.location.origin}/driver/reset-password.html`
+    });
+    await supabaseClient.auth.signOut();
+    message.innerText = "Password reset required. Check your email for a secure reset link.";
+    message.style.color = "#0b2d52";
+    return;
+  }
+
+  await supabaseClient
+    .from("drivers")
+    .update({
+      auth_user_id: (await supabaseClient.auth.getUser()).data.user?.id || driver.auth_user_id || null,
+      last_login_at: new Date().toISOString(),
+      account_status: "Active",
+      activated_at: driver.activated_at || new Date().toISOString()
+    })
+    .eq("id", driver.id);
+
+  localStorage.setItem("driver_id", driver.id);
+  localStorage.setItem("driver_name", driver.name || "Driver");
+  localStorage.setItem("role", "driver");
+  localStorage.setItem("driver_auth_user_id", driver.auth_user_id || "");
+
+  window.location.href = "/driver/dashboard.html";
 }
 
-const driver = data[0];
+async function forgotPassword(){
+  const message = document.getElementById("message");
+  const emailOrPhone = document.getElementById("email").value.trim();
 
-localStorage.setItem("driver_id", driver.id);
-localStorage.setItem("driver_name", driver.name);
-localStorage.setItem("role", "driver");
+  if(!emailOrPhone){
+    message.innerText = "Enter your email (or phone) first.";
+    message.style.color = "red";
+    return;
+  }
 
-window.location.href = "/driver/dashboard.html";
+  let email = emailOrPhone.toLowerCase();
+
+  if(!emailOrPhone.includes("@")){
+    const lookup = await supabaseClient
+      .from("drivers")
+      .select("email")
+      .eq("phone", emailOrPhone)
+      .limit(1)
+      .maybeSingle();
+
+    if(!lookup.error && lookup.data && lookup.data.email){
+      email = String(lookup.data.email).toLowerCase();
+    }
+  }
+
+  await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/driver/reset-password.html`
+  });
+
+  message.innerText = "If an account exists, a password reset email has been sent.";
+  message.style.color = "#0b2d52";
 }
 </script>
 

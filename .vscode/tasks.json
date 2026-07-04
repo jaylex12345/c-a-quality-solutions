@@ -1,0 +1,59 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Copilot Echo Check",
+			"type": "shell",
+			"command": "cmd /d /c \"echo task-ok\"",
+			"isBackground": false
+		},
+		{
+			"label": "Netlify Deploy Prod",
+			"type": "shell",
+			"command": "cmd /d /c \".\\node_modules\\.bin\\netlify.cmd deploy --prod --dir . --site legendary-tiramisu-32555a --message role-platform-update\"",
+			"isBackground": false
+		},
+		{
+			"label": "Netlify Status",
+			"type": "shell",
+			"command": "cmd /d /c \".\\node_modules\\.bin\\netlify.cmd status\"",
+			"isBackground": false
+		},
+		{
+			"label": "Netlify Deploy Prod by ID",
+			"type": "shell",
+			"command": "cmd /d /c \".\\node_modules\\.bin\\netlify.cmd deploy --prod --dir . --site b195b388-0b5a-4228-9c59-ece71a248756 --message role-platform-update\"",
+			"isBackground": false
+		},
+		{
+			"label": "Check Custom Domain Cache",
+			"type": "shell",
+			"command": "cmd /d /c \"curl -s -H \\\"Cache-Control: no-cache\\\" https://caqualitysolutions.com/admin/dispatcher.html | findstr /c:\\\"Clocked In\\\" & curl -s -H \\\"Cache-Control: no-cache\\\" https://caqualitysolutions.com/customer-dashboard.html | findstr /c:\\\"Customer Portal\\\" & curl -s -H \\\"Cache-Control: no-cache\\\" https://caqualitysolutions.com/driver/dashboard.html | findstr /c:\\\"Customer Tracking\\\"\"",
+			"isBackground": false
+		},
+		{
+			"label": "Check Custom Domain Markers",
+			"type": "shell",
+			"command": "$d1 = curl.exe -s -H \"Cache-Control: no-cache\" \"https://caqualitysolutions.com/admin/dispatcher.html\"; $d2 = curl.exe -s -H \"Cache-Control: no-cache\" \"https://caqualitysolutions.com/customer-dashboard.html\"; $d3 = curl.exe -s -H \"Cache-Control: no-cache\" \"https://caqualitysolutions.com/driver/dashboard.html\"; Write-Output \"-- dispatcher has Clocked In --\"; ($d1 | Select-String -Pattern \"Clocked In\").Line; Write-Output \"-- customer dashboard has Customer Portal --\"; ($d2 | Select-String -Pattern \"Customer Portal\").Line; Write-Output \"-- driver dashboard has Customer Tracking link text --\"; ($d3 | Select-String -Pattern \"Customer Tracking\").Line",
+			"isBackground": false
+		},
+		{
+			"label": "Create Full Role Backup",
+			"type": "shell",
+			"command": "$ts = Get-Date -Format 'yyyyMMdd_HHmmss'; $dir = \"backups/role_platform_full_$ts\"; New-Item -ItemType Directory -Path $dir -Force | Out-Null; Copy-Item \"driver/dashboard.html\",\"admin/dispatcher.html\",\"admin/dashboard.html\",\"customer-dashboard.html\",\"customer/invoices.html\",\"customer/profile.html\" -Destination $dir -Force; Get-ChildItem $dir | Select-Object -ExpandProperty Name",
+			"isBackground": false
+		},
+		{
+			"label": "Create Full Role Backup Fixed",
+			"type": "shell",
+			"command": "cmd /d /c \"if not exist backups\\role_platform_full_latest mkdir backups\\role_platform_full_latest && copy /Y driver\\dashboard.html backups\\role_platform_full_latest\\driver-dashboard.html && copy /Y admin\\dispatcher.html backups\\role_platform_full_latest\\admin-dispatcher.html && copy /Y admin\\dashboard.html backups\\role_platform_full_latest\\admin-dashboard.html && copy /Y customer-dashboard.html backups\\role_platform_full_latest\\customer-dashboard.html && copy /Y customer\\invoices.html backups\\role_platform_full_latest\\customer-invoices.html && copy /Y customer\\profile.html backups\\role_platform_full_latest\\customer-profile.html && dir /b backups\\role_platform_full_latest\"",
+			"isBackground": false
+		},
+		{
+			"label": "Create Full Role Backup PS",
+			"type": "shell",
+			"command": "$dest = 'backups/role_platform_full_latest'; if(-not (Test-Path $dest)){ New-Item -ItemType Directory -Path $dest | Out-Null }; Copy-Item 'driver/dashboard.html' \"$dest/driver-dashboard.html\" -Force; Copy-Item 'admin/dispatcher.html' \"$dest/admin-dispatcher.html\" -Force; Copy-Item 'admin/dashboard.html' \"$dest/admin-dashboard.html\" -Force; Copy-Item 'customer-dashboard.html' \"$dest/customer-dashboard.html\" -Force; Copy-Item 'customer/invoices.html' \"$dest/customer-invoices.html\" -Force; Copy-Item 'customer/profile.html' \"$dest/customer-profile.html\" -Force; Get-ChildItem $dest | Select-Object -ExpandProperty Name",
+			"isBackground": false
+		}
+	]
+}

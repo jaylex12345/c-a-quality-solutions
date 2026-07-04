@@ -23,8 +23,23 @@ body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33;}
 .btn{background:#d9b431;color:#071b33;padding:10px 16px;border:none;border-radius:8px;font-weight:bold;text-decoration:none;display:inline-block;cursor:pointer;}
 .quick-actions{display:flex;gap:15px;flex-wrap:wrap;}
 input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border-radius:8px;}
+@media(max-width:980px){
+  .admin-layout{flex-direction:column}
+  .sidebar{width:100%;padding:16px}
+  .sidebar h2{margin-bottom:8px}
+  .sidebar a{padding:12px 14px;font-size:16px}
+  .main{padding:16px}
+  .cards{grid-template-columns:1fr 1fr;gap:12px}
+  .btn{min-height:48px;padding:12px 16px;font-size:16px}
+}
+@media(max-width:640px){
+  .cards{grid-template-columns:1fr}
+  .quick-actions{display:grid;grid-template-columns:1fr}
+  .quick-actions .btn{width:100%}
+}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Official admin dashboard page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/dashboard.html">
   <meta name="robots" content="noindex, follow">
@@ -70,13 +85,23 @@ input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border
       <div class="card"><h3>Active Drivers</h3><p id="activeDrivers">0</p></div>
       <div class="card"><h3>Pending Jobs</h3><p id="pendingJobs">0</p></div>
       <div class="card"><h3>Completed Today</h3><p id="completedToday">0</p></div>
+      <div class="card"><h3>Total Completed Deliveries</h3><p id="completedTotal">0</p></div>
       <div class="card"><h3>Stripe Revenue (Paid)</h3><p id="paidRevenue">$0.00</p></div>
+      <div class="card"><h3>Daily Revenue</h3><p id="dailyRevenue">$0.00</p></div>
+      <div class="card"><h3>Weekly Revenue</h3><p id="weeklyRevenue">$0.00</p></div>
+      <div class="card"><h3>Monthly Revenue</h3><p id="monthlyRevenue">$0.00</p></div>
     </div>
 
     <div class="section">
       <h2>Quick Actions</h2>
       <div class="quick-actions">
         <a href="/admin/dispatcher.html" class="btn">Assign Job</a>
+        <a href="/admin/payroll.html" class="btn">Payroll</a>
+        <a href="/admin/invoices.html" class="btn">Invoices</a>
+        <a href="/admin/reports.html" class="btn">Reports</a>
+        <a href="/admin/customers.html" class="btn">Customer Management</a>
+        <a href="/admin/employees.html" class="btn">Driver Performance</a>
+        <a href="/admin/settings.html" class="btn">Settings</a>
         <a href="/driver/login.html" class="btn">Driver Login</a>
         <a href="/driver/dashboard.html" class="btn">Driver Dashboard</a>
         <a href="/customer/booking.html" class="btn">New Booking</a>
@@ -89,8 +114,12 @@ input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border
       <input id="driverName" placeholder="Driver Full Name">
       <input id="driverPhone" placeholder="Phone Number">
       <input id="driverEmail" placeholder="Email Address">
-      <input id="driverPassword" placeholder="Password">
-      <button onclick="addDriver()" class="btn">Add Driver</button>
+      <input id="driverRole" value="Driver" disabled>
+      <select id="driverStatus">
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+      </select>
+      <button onclick="addDriver()" class="btn">Create Driver</button>
       <p id="driverMessage"></p>
     </div>
   </main>
@@ -100,15 +129,12 @@ input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border
 const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+window.supabaseClient = supabaseClient;
 
-const currentRole = localStorage.getItem("role");
-if(currentRole !== "admin"){
-  window.location.href = "/admin/login.html";
-}
+requireAdminAuth({ supabaseClient, loginPath: "/login.html" });
 
 function logout(){
-  localStorage.clear();
-  window.location.href = "/admin/login.html";
+  return adminLogout('/login.html');
 }
 
 function asMoney(value){
@@ -149,48 +175,70 @@ async function loadAdminStats(){
   const deliveriesList = latestByTracking(deliveries || []);
   const driversList = drivers || [];
   const today = new Date().toISOString().slice(0,10);
+  const now = new Date();
+  const weekStart = new Date(now);
+  const offset = weekStart.getDay() === 0 ? 6 : weekStart.getDay() - 1;
+  weekStart.setDate(weekStart.getDate() - offset);
+  weekStart.setHours(0,0,0,0);
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+  const paidRows = deliveriesList.filter(item => String(item.payment_status || "").toLowerCase() === "paid");
+  const paidTotal = paidRows.reduce((sum, item) => sum + Number(item.total_amount || item.amount || item.delivery_fee || 0), 0);
+  const paidDaily = paidRows
+    .filter(item => item.created_at && item.created_at.slice(0,10) === today)
+    .reduce((sum, item) => sum + Number(item.total_amount || item.amount || item.delivery_fee || 0), 0);
+  const paidWeekly = paidRows
+    .filter(item => item.created_at && new Date(item.created_at) >= weekStart)
+    .reduce((sum, item) => sum + Number(item.total_amount || item.amount || item.delivery_fee || 0), 0);
+  const paidMonthly = paidRows
+    .filter(item => item.created_at && new Date(item.created_at) >= monthStart)
+    .reduce((sum, item) => sum + Number(item.total_amount || item.amount || item.delivery_fee || 0), 0);
 
   document.getElementById("todayDeliveries").innerText = deliveriesList.filter(item => item.created_at && item.created_at.slice(0,10) === today).length;
   document.getElementById("activeDrivers").innerText = driversList.filter(item => item.is_active === true && String(item.status || "").toLowerCase() !== "offline").length;
   document.getElementById("pendingJobs").innerText = deliveriesList.filter(item => normalizeDeliveryStatus(item.status) !== "Delivered" && normalizeDeliveryStatus(item.status) !== "Cancelled").length;
   document.getElementById("completedToday").innerText = deliveriesList.filter(item => normalizeDeliveryStatus(item.status) === "Delivered" && item.delivery_time && item.delivery_time.slice(0,10) === today).length;
-  document.getElementById("paidRevenue").innerText = asMoney(
-    deliveriesList
-      .filter(item => String(item.payment_status || "").toLowerCase() === "paid")
-      .reduce((sum, item) => sum + Number(item.total_amount || item.amount || item.delivery_fee || 0), 0)
-  );
+  document.getElementById("completedTotal").innerText = deliveriesList.filter(item => normalizeDeliveryStatus(item.status) === "Delivered").length;
+  document.getElementById("paidRevenue").innerText = asMoney(paidTotal);
+  document.getElementById("dailyRevenue").innerText = asMoney(paidDaily);
+  document.getElementById("weeklyRevenue").innerText = asMoney(paidWeekly);
+  document.getElementById("monthlyRevenue").innerText = asMoney(paidMonthly);
 }
 
 async function addDriver(){
   const name = document.getElementById("driverName").value.trim();
   const phone = document.getElementById("driverPhone").value.trim();
   const email = document.getElementById("driverEmail").value.trim();
-  const password = document.getElementById("driverPassword").value.trim();
+  const isActive = document.getElementById("driverStatus").value === "active";
 
-  if(!name || !phone || !email || !password){
+  if(!name || !phone || !email){
     document.getElementById("driverMessage").innerText = "Fill all driver fields.";
     return;
   }
 
-  const { error } = await supabaseClient.from("drivers").insert([{
-    name,
-    phone,
-    email,
-    password,
-    is_active: true,
-    status: "Available"
-  }]);
+  const response = await fetch("/.netlify/functions/driver-account-admin", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "create_invite",
+      name,
+      phone,
+      email,
+      isActive
+    })
+  });
 
-  if(error){
-    document.getElementById("driverMessage").innerText = error.message;
+  const payload = await response.json();
+  if(!response.ok){
+    document.getElementById("driverMessage").innerText = payload.error || "Unable to create driver.";
     return;
   }
 
-  document.getElementById("driverMessage").innerText = "Driver added successfully.";
+  document.getElementById("driverMessage").innerText = payload.message || "Driver invitation sent.";
   document.getElementById("driverName").value = "";
   document.getElementById("driverPhone").value = "";
   document.getElementById("driverEmail").value = "";
-  document.getElementById("driverPassword").value = "";
+  document.getElementById("driverStatus").value = "active";
   loadAdminStats();
 }
 

@@ -1,102 +1,13 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Admin Login | C&A Quality Solutions LLC</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<style>
-body{
-font-family:Arial;
-background:#f4f7fb;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-}
-
-.card{
-background:white;
-padding:30px;
-width:350px;
-border-radius:12px;
-box-shadow:0 10px 30px rgba(0,0,0,.1);
-}
-
-input{
-width:100%;
-padding:12px;
-margin-bottom:15px;
-}
-
-button{
-width:100%;
-padding:12px;
-background:#0b2d52;
-color:white;
-border:none;
-cursor:pointer;
-}
-</style>
-  <meta name="description" content="Official admin login page for C&A Quality Solutions LLC operations and customer support.">
-  <link rel="canonical" href="https://caqualitysolutions.com/admin/login.html">
-  <meta name="robots" content="noindex, follow">
-  <meta property="og:type" content="website">
-  <meta property="og:title" content="Admin Login | C&A Quality Solutions LLC">
-  <meta property="og:description" content="Official admin login page for C&A Quality Solutions LLC operations and customer support.">
-  <meta property="og:url" content="https://caqualitysolutions.com/admin/login.html">
-  <meta property="og:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Admin Login | C&A Quality Solutions LLC">
-  <meta name="twitter:description" content="Official admin login page for C&A Quality Solutions LLC operations and customer support.">
-  <meta name="twitter:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
-  <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpeg">
-  <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}</style>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0; url=/login.html">
+  <title>Redirecting...</title>
 </head>
-
 <body>
-<h1 class="sr-only">Admin Login</h1>
-
-<div class="card">
-<h2>C&A Admin Login</h2>
-
-<input id="email" placeholder="Email">
-<input id="password" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
-
-<p id="msg"></p>
-</div>
-
-<script>
-
-const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
-const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
-
-const supabaseClient=supabase.createClient(
-supabaseUrl,
-supabaseKey
-);
-
-async function login(){
-
-const email=document.getElementById('email').value;
-const password=document.getElementById('password').value;
-
-const {error}=await supabaseClient.auth.signInWithPassword({
-email,
-password
-});
-
-if(error){
-document.getElementById('msg').innerText=error.message;
-return;
-}
-
-localStorage.setItem('role', 'admin');
-
-window.location.href='/admin/dashboard.html';
-}
-
-</script>
-
+  <script>
+    window.location.replace('/login.html');
+  </script>
 </body>
 </html>

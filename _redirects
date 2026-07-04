@@ -10,6 +10,8 @@ https://www.caqualitysolutions.com/* https://caqualitysolutions.com/:splat 301!
 /driver-dashboard.html /driver/dashboard.html 301
 /driver-history.html /driver/history.html 301
 /driver-profile.html /driver/profile.html 301
+/admin /admin/dashboard.html 301
+/dispatcher /admin/dispatcher.html 301
 /customer-invoices.html /customer/invoices.html 301
 /customer-profile.html /customer/profile.html 301
 /admin.html /admin/dashboard.html 301
