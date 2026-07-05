@@ -56,7 +56,7 @@ async function login(){
   }
 
   if(!isOwnerAdminEmail(email)){
-    msg.innerText = "Not authorized.";
+    msg.innerText = "Invalid email or password.";
     return;
   }
 
@@ -69,7 +69,7 @@ async function login(){
   const sessionEmail = String(data.user.email || "").toLowerCase();
   if(!isOwnerAdminEmail(sessionEmail)){
     await supabaseClient.auth.signOut();
-    msg.innerText = "Not authorized.";
+    msg.innerText = "Invalid email or password.";
     return;
   }
 
