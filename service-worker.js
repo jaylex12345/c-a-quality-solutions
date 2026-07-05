@@ -1,4 +1,4 @@
-const CACHE_NAME = "c-a-driver-dashboard-v35";
+const CACHE_NAME = "c-a-driver-dashboard-v36";
 const APP_SHELL = [
   "./",
   "/driver/dashboard.html",
@@ -33,6 +33,20 @@ self.addEventListener("fetch", event => {
     return;
   }
 
+  const path = requestUrl.pathname;
+  const bypassAuthCache =
+    path === "/login.html" ||
+    path === "/admin.html" ||
+    path.startsWith("/admin/") ||
+    path === "/assets/js/admin-auth.js";
+
+  if (bypassAuthCache) {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() => caches.match("/driver/dashboard.html"))
@@ -47,6 +61,10 @@ self.addEventListener("fetch", event => {
       }
 
       return fetch(event.request).then(response => {
+        if (!response || response.status !== 200) {
+          return response;
+        }
+
         const responseClone = response.clone();
         caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
         return response;
