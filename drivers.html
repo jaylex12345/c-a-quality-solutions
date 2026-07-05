@@ -266,12 +266,16 @@ async function addDriver(){
   }
 
   try{
-    const result = await adminAction("create_invite", {
-      name,
-      phone,
-      email,
-      isActive
+    const response = await fetch("/.netlify/functions/create-driver", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, phone, email, isActive })
     });
+
+    const result = await response.json();
+    if(!response.ok){
+      throw new Error(result.error || "Unable to create driver.");
+    }
     document.getElementById("message").innerText = result.message || "Driver invitation sent.";
   }catch(error){
     document.getElementById("message").innerText = error.message;

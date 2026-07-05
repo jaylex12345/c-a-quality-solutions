@@ -216,16 +216,10 @@ async function addDriver(){
     return;
   }
 
-  const response = await fetch("/.netlify/functions/driver-account-admin", {
+  const response = await fetch("/.netlify/functions/create-driver", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "create_invite",
-      name,
-      phone,
-      email,
-      isActive
-    })
+    body: JSON.stringify({ name, phone, email, isActive })
   });
 
   const payload = await response.json();
