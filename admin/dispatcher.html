@@ -20,7 +20,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
 .btn-red{background:#dc2626;color:white}
 .btn-dark{background:#061b3a;color:white}
 .container{max-width:1400px;margin:25px auto;padding:0 18px}
-.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px}
 .card{background:white;border-radius:18px;padding:20px;margin-bottom:20px;box-shadow:0 8px 25px rgba(0,0,0,.08)}
 .big{font-size:30px;font-weight:bold;color:#d9b431}
 .main{display:grid;grid-template-columns:2fr 1fr;gap:20px}
@@ -33,6 +33,11 @@ select{padding:8px;border-radius:8px;width:100%}
 .delivered{background:#dcfce7;color:#166534}.pending{background:#fee2e2;color:#991b1b}
 .transit{background:#fef3c7;color:#92400e}.picked{background:#dbeafe;color:#1d4ed8}.out{background:#ede9fe;color:#6d28d9}
 .cancelled{background:#e5e7eb;color:#374151}.rejected{background:#fee2e2;color:#991b1b}.accepted{background:#dcfce7;color:#166534}
+.paid-badge{background:#dcfce7;color:#166534}
+.unpaid-badge{background:#fee2e2;color:#991b1b}
+.booking-badge{background:#e0f2fe;color:#0c4a6e}
+.quote-badge{background:#fef3c7;color:#92400e}
+.source-badge{background:#f8fafc;color:#334155;border:1px solid #cbd5e1}
 .assignment-badge{padding:7px 10px;border-radius:999px;font-weight:bold;font-size:12px;display:inline-block}
 .completed-badge{background:#dcfce7;color:#166534}
 .assigned-badge{background:#dbeafe;color:#1d4ed8}
@@ -104,6 +109,10 @@ select{padding:8px;border-radius:8px;width:100%}
 
   <div class="grid">
     <div class="card"><h3>Total Deliveries</h3><div class="big" id="totalJobs">0</div></div>
+    <div class="card"><h3>New Bookings</h3><div class="big" id="newBookings">0</div><div class="metric-sub">Quote and booking intake</div></div>
+    <div class="card"><h3>Pending Quotes</h3><div class="big" id="pendingQuotes">0</div><div class="metric-sub">Awaiting dispatch review</div></div>
+    <div class="card"><h3>Paid</h3><div class="big" id="paidJobs">0</div><div class="metric-sub">Paid via Stripe / cash</div></div>
+    <div class="card"><h3>Unpaid</h3><div class="big" id="unpaidJobs">0</div><div class="metric-sub">Pending payment</div></div>
     <div class="card"><h3>Pending</h3><div class="big" id="pendingJobs">0</div><div class="metric-sub">Waiting for dispatch</div></div>
     <div class="card"><h3>Assigned</h3><div class="big" id="assignedJobs">0</div><div class="metric-sub">Queued to drivers</div></div>
     <div class="card"><h3>Accepted</h3><div class="big" id="acceptedJobs">0</div><div class="metric-sub">Driver confirmed</div></div>
@@ -136,13 +145,14 @@ select{padding:8px;border-radius:8px;width:100%}
           <thead>
             <tr>
               <th>Tracking</th>
-              <th>Customer</th>
-              <th>Status</th>
+              <th>Customer Info</th>
+              <th>Booking Status</th>
+              <th>Payment</th>
+              <th>Delivery Status</th>
               <th>Assignment Status</th>
               <th>Driver Response</th>
               <th>Clock Status</th>
               <th>Timeline</th>
-              <th>Customer Phone</th>
               <th>Driver Phone</th>
               <th>Proof</th>
               <th>Driver</th>
@@ -151,7 +161,7 @@ select{padding:8px;border-radius:8px;width:100%}
             </tr>
           </thead>
           <tbody id="deliveryTable">
-            <tr><td colspan="13">Loading deliveries...</td></tr>
+            <tr><td colspan="14">Loading deliveries...</td></tr>
           </tbody>
         </table>
       </div>
@@ -379,6 +389,107 @@ function deliveryTimeline(delivery){
   return `Created: ${created}<span class="mini">Updated: ${updated}</span><span class="mini">Delivered: ${delivered}</span>`;
 }
 
+function normalizePayment(status){
+  const value = toText(status).toLowerCase();
+  if(value === "paid" || value === "completed" || value === "settled") return "Paid";
+  return "Unpaid";
+}
+
+function paymentBadge(status){
+  return normalizePayment(status) === "Paid"
+    ? `<span class="badge paid-badge">Paid</span>`
+    : `<span class="badge unpaid-badge">Unpaid</span>`;
+}
+
+function bookingBadge(status){
+  const value = toText(status).toLowerCase();
+  if(value === "pending quote" || value === "quote requested") return `<span class="badge quote-badge">Pending Quote</span>`;
+  if(value === "pending dispatch") return `<span class="badge booking-badge">Pending Dispatch</span>`;
+  if(value === "dispatched") return `<span class="badge booking-badge">Dispatched</span>`;
+  if(value === "delivered") return `<span class="badge delivered">Delivered</span>`;
+  if(value === "cancelled" || value === "canceled") return `<span class="badge cancelled">Cancelled</span>`;
+  return `<span class="badge booking-badge">${status || "Booking"}</span>`;
+}
+
+function sourceBadge(source){
+  const value = toText(source) || "website";
+  return `<span class="badge source-badge">${value}</span>`;
+}
+
+function customerInfoCell(record){
+  const lines = [
+    `<strong>${record.customer_name || record.contact_person || ""}</strong>`,
+    record.customer_email || record.email || "",
+    record.customer_phone || record.phone || "",
+    record.source ? `Source: ${record.source}` : ""
+  ].filter(Boolean).join("<br>");
+  return lines || "N/A";
+}
+
+function mergedKey(row){
+  return String(row.tracking_number || row.checkout_session_id || row.stripe_session_id || row.id || "");
+}
+
+function mergeDispatcherRecords(bookingsRows, deliveriesRows){
+  const records = new Map();
+
+  function assign(row, recordType){
+    if(!row) return;
+    const key = mergedKey(row) || `${recordType}-${row.created_at || Date.now()}-${Math.random()}`;
+    const existing = records.get(key) || {};
+    const merged = { ...existing };
+
+    merged.record_key = key;
+    merged.record_type = existing.record_type || recordType;
+    merged.booking_id = existing.booking_id || (recordType === "booking" ? row.id : null);
+    merged.delivery_id = existing.delivery_id || (recordType === "delivery" ? row.id : null);
+    merged.tracking_number = row.tracking_number || existing.tracking_number || "";
+
+    merged.customer_name = row.customer_name || row.contact_person || existing.customer_name || "";
+    merged.customer_email = row.customer_email || row.email || existing.customer_email || "";
+    merged.customer_phone = row.customer_phone || row.phone || existing.customer_phone || "";
+    merged.pickup_location = row.pickup_location || row.pickup_address || existing.pickup_location || "";
+    merged.delivery_location = row.delivery_location || row.dropoff_address || row.destination_address || existing.delivery_location || "";
+    merged.delivery_address = row.delivery_address || existing.delivery_address || "";
+    merged.destination_address = row.destination_address || existing.destination_address || "";
+    merged.package_type = row.package_type || row.service_type || existing.package_type || "";
+    merged.estimated_distance_miles = row.estimated_distance_miles || row.estimated_miles || existing.estimated_distance_miles || 0;
+    merged.estimated_price = row.estimated_price || row.total_amount || row.amount || existing.estimated_price || 0;
+    merged.amount = row.amount || existing.amount || 0;
+    merged.total_amount = row.total_amount || existing.total_amount || merged.amount || 0;
+    merged.delivery_fee = row.delivery_fee || existing.delivery_fee || merged.total_amount || 0;
+    merged.payment_status = row.payment_status || existing.payment_status || "Pending";
+    merged.booking_status = row.booking_status || existing.booking_status || (recordType === "booking" ? "Pending Dispatch" : "Pending");
+    merged.status = recordType === "delivery" ? (row.status || existing.status || "Pending") : (existing.status || row.status || "Pending");
+    merged.assignment_status = recordType === "delivery" ? (row.assignment_status || (row.driver_id ? "Assigned" : "Unassigned")) : (existing.assignment_status || "Unassigned");
+    merged.driver_id = row.driver_id || existing.driver_id || null;
+    merged.driver_name = row.driver_name || existing.driver_name || null;
+    merged.driver_phone = row.driver_phone || existing.driver_phone || "";
+    merged.proof_of_delivery = row.proof_of_delivery || existing.proof_of_delivery || "";
+    merged.proof_photo_url = row.proof_photo_url || existing.proof_photo_url || "";
+    merged.delivery_time = row.delivery_time || existing.delivery_time || null;
+    merged.source = row.source || existing.source || (recordType === "booking" ? "website" : "admin");
+    merged.created_at = existing.created_at || row.created_at || null;
+    merged.updated_at = row.updated_at || existing.updated_at || null;
+    merged.checkout_session_id = row.checkout_session_id || existing.checkout_session_id || "";
+    merged.stripe_session_id = row.stripe_session_id || existing.stripe_session_id || "";
+    merged.notes = row.notes || row.instructions || existing.notes || "";
+    merged.special_instructions = row.special_instructions || existing.special_instructions || "";
+    merged.recipient_phone = row.recipient_phone || existing.recipient_phone || "";
+
+    records.set(key, merged);
+  }
+
+  (bookingsRows || []).forEach(row => assign(row, "booking"));
+  (deliveriesRows || []).forEach(row => assign(row, "delivery"));
+
+  return Array.from(records.values()).sort((a, b) => {
+    const aTime = new Date(a.delivery_time || a.updated_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.delivery_time || b.updated_at || b.created_at || 0).getTime();
+    return bTime - aTime;
+  });
+}
+
 async function geocodeAddress(address){
   const value = toText(address);
   if(!value) return null;
@@ -534,6 +645,10 @@ function assignmentBadge(status){
 }
 
 function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, driverOptions, rowActions, assignmentStatus, response, clock){
+  const isBookingOnly = delivery.record_type === "booking" && !delivery.delivery_id;
+  const bookingStatus = bookingBadge(delivery.booking_status || (isBookingOnly ? "Pending Quote" : "Pending Dispatch"));
+  const paymentStatus = paymentBadge(delivery.payment_status);
+  const deliveryStatus = statusBadge(delivery.status || (isBookingOnly ? "Pending" : "Pending"));
   return `
     <article class="delivery-card">
       <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
@@ -541,20 +656,28 @@ function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, dri
           <div class="label">Tracking</div>
           <div class="value">${delivery.tracking_number || ""}</div>
         </div>
-        <div>${statusBadge(delivery.status)}</div>
+        <div>${deliveryStatus}</div>
       </div>
 
       <div class="delivery-card-grid">
         <div>
-          <div class="label">Customer</div>
-          <div class="value">${delivery.customer_name || ""}</div>
+          <div class="label">Customer Info</div>
+          <div class="value">${customerInfoCell(delivery)}</div>
+        </div>
+        <div>
+          <div class="label">Booking Status</div>
+          <div class="value">${bookingStatus}</div>
+        </div>
+        <div>
+          <div class="label">Payment</div>
+          <div class="value">${paymentStatus}</div>
         </div>
         <div>
           <div class="label">Assignment</div>
           <div class="value">${isDelivered ? `<span class="assignment-badge completed-badge">Completed</span>` : assignmentBadge(delivery.assignment_status || (delivery.driver_id ? "Assigned" : "Unassigned"))}</div>
         </div>
         <div>
-          <div class="label">Response</div>
+          <div class="label">Driver Response</div>
           <div class="value">${response}</div>
         </div>
         <div>
@@ -564,10 +687,6 @@ function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, dri
         <div>
           <div class="label">Timeline</div>
           <div class="value">${deliveryTimeline(delivery)}</div>
-        </div>
-        <div>
-          <div class="label">Customer Phone</div>
-          <div class="value">${delivery.recipient_phone || delivery.customer_phone || "N/A"}</div>
         </div>
         <div>
           <div class="label">Driver Phone</div>
@@ -583,7 +702,7 @@ function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, dri
         </div>
       </div>
 
-      ${isDelivered ? "" : `<div style="margin-top:10px;"><select id="driver-${delivery.id}">${driverOptions}</select></div>`}
+      ${isDelivered || isBookingOnly ? "" : `<div style="margin-top:10px;"><select id="driver-${delivery.id}">${driverOptions}</select></div>`}
 
       <div class="delivery-card-actions">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(delivery.delivery_location || delivery.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div>
     </article>
@@ -638,14 +757,15 @@ async function loadDeliveries(){
   const tableBody = document.getElementById("deliveryTable");
   const cardsBox = document.getElementById("deliveryCards");
 
-  const [{ data, error }, { data: timesheets, error: tsError }] = await Promise.all([
+  const [{ data: bookingRows, error: bookingError }, { data: deliveryRows, error: deliveryError }, { data: timesheets, error: tsError }] = await Promise.all([
+    supabaseClient.from("bookings").select("*").order("created_at", { ascending:false }),
     supabaseClient.from("deliveries").select("*").order("created_at", { ascending:false }),
     supabaseClient.from("timesheets").select("id,driver_id,status,clock_in_at,clock_out_at,break_started_at,break_ended_at,created_at").order("created_at", { ascending: false }).limit(800)
   ]);
 
-  if(error || tsError){
-    const message = (error || tsError).message;
-    tableBody.innerHTML = `<tr><td colspan="13">${message}</td></tr>`;
+  if(bookingError || deliveryError || tsError){
+    const message = (bookingError || deliveryError || tsError).message;
+    tableBody.innerHTML = `<tr><td colspan="14">${message}</td></tr>`;
     cardsBox.innerHTML = `<div class="empty">${message}</div>`;
     return;
   }
@@ -657,7 +777,12 @@ async function loadDeliveries(){
     if(!latestTimesheetByDriver.has(key)) latestTimesheetByDriver.set(key, row);
   });
 
-  deliveries = latestDeliveriesByTracking(data || []);
+  deliveries = mergeDispatcherRecords(bookingRows || [], deliveryRows || []);
+
+  const newBookings = deliveries.filter(row => row.record_type === "booking" && !row.delivery_id).length;
+  const pendingQuotes = deliveries.filter(row => row.record_type === "booking" && !row.delivery_id && normalizePayment(row.payment_status) !== "Paid").length;
+  const paidJobs = deliveries.filter(row => normalizePayment(row.payment_status) === "Paid").length;
+  const unpaidJobs = Math.max(0, deliveries.length - paidJobs);
 
   const counts = {
     total: deliveries.length,
@@ -685,6 +810,10 @@ async function loadDeliveries(){
   ).size;
 
   document.getElementById("totalJobs").innerText = counts.total;
+  document.getElementById("newBookings").innerText = newBookings;
+  document.getElementById("pendingQuotes").innerText = pendingQuotes;
+  document.getElementById("paidJobs").innerText = paidJobs;
+  document.getElementById("unpaidJobs").innerText = unpaidJobs;
   document.getElementById("pendingJobs").innerText = counts.pending;
   document.getElementById("assignedJobs").innerText = counts.assigned;
   document.getElementById("acceptedJobs").innerText = counts.accepted;
@@ -698,7 +827,7 @@ async function loadDeliveries(){
   document.getElementById("avgDeliveryTime").innerText = completedDurations.length ? `${Math.round(completedDurations.reduce((a,b) => a + b, 0) / completedDurations.length)}m` : "0m";
 
   if(!deliveries.length){
-    tableBody.innerHTML = `<tr><td colspan="13">No deliveries found.</td></tr>`;
+    tableBody.innerHTML = `<tr><td colspan="14">No deliveries found.</td></tr>`;
     cardsBox.innerHTML = `<div class="empty">No deliveries found.</div>`;
     await renderMap();
     return;
@@ -710,6 +839,7 @@ async function loadDeliveries(){
         const response = responseText(assignmentStatus);
         const clock = clockStatusForDriver(d.driver_id);
         const isDelivered = normalizeStatus(d.status) === "Delivered";
+        const isBookingOnly = d.record_type === "booking" && !d.delivery_id;
         const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
         const proofHtml = proofUrl
           ? `<div class="proof-preview"><a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a><a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a></div>`
@@ -717,7 +847,11 @@ async function loadDeliveries(){
 
         const driverOptions = drivers.map(driver => `<option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>${driver.name || "Driver"}</option>`).join("");
 
-        const rowActions = isDelivered
+        const rowActions = isBookingOnly
+          ? `
+            <button class="btn btn-blue" onclick="createDeliveryFromBooking('${d.booking_id || d.delivery_id || d.id}')">Create Delivery</button>
+          `
+          : isDelivered
           ? `
             <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
             <button class="btn btn-dark" onclick="printDeliveryTicket('${d.id}')">Print</button>
@@ -736,17 +870,18 @@ async function loadDeliveries(){
         return `
           <tr>
             <td><strong>${d.tracking_number || ""}</strong></td>
-            <td>${d.customer_name || ""}</td>
-            <td>${statusBadge(d.status)}</td>
+            <td>${customerInfoCell(d)}</td>
+            <td>${bookingBadge(d.booking_status || (isBookingOnly ? "Pending Quote" : "Pending Dispatch"))}</td>
+            <td>${paymentBadge(d.payment_status)}</td>
+            <td>${statusBadge(d.status || (isBookingOnly ? "Pending" : "Pending"))}</td>
             <td>${isDelivered ? `<span class="assignment-badge completed-badge">Completed</span>` : assignmentBadge(assignmentStatus)}</td>
             <td>${response}</td>
             <td>${clock.label}<span class="mini">${clock.detail}</span></td>
             <td>${deliveryTimeline(d)}</td>
-            <td>${d.recipient_phone || d.customer_phone || "N/A"}</td>
             <td>${currentDriver?.phone || "N/A"}</td>
             <td>${proofHtml}</td>
             <td>${currentDriver ? currentDriver.name : "Unassigned"}</td>
-            <td>${isDelivered ? "" : `<select id="driver-${d.id}">${driverOptions}</select>`}</td>
+            <td>${isDelivered || isBookingOnly ? "" : `<select id="driver-${d.id}">${driverOptions}</select>`}</td>
             <td><div style="display:flex;gap:8px;flex-wrap:wrap;">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(d.delivery_location || d.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div></td>
           </tr>
         `;
@@ -758,13 +893,18 @@ async function loadDeliveries(){
     const response = responseText(assignmentStatus);
     const clock = clockStatusForDriver(d.driver_id);
     const isDelivered = normalizeStatus(d.status) === "Delivered";
+    const isBookingOnly = d.record_type === "booking" && !d.delivery_id;
     const proofUrl = d.proof_photo_url || d.proof_of_delivery || "";
     const proofHtml = proofUrl
       ? `<div class="proof-preview"><a class="proof-link" href="${proofUrl}" target="_blank" rel="noopener">View proof</a><a href="${proofUrl}" target="_blank" rel="noopener"><img src="${proofUrl}" alt="Proof of delivery"></a></div>`
       : `<span class="muted">No proof</span>`;
     const driverOptions = drivers.map(driver => `<option value="${driver.id}" ${String(d.driver_id) === String(driver.id) ? "selected" : ""}>${driver.name || "Driver"}</option>`).join("");
 
-    const rowActions = isDelivered
+    const rowActions = isBookingOnly
+      ? `
+        <button class="btn btn-blue" onclick="createDeliveryFromBooking('${d.booking_id || d.delivery_id || d.id}')">Create Delivery</button>
+      `
+      : isDelivered
       ? `
         <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
         <button class="btn btn-dark" onclick="printDeliveryTicket('${d.id}')">Print</button>
@@ -787,6 +927,63 @@ async function loadDeliveries(){
   cardsBox.innerHTML = `<div class="delivery-cards">${mobileCards}</div>`;
 
   await renderMap();
+}
+
+async function createDeliveryFromBooking(bookingId){
+  const booking = deliveries.find(item => String(item.booking_id || item.id) === String(bookingId) && item.record_type === "booking");
+  if(!booking){
+    alert("Booking not found.");
+    return;
+  }
+
+  if(booking.delivery_id){
+    alert("This booking is already connected to a delivery.");
+    return;
+  }
+
+  const trackingNumber = booking.tracking_number || `CQA-${Date.now()}`;
+  const existing = await supabaseClient.from("deliveries").select("id").eq("tracking_number", trackingNumber).limit(1);
+  if(existing.data && existing.data.length){
+    alert("Delivery already exists for this tracking number.");
+    return;
+  }
+
+  const payload = {
+    customer_id: booking.customer_id || null,
+    tracking_number: trackingNumber,
+    customer_name: booking.customer_name || booking.contact_person || "Customer",
+    customer_email: booking.customer_email || booking.email || null,
+    customer_phone: booking.customer_phone || booking.phone || null,
+    pickup_location: booking.pickup_location || booking.pickup_address || null,
+    pickup_address: booking.pickup_location || booking.pickup_address || null,
+    delivery_location: booking.delivery_location || booking.dropoff_address || booking.destination_address || null,
+    delivery_address: booking.delivery_location || booking.dropoff_address || booking.destination_address || null,
+    destination_address: booking.delivery_location || booking.dropoff_address || booking.destination_address || null,
+    package_type: booking.package_type || booking.service_type || "Standard Courier",
+    estimated_distance_miles: Number(booking.estimated_distance_miles || booking.estimated_miles || 0),
+    estimated_price: Number(booking.estimated_price || 0),
+    amount: Number(booking.estimated_price || 0),
+    total_amount: Number(booking.estimated_price || 0),
+    delivery_fee: Number(booking.estimated_price || 0),
+    delivery_date: booking.delivery_date || booking.pickup_date || null,
+    notes: booking.notes || booking.instructions || null,
+    status: "Pending",
+    assignment_status: "Unassigned",
+    payment_status: booking.payment_status || "Pending",
+    booking_status: booking.booking_status || "Pending Dispatch",
+    source: booking.source || "website",
+    stripe_session_id: booking.stripe_session_id || null,
+    checkout_session_id: booking.checkout_session_id || null
+  };
+
+  const { error } = await supabaseClient.from("deliveries").insert([payload]);
+  if(error){
+    alert(error.message);
+    return;
+  }
+
+  alert("Booking promoted to delivery.");
+  loadDashboard();
 }
 
 async function assignDriver(deliveryId) {
@@ -971,6 +1168,9 @@ function initRealtime(){
 
   realtimeChannel = supabaseClient
     .channel("dispatcher-live-updates")
+    .on("postgres_changes", { event: "*", schema: "public", table: "bookings" }, () => {
+      loadDashboard();
+    })
     .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, () => {
       loadDashboard();
     })

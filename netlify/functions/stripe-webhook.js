@@ -94,6 +94,42 @@ async function sendConfirmationEmail({ toEmail, customerName, trackingNumber, am
   }
 }
 
+async function syncBookingPaymentStatus(metadata, stripeSessionId, paymentStatus = "Paid") {
+  const trackingNumber = (metadata.trackingNumber || "").trim();
+
+  if (trackingNumber) {
+    await supabaseRequest(
+      `bookings?tracking_number=eq.${encodeURIComponent(trackingNumber)}`,
+      {
+        method: "PATCH",
+        body: {
+          payment_status: paymentStatus,
+          booking_status: "Pending Dispatch",
+          checkout_session_id: stripeSessionId,
+          stripe_session_id: stripeSessionId,
+          source: metadata.source || "website",
+        },
+      }
+    );
+    return;
+  }
+
+  if (metadata.customerId) {
+    await supabaseRequest(
+      `bookings?checkout_session_id=eq.${encodeURIComponent(stripeSessionId)}`,
+      {
+        method: "PATCH",
+        body: {
+          payment_status: paymentStatus,
+          checkout_session_id: stripeSessionId,
+          stripe_session_id: stripeSessionId,
+          source: metadata.source || "website",
+        },
+      }
+    );
+  }
+}
+
 exports.handler = async function handler(event) {
   try {
     if (event.httpMethod !== "POST") {
@@ -132,6 +168,7 @@ exports.handler = async function handler(event) {
     );
 
     if (existingDelivery.length) {
+      await syncBookingPaymentStatus(metadata, stripeSessionId, "Paid");
       return json(200, { received: true, duplicate: true, delivery_id: existingDelivery[0].id });
     }
 
@@ -170,6 +207,8 @@ exports.handler = async function handler(event) {
       method: "POST",
       body: deliveryPayload,
     });
+
+    await syncBookingPaymentStatus(metadata, stripeSessionId, "Paid");
 
     await sendConfirmationEmail({
       toEmail: metadata.email || session.customer_email || null,
