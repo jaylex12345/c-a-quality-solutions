@@ -35,12 +35,20 @@ button{width:100%;padding:12px;background:#0b2d52;color:#fff;border:none;border-
 	<button onclick="login()">Login</button>
 	<p id="msg"></p>
   <p><a href="#" onclick="event.preventDefault();forgotPassword()">Forgot Password?</a></p>
-  <p><a href="/admin-signup.html">Create admin account</a></p>
 </div>
 <script>
 const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+const OWNER_ADMIN_EMAILS = [
+  "james@caqualitysolutions.com",
+  "alexisbright@caqualitysolutions.com"
+];
+
+function isOwnerAdminEmail(email){
+  return OWNER_ADMIN_EMAILS.includes(String(email || "").trim().toLowerCase());
+}
+
 async function login(){
-	const email = document.getElementById("email").value.trim();
+	const email = document.getElementById("email").value.trim().toLowerCase();
 	const password = document.getElementById("password").value.trim();
   const msg = document.getElementById("msg");
   if(!email || !password){
@@ -48,10 +56,27 @@ async function login(){
     return;
   }
 
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if(error){ msg.innerText = error.message; return; }
+  if(!isOwnerAdminEmail(email)){
+    msg.innerText = "Not authorized.";
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+  if(error || !data || !data.user){
+    msg.innerText = "Invalid email or password.";
+    return;
+  }
+
+  const sessionEmail = String(data.user.email || "").toLowerCase();
+  if(!isOwnerAdminEmail(sessionEmail)){
+    await supabaseClient.auth.signOut();
+    msg.innerText = "Not authorized.";
+    return;
+  }
 
   localStorage.setItem("role", "admin");
+  localStorage.setItem("admin_auth_email", sessionEmail);
+  localStorage.setItem("admin_auth_ok", "true");
   window.location.href = "/admin";
 }
 

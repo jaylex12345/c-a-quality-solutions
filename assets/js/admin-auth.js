@@ -9,11 +9,49 @@ const SUPER_ADMIN_OWNER_EMAILS = [
   "alexisbright@caqualitysolutions.com",
 ];
 
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
+}
+
+function isOwnerAdminEmail(email) {
+  return SUPER_ADMIN_OWNER_EMAILS.includes(normalizeEmail(email));
+}
+
+function readStoredAdminEmail() {
+  try {
+    return normalizeEmail(localStorage.getItem("admin_auth_email"));
+  } catch (_) {
+    return "";
+  }
+}
+
+function clearSimpleAdminAuth() {
+  try {
+    localStorage.removeItem("admin_auth_email");
+    localStorage.removeItem("admin_auth_ok");
+    localStorage.removeItem("role");
+  } catch (_) {
+    // no-op
+  }
+}
+
 async function requireAdminAuth(options) {
   const supabaseClient = options && options.supabaseClient;
   const loginPath = (options && options.loginPath) || "/login.html";
 
+  const denyAccess = function () {
+    clearSimpleAdminAuth();
+    document.documentElement.style.visibility = "visible";
+    window.location.href = loginPath;
+    return false;
+  };
+
   if (!supabaseClient) {
+    const storedEmail = readStoredAdminEmail();
+    if (!isOwnerAdminEmail(storedEmail)) {
+      return denyAccess();
+    }
+
     document.documentElement.style.visibility = "visible";
     return true;
   }
@@ -21,19 +59,27 @@ async function requireAdminAuth(options) {
   try {
     const sessionResult = await supabaseClient.auth.getSession();
     const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+    const sessionEmail = normalizeEmail(session && session.user ? session.user.email : "");
 
-    if (session && session.user) {
-      const adminLookup = await supabaseClient
-        .from("admin_users")
-        .select("id, full_name, email, role")
-        .eq("id", session.user.id)
-        .limit(1)
-        .maybeSingle();
+    if (!session || !session.user || !isOwnerAdminEmail(sessionEmail)) {
+      return denyAccess();
+    }
 
-      if (!adminLookup.error && adminLookup.data) {
-        window.__adminUser = adminLookup.data;
-        localStorage.setItem("role", adminLookup.data.role || "admin");
-      }
+    localStorage.setItem("admin_auth_email", sessionEmail);
+    localStorage.setItem("admin_auth_ok", "true");
+
+    const adminLookup = await supabaseClient
+      .from("admin_users")
+      .select("id, full_name, email, role")
+      .eq("id", session.user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (!adminLookup.error && adminLookup.data) {
+      window.__adminUser = adminLookup.data;
+      localStorage.setItem("role", adminLookup.data.role || "admin");
+    } else {
+      localStorage.setItem("role", "admin");
     }
 
     if (!document.getElementById("admin-logout-floating")) {
@@ -59,8 +105,7 @@ async function requireAdminAuth(options) {
     document.documentElement.style.visibility = "visible";
     return true;
   } catch (_) {
-    document.documentElement.style.visibility = "visible";
-    return true;
+    return denyAccess();
   }
 }
 
@@ -75,7 +120,7 @@ async function adminLogout(loginPath) {
     // no-op
   }
 
-  localStorage.removeItem("role");
+  clearSimpleAdminAuth();
   window.location.href = redirectPath;
   return false;
 }
