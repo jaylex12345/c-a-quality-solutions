@@ -67,20 +67,7 @@ async function requireAdminAuth(options) {
 
     localStorage.setItem("admin_auth_email", sessionEmail);
     localStorage.setItem("admin_auth_ok", "true");
-
-    const adminLookup = await supabaseClient
-      .from("admin_users")
-      .select("id, full_name, email, role")
-      .eq("id", session.user.id)
-      .limit(1)
-      .maybeSingle();
-
-    if (!adminLookup.error && adminLookup.data) {
-      window.__adminUser = adminLookup.data;
-      localStorage.setItem("role", adminLookup.data.role || "admin");
-    } else {
-      localStorage.setItem("role", "admin");
-    }
+    localStorage.setItem("role", "admin");
 
     if (!document.getElementById("admin-logout-floating")) {
       const button = document.createElement("button");
