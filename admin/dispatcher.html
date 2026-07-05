@@ -6,6 +6,12 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="/assets/js/admin-auth.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+window.__dispatcherMapReady = false;
+window.initMap = function(){
+  window.__dispatcherMapReady = true;
+};
+</script>
 <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries&callback=initMap"></script>
 
 <style>
@@ -1183,6 +1189,9 @@ function initRealtime(){
 setInterval(loadDashboard, 15000);
 initRealtime();
 loadDashboard();
+if(window.__dispatcherMapReady){
+  initMap();
+}
 
 </script>
 
