@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -9,6 +9,7 @@ window.location.replace("/driver/dashboard.html");
 </script>
 <meta http-equiv="refresh" content="0;url=/driver/dashboard.html">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
 .header{background:#061b3a;color:#fff;padding:20px;text-align:center}
@@ -73,7 +74,7 @@ if(!window.supabase || typeof window.supabase.createClient !== "function"){
 	throw new Error("Supabase library is not available");
 }
 
-const supabaseClient = window.supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+const supabaseClient = window.supabase.createClient("" + (window.CAQ_SUPABASE_URL || "") + "", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 const driverId = localStorage.getItem("driver_id");
 if(!driverId) window.location.href = "driver-login.html";
 document.getElementById("driverName").innerText = localStorage.getItem("driver_name") || "Driver";
@@ -232,3 +233,4 @@ loadJobs();
 </script>
 </body>
 </html>
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +6,7 @@
 <title>Book Courier Service | C&A Quality Solutions LLC</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCV0NhAhvSZdU-0_-u-V2EMN_W4c-4QPwg&libraries=places&callback=initAutocomplete" async defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
@@ -112,11 +113,11 @@ button{width:100%;padding:16px;margin-top:20px;border:none;border-radius:10px;fo
 </div>
 
 <footer class="footer">
-  <p>© 2026 C&A Quality Solutions LLC. All Rights Reserved.</p>
+  <p>Â© 2026 C&A Quality Solutions LLC. All Rights Reserved.</p>
 </footer>
 
 <script>
-const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+const supabaseClient = supabase.createClient("" + (window.CAQ_SUPABASE_URL || "") + "", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 let pickupAutocomplete;
 let dropoffAutocomplete;
 let distanceService;
@@ -261,3 +262,4 @@ document.getElementById("bookingForm").addEventListener("submit", async (e) => {
 </script>
 </body>
 </html>
+

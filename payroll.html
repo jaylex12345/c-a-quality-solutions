@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -37,6 +37,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 @media(max-width:1100px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Legacy URL retained for redirects: payroll. Use the preferred canonical URL for this C&A Quality Solutions page.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/payroll.html">
@@ -123,7 +124,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 </div>
 
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 window.supabaseClient = supabaseClient;
@@ -295,3 +296,4 @@ renderPayroll();
 </script>
 </body>
 </html>
+

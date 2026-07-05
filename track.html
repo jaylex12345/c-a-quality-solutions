@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,6 +11,7 @@ if (window.location.pathname === "/track.html") {
 </script>
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
 .wrap{max-width:800px;margin:40px auto;padding:0 16px}
@@ -46,7 +47,7 @@ button{margin-top:12px;background:#d9b431;color:#071b33;border:0;padding:12px 16
 	</div>
 </div>
 <script>
-const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+const supabaseClient = supabase.createClient("" + (window.CAQ_SUPABASE_URL || "") + "", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 
 async function trackPackage(){
 	const tracking = document.getElementById("tracking").value.trim();
@@ -71,3 +72,4 @@ async function trackPackage(){
 </script>
 </body>
 </html>
+

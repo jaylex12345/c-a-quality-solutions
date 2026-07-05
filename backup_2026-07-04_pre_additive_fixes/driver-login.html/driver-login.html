@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 	<meta charset="UTF-8">
@@ -10,6 +10,7 @@
 	<meta http-equiv="refresh" content="0;url=/driver/login.html">
 	<link rel="stylesheet" href="/assets/css/style.css">
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 	<style>
 		body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh}
 		.card{background:#fff;padding:28px;border-radius:12px;box-shadow:0 8px 20px rgba(0,0,0,.1);width:360px}
@@ -41,7 +42,7 @@
 	<p id="message"></p>
 </div>
 <script>
-const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
+const supabaseClient = supabase.createClient("" + (window.CAQ_SUPABASE_URL || "") + "", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
 async function driverLogin(){
 	const email = document.getElementById("email").value.trim();
 	const password = document.getElementById("password").value.trim();
@@ -56,3 +57,4 @@ async function driverLogin(){
 </script>
 </body>
 </html>
+

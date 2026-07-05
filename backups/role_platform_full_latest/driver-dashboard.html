@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -7,6 +7,7 @@
 <link rel="manifest" href="/manifest.json">
 <title>Driver Dashboard | C&A Quality Solutions LLC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 
 <style>
 *{box-sizing:border-box}
@@ -134,14 +135,14 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
     <div class="card">
       <h3>Profile</h3>
       <div class="big" id="driverName">Driver</div>
-      <p class="status-online" id="connectionStatus">● Online</p>
+      <p class="status-online" id="connectionStatus">â— Online</p>
       <p id="driverProfileSummary" class="muted">Loading profile...</p>
     </div>
 
     <div class="card">
       <h3>Assigned Jobs</h3>
       <div class="big" id="assignedCount">0</div>
-      <p>Today’s deliveries</p>
+      <p>Todayâ€™s deliveries</p>
     </div>
 
     <div class="card">
@@ -168,7 +169,7 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
   <div class="main">
 
     <div class="card">
-      <h2>📦 Assigned Deliveries</h2>
+      <h2>ðŸ“¦ Assigned Deliveries</h2>
       <div class="delivery-desktop">
         <table>
           <thead>
@@ -198,12 +199,12 @@ select,input{padding:9px;border:1px solid #cbd5e1;border-radius:8px;width:100%;m
 
 <div class="footer">
   C&A Quality Solutions LLC<br>
-  Licensed • Insured • Bonded<br>
-  Maryland • DC • Virginia • Same-Day Courier Service
+  Licensed â€¢ Insured â€¢ Bonded<br>
+  Maryland â€¢ DC â€¢ Virginia â€¢ Same-Day Courier Service
 </div>
 
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
   const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -250,7 +251,7 @@ function setConnectivity(){
   const banner = document.getElementById("offlineBanner");
   const status = document.getElementById("connectionStatus");
   const online = navigator.onLine;
-  if(status) status.innerText = online ? "● Online" : "● Offline";
+  if(status) status.innerText = online ? "â— Online" : "â— Offline";
   if(banner) banner.classList.toggle("show", !online);
 }
 
@@ -998,3 +999,4 @@ setInterval(loadTimeClock, 30000);
 
 </body>
 </html>
+

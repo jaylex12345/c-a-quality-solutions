@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -46,6 +46,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Official admin reports page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/reports.html">
@@ -145,7 +146,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;}
   </main>
 </div>
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 window.supabaseClient = supabaseClient;
@@ -314,3 +315,4 @@ setInterval(loadReports, 15000);
 </script>
 </body>
 </html>
+

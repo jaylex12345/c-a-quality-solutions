@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +6,7 @@
 <title>Customer Invoices | C&A Quality Solutions LLC</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
   <meta name="description" content="Official customer invoices page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/customer/invoices.html">
   <meta name="robots" content="noindex, follow">
@@ -101,7 +102,7 @@
   </main>
 
 <script>
-const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
+const supabaseUrl='" + (window.CAQ_SUPABASE_URL || "") + "';
 const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
 const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
 
@@ -212,4 +213,5 @@ loadCustomerBilling();
 </script>
 </body>
 </html>
+
 

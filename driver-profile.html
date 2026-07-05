@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +6,7 @@
 <title>Legacy URL: driver profile | C&A Quality Solutions LLC</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#eef2f7;color:#1f2937}
 .header{background:#061b3a;color:#fff;padding:20px;text-align:center}
@@ -56,7 +57,7 @@ input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px}
   </div>
 </div>
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 const driverId = localStorage.getItem("driver_id");

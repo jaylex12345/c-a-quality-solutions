@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -39,6 +39,7 @@ input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border
 }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
   <meta name="description" content="Official admin dashboard page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/dashboard.html">
   <meta name="robots" content="noindex, follow">
@@ -125,7 +126,7 @@ input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border
 </div>
 
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
@@ -250,3 +251,4 @@ supabaseClient
 
 </body>
 </html>
+

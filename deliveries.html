@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -40,6 +40,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Official deliveries page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/deliveries.html">
@@ -175,7 +176,7 @@ td{padding:12px;border-bottom:1px solid #e5e7eb;vertical-align:top;}
   </main>
 </div>
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 window.supabaseClient = supabaseClient;
@@ -246,7 +247,7 @@ async function loadDeliveries(){
         <td>${delivery.pickup_location || delivery.pickup_address || ""}</td>
         <td>${delivery.delivery_location || delivery.delivery_address || ""}</td>
         <td>${[delivery.pickup_contact, delivery.delivery_contact, delivery.customer_phone || delivery.recipient_phone].filter(Boolean).join("<br>")}</td>
-        <td>${[delivery.package_type, delivery.package_weight ? `${delivery.package_weight} lb` : ""].filter(Boolean).join(" • ")}</td>
+        <td>${[delivery.package_type, delivery.package_weight ? `${delivery.package_weight} lb` : ""].filter(Boolean).join(" â€¢ ")}</td>
         <td>${delivery.priority || "Standard"}</td>
         <td>${Number(delivery.cod_amount || 0).toLocaleString("en-US", { style:"currency", currency:"USD" })}</td>
         <td>${formatDateTime(delivery.estimated_delivery_time)}</td>
@@ -366,3 +367,4 @@ loadPage();
 </script>
 </body>
 </html>
+

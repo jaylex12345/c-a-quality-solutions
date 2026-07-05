@@ -124,12 +124,6 @@ async function generateAuthLink({ type, email }) {
   });
 }
 
-async function getDriverByEmail(email) {
-  if (!email) return null;
-  const list = await supabaseRest(`drivers?select=*&email=eq.${encodeURIComponent(email)}&limit=1`);
-  return list[0] || null;
-}
-
 async function createDriverInvite(payload) {
   const name = String(payload.name || "").trim();
   const email = String(payload.email || "").trim().toLowerCase();
@@ -142,11 +136,6 @@ async function createDriverInvite(payload) {
     throw new Error("Name, email, and phone are required");
   }
 
-  const existingDriver = await getDriverByEmail(email);
-  if (existingDriver && existingDriver.account_status === "Active") {
-    throw new Error("Driver already exists and is active");
-  }
-
   const linkData = await generateAuthLink({ type: "invite", email });
   const userId = linkData.user && linkData.user.id ? linkData.user.id : null;
   const actionLink = linkData.action_link;
@@ -155,40 +144,22 @@ async function createDriverInvite(payload) {
     throw new Error("Invite link generation failed");
   }
 
-  if (existingDriver) {
-    await supabaseRest(`drivers?id=eq.${encodeURIComponent(existingDriver.id)}`, {
-      method: "PATCH",
-      prefer: "return=minimal",
-      body: {
-        name,
-        email,
-        phone,
-        role,
-        status: uiStatus,
-        is_active: isActive,
-        auth_user_id: userId || existingDriver.auth_user_id || null,
-        account_status: accountStatusFromActive(isActive),
-        invited_at: new Date().toISOString(),
-        force_password_reset: false,
-      },
-    });
-  } else {
-    await supabaseRest("drivers", {
-      method: "POST",
-      body: {
-        name,
-        email,
-        phone,
-        role,
-        status: uiStatus,
-        is_active: isActive,
-        auth_user_id: userId,
-        account_status: accountStatusFromActive(isActive),
-        invited_at: new Date().toISOString(),
-        force_password_reset: false,
-      },
-    });
-  }
+  await supabaseRest("drivers", {
+    method: "POST",
+    prefer: "resolution=merge-duplicates,return=minimal",
+    body: {
+      name,
+      email,
+      phone,
+      role,
+      status: uiStatus,
+      is_active: isActive,
+      auth_user_id: userId,
+      account_status: accountStatusFromActive(isActive),
+      invited_at: new Date().toISOString(),
+      force_password_reset: false,
+    },
+  });
 
   await sendDriverInviteEmail({ driverName: name, email, actionLink });
 

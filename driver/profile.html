@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +6,7 @@
 <title>Driver Profile | C&A Quality Solutions LLC</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <style>
 body{margin:0;background:#f3f6fb;color:#071b33;font-family:Arial,sans-serif}
 main{max-width:920px;margin:28px auto;padding:18px}
@@ -81,7 +82,7 @@ button{border:0;border-radius:8px;padding:10px 14px;font-weight:bold;cursor:poin
   </main>
 
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 let driverRecord = null;
@@ -287,4 +288,5 @@ loadProfile();
 </script>
 </body>
 </html>
+
 

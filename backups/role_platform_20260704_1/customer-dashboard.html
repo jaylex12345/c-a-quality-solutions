@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -6,6 +6,7 @@
 <title>Customer Dashboard | C&A Quality Solutions LLC</title>
 <link rel="stylesheet" href="/assets/css/style.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <style>
 body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
 .header{background:#061b3a;color:#fff;padding:20px;text-align:center}
@@ -54,7 +55,7 @@ table{width:100%;border-collapse:collapse}th{background:#061b3a;color:#fff;paddi
   </div>
 </div>
 <script>
-const supabaseUrl='https://ncdozhypelmkvaxsdwwt.supabase.co';
+const supabaseUrl='" + (window.CAQ_SUPABASE_URL || "") + "';
 const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
 const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
 const customerId=localStorage.getItem('customer_id');
@@ -123,3 +124,4 @@ loadData();
 </script>
 </body>
 </html>
+

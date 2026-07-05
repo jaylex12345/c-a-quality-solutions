@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -29,6 +29,7 @@ textarea{min-height:100px;resize:vertical;}
 @media(max-width:900px){.admin-layout{flex-direction:column}.sidebar{width:100%}.form-grid{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
 <script src="/assets/js/admin-auth.js"></script>
   <meta name="description" content="Legacy URL retained for redirects: settings. Use the preferred canonical URL for this C&A Quality Solutions page.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/settings.html">
@@ -123,7 +124,7 @@ textarea{min-height:100px;resize:vertical;}
   </main>
 </div>
 <script>
-const supabaseUrl = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 window.supabaseClient = supabaseClient;
@@ -188,3 +189,4 @@ applySettings(readSettings());
 </script>
 </body>
 </html>
+
