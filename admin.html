@@ -15,6 +15,8 @@
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    const SUPABASE_URL = "https://ncdozhypelmkvaxsdwwt.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
     const OWNER_ADMIN_EMAILS = [
       "james@caqualitysolutions.com",
       "alexisbright@caqualitysolutions.com"
@@ -28,27 +30,76 @@
       return OWNER_ADMIN_EMAILS.includes(normalizeEmail(email));
     }
 
+    function showErrorAndRedirect(message){
+      const loadingEl = document.getElementById("state-loading");
+      const errorEl = document.getElementById("state-error");
+      const readyEl = document.getElementById("state-ready");
+
+      if(loadingEl) loadingEl.classList.add("hidden");
+      if(readyEl) readyEl.classList.add("hidden");
+      if(errorEl){
+        errorEl.innerText = message;
+        errorEl.classList.remove("hidden");
+      }
+
+      window.setTimeout(() => {
+        window.location.replace("/login.html");
+      }, 1000);
+    }
+
     async function checkAdminSession(){
-      const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
-      const sessionResult = await supabaseClient.auth.getSession();
-      const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+      const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      let done = false;
+
+      const timeoutId = window.setTimeout(() => {
+        if(done) return;
+        done = true;
+        console.log("no session");
+        showErrorAndRedirect("Session check timed out. Redirecting to login...");
+      }, 5000);
+
+      let session = null;
+      try {
+        const { data: { session: loadedSession } } = await supabaseClient.auth.getSession();
+        session = loadedSession;
+      } catch (_) {
+        // fall through to session-missing path
+      }
+
+      if(done) return;
+      done = true;
+      window.clearTimeout(timeoutId);
 
       if(!session || !session.user || !isAllowedOwner(session.user.email)){
+        if(!session || !session.user){
+          console.log("no session");
+        } else {
+          console.log("session found");
+          console.log("not authorized");
+        }
         window.location.replace("/login.html");
         return;
       }
 
-      document.getElementById("state-loading").classList.add("hidden");
-      document.getElementById("state-ready").classList.remove("hidden");
-      document.getElementById("who").innerText = normalizeEmail(session.user.email);
+      console.log("session found");
+      console.log("authorized admin");
+
+      const loadingEl = document.getElementById("state-loading");
+      const readyEl = document.getElementById("state-ready");
+      const whoEl = document.getElementById("who");
+      if(loadingEl) loadingEl.classList.add("hidden");
+      if(readyEl) readyEl.classList.remove("hidden");
+      if(whoEl) whoEl.innerText = normalizeEmail(session.user.email);
+      window.location.replace("/admin/dashboard.html");
     }
 
-    checkAdminSession();
+    window.addEventListener("DOMContentLoaded", checkAdminSession);
   </script>
 </head>
 <body>
   <div class="card">
     <p id="state-loading">Checking admin session...</p>
+    <p id="state-error" class="hidden"></p>
     <div id="state-ready" class="hidden">
       <h1>Admin Session Active</h1>
       <p>Signed in as <strong id="who"></strong></p>
