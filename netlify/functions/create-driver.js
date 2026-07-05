@@ -2,6 +2,8 @@ const { Resend } = require("resend");
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SUPABASE_PUBLISHABLE_KEY =
+  process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "contact@caqualitysolutions.com";
 const SITE_URL = process.env.SITE_URL || "https://caqualitysolutions.com";
@@ -75,6 +77,32 @@ async function supabaseAuth(path, options = {}) {
   return text ? JSON.parse(text) : {};
 }
 
+async function supabasePublicRest(path, options = {}) {
+  if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+    throw new Error("Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY");
+  }
+
+  const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    method: options.method || "GET",
+    headers: {
+      apikey: SUPABASE_PUBLISHABLE_KEY,
+      Authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
+      "Content-Type": "application/json",
+      Prefer: options.prefer || "return=representation",
+      ...(options.headers || {}),
+    },
+    body: options.body ? JSON.stringify(options.body) : undefined,
+  });
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Error(`Supabase public REST failed (${response.status}): ${text}`);
+  }
+
+  const text = await response.text();
+  return text ? JSON.parse(text) : [];
+}
+
 function accountStatusFromActive(isActive) {
   return isActive ? "Pending Activation" : "Suspended";
 }
@@ -144,7 +172,7 @@ async function createDriverInvite(payload) {
     throw new Error("Invite link generation failed");
   }
 
-  await supabaseRest("drivers", {
+  await supabasePublicRest("drivers", {
     method: "POST",
     prefer: "resolution=merge-duplicates,return=minimal",
     body: {
