@@ -965,7 +965,6 @@ async function createDeliveryFromBooking(bookingId){
     amount: Number(booking.estimated_price || 0),
     total_amount: Number(booking.estimated_price || 0),
     delivery_fee: Number(booking.estimated_price || 0),
-    delivery_date: booking.delivery_date || booking.pickup_date || null,
     notes: booking.notes || booking.instructions || null,
     status: "Pending",
     assignment_status: "Unassigned",
