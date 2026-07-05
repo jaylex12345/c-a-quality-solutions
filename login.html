@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Legacy URL: login | C&A Quality Solutions LLC</title>
+<title>Admin Login | C&A Quality Solutions LLC</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
@@ -11,7 +11,7 @@ body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-conten
 input{width:100%;padding:12px;margin-bottom:12px;border:1px solid #d1d5db;border-radius:8px}
 button{width:100%;padding:12px;background:#0b2d52;color:#fff;border:none;border-radius:8px;cursor:pointer}
 </style>
-  <meta name="description" content="Legacy URL retained for redirects: login. Use the preferred canonical URL for this C&A Quality Solutions page.">
+  <meta name="description" content="Owner admin login for C&A Quality Solutions LLC.">
   <link rel="canonical" href="https://caqualitysolutions.com/admin/login.html">
   <meta name="robots" content="noindex, follow">
   <meta property="og:type" content="website">
@@ -27,14 +27,13 @@ button{width:100%;padding:12px;background:#0b2d52;color:#fff;border:none;border-
   <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}</style>
 </head>
 <body>
-<h1 class="sr-only">Legacy URL Redirect Page: login</h1>
+<h1 class="sr-only">Admin Login</h1>
 <div class="card">
 	<h2>C&A Admin Login</h2>
 	<input id="email" placeholder="Email">
 	<input id="password" type="password" placeholder="Password">
 	<button onclick="login()">Login</button>
 	<p id="msg"></p>
-  <p><a href="#" onclick="event.preventDefault();forgotPassword()">Forgot Password?</a></p>
 </div>
 <script>
 const supabaseClient = supabase.createClient("https://ncdozhypelmkvaxsdwwt.supabase.co", "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR");
@@ -78,22 +77,6 @@ async function login(){
   localStorage.setItem("admin_auth_email", sessionEmail);
   localStorage.setItem("admin_auth_ok", "true");
   window.location.href = "/admin";
-}
-
-async function forgotPassword(){
-  const email = document.getElementById("email").value.trim().toLowerCase();
-  const msg = document.getElementById("msg");
-
-  if(!email){
-    msg.innerText = "Enter your email first.";
-    return;
-  }
-
-  await supabaseClient.auth.resetPasswordForEmail(email, {
-    redirectTo: `${window.location.origin}/admin-reset-password.html`
-  });
-
-  msg.innerText = "If this account exists, a reset link has been sent.";
 }
 </script>
 </body>
