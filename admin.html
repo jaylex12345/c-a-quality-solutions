@@ -6,6 +6,13 @@
   <title>Admin | C&A Quality Solutions LLC</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="canonical" href="https://caqualitysolutions.com/admin.html">
+  <style>
+    body{font-family:Arial,sans-serif;background:#f4f7fb;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0}
+    .card{background:#fff;padding:28px;width:420px;max-width:92vw;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.1)}
+    .hidden{display:none}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    a.btn{display:inline-block;padding:10px 14px;background:#0b2d52;color:#fff;text-decoration:none;border-radius:8px}
+  </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const OWNER_ADMIN_EMAILS = [
@@ -27,22 +34,28 @@
       const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
 
       if(!session || !session.user || !isAllowedOwner(session.user.email)){
-        try { await supabaseClient.auth.signOut(); } catch (_) { }
-        localStorage.removeItem("role");
-        localStorage.removeItem("admin_auth_email");
-        localStorage.removeItem("admin_auth_ok");
         window.location.replace("/login.html");
         return;
       }
 
-      localStorage.setItem("role", "admin");
-      localStorage.setItem("admin_auth_email", normalizeEmail(session.user.email));
-      localStorage.setItem("admin_auth_ok", "true");
-      window.location.replace("/admin/dashboard.html");
+      document.getElementById("state-loading").classList.add("hidden");
+      document.getElementById("state-ready").classList.remove("hidden");
+      document.getElementById("who").innerText = normalizeEmail(session.user.email);
     }
 
     checkAdminSession();
   </script>
 </head>
-<body></body>
+<body>
+  <div class="card">
+    <p id="state-loading">Checking admin session...</p>
+    <div id="state-ready" class="hidden">
+      <h1>Admin Session Active</h1>
+      <p>Signed in as <strong id="who"></strong></p>
+      <div class="actions">
+        <a class="btn" href="/admin/dashboard.html">Open Admin Dashboard</a>
+      </div>
+    </div>
+  </div>
+</body>
 </html>

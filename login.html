@@ -68,14 +68,10 @@ async function login(){
 
   const sessionEmail = String(data.user.email || "").toLowerCase();
   if(!isOwnerAdminEmail(sessionEmail)){
-    await supabaseClient.auth.signOut();
     msg.innerText = "Invalid email or password.";
     return;
   }
 
-  localStorage.setItem("role", "admin");
-  localStorage.setItem("admin_auth_email", sessionEmail);
-  localStorage.setItem("admin_auth_ok", "true");
   window.location.href = "/admin.html";
 }
 </script>
