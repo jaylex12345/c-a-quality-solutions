@@ -21,6 +21,8 @@ body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
 .kpi{font-size:30px;font-weight:bold;color:#d9b431;margin:8px 0 0}
 .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .action{display:flex;align-items:center;justify-content:center;min-height:48px;text-align:center;background:#0b2d52;color:#fff;border-radius:10px;text-decoration:none;font-weight:bold;padding:10px}
+.favorites{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
+.favorite{background:#f8fbff;border:1px solid #dbe5f2;border-radius:12px;padding:12px;text-decoration:none;color:#071b33;font-weight:bold;min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center}
 .table-wrap{overflow:auto}
 table{width:100%;border-collapse:collapse}
 th{background:#061b3a;color:#fff;padding:10px;text-align:left;white-space:nowrap}
@@ -36,6 +38,7 @@ td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 }
 @media(max-width:640px){
   .grid,.actions{grid-template-columns:1fr}
+  .favorites{grid-template-columns:1fr 1fr}
 }
 </style>
   <meta name="description" content="Official customer dashboard page for C&A Quality Solutions LLC operations and customer support.">
@@ -64,6 +67,7 @@ td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 <a href="/customer/invoices.html">Invoices</a>
 <a href="/customer/booking.html">Book Service</a>
 <a href="/customer/tracking.html">Track Package</a>
+<a href="/customer/tracking.html">Proof of Delivery</a>
 <button onclick="logout()">Logout</button>
 </div>
 <div class="container">
@@ -81,8 +85,18 @@ td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
       <a class="action" href="/customer/tracking.html">Live Tracking Map</a>
       <a class="action" href="/customer/invoices.html">Invoices & Receipts</a>
       <a class="action" href="/customer/profile.html">Profile Settings</a>
-      <a class="action" href="/customer/tracking.html">Download POD PDF</a>
-      <a class="action" href="/customer/invoices.html">Delivery History</a>
+      <a class="action" href="/customer/tracking.html">Proof of Delivery</a>
+      <a class="action" href="/customer/invoices.html">Booking History</a>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3>Saved Tools</h3>
+    <div class="favorites">
+      <a class="favorite" href="/customer/booking.html">Rebook Previous Delivery</a>
+      <a class="favorite" href="/customer/profile.html">Saved Addresses</a>
+      <a class="favorite" href="/customer/profile.html">Favorite Locations</a>
+      <a class="favorite" href="/customer/tracking.html">Track Active Delivery</a>
     </div>
   </div>
 

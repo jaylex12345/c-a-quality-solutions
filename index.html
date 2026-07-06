@@ -3,19 +3,19 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>C&A Quality Solutions LLC | Courier, Medical & Same-Day Delivery</title>
+  <title>C&A Quality Solutions LLC | Courier & Logistics Solutions</title>
   <link rel="stylesheet" href="/assets/css/style.css" />
-  <meta name="description" content="C&A Quality Solutions LLC provides professional courier, medical courier, and same-day delivery services across Maryland, DC, and Virginia.">
+  <meta name="description" content="C&A Quality Solutions LLC provides enterprise courier and logistics services across Maryland, Washington DC, and Northern Virginia.">
   <link rel="canonical" href="https://caqualitysolutions.com/">
   <meta name="robots" content="index, follow">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="C&A Quality Solutions LLC | Courier, Medical & Same-Day Delivery">
-  <meta property="og:description" content="C&A Quality Solutions LLC provides professional courier, medical courier, and same-day delivery services across Maryland, DC, and Virginia.">
+  <meta property="og:title" content="C&A Quality Solutions LLC | Courier & Logistics Solutions">
+  <meta property="og:description" content="C&A Quality Solutions LLC provides enterprise courier and logistics services across Maryland, Washington DC, and Northern Virginia.">
   <meta property="og:url" content="https://caqualitysolutions.com/">
   <meta property="og:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="C&A Quality Solutions LLC | Courier, Medical & Same-Day Delivery">
-  <meta name="twitter:description" content="C&A Quality Solutions LLC provides professional courier, medical courier, and same-day delivery services across Maryland, DC, and Virginia.">
+  <meta name="twitter:title" content="C&A Quality Solutions LLC | Courier & Logistics Solutions">
+  <meta name="twitter:description" content="C&A Quality Solutions LLC provides enterprise courier and logistics services across Maryland, Washington DC, and Northern Virginia.">
   <meta name="twitter:image" content="https://caqualitysolutions.com/assets/images/logo.jpeg">
   <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpeg">
   <style>.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}</style>
@@ -23,6 +23,14 @@
     html, body {
       max-width: 100%;
       overflow-x: hidden;
+    }
+
+    :root {
+      --navy: #061b3a;
+      --navy-2: #0b2d52;
+      --gold: #d9b431;
+      --ink: #071b33;
+      --mist: #eef3f9;
     }
 
     .nav-container,
@@ -64,6 +72,55 @@
       gap: 10px;
     }
 
+    .executive-strip {
+      max-width: 1180px;
+      margin: -28px auto 0;
+      padding: 0 16px;
+    }
+
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .feature-card,
+    .metric-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 14px 30px rgba(6, 27, 58, 0.08);
+      border: 1px solid #dbe5f2;
+    }
+
+    .feature-card h3,
+    .metric-card h3 {
+      margin: 0 0 8px;
+      color: var(--navy);
+      font-size: 18px;
+    }
+
+    .feature-card p,
+    .metric-card p {
+      margin: 0;
+      color: #516174;
+      line-height: 1.6;
+    }
+
+    .metric-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 14px;
+    }
+
+    .metric-card strong {
+      display: block;
+      margin-top: 6px;
+      font-size: 28px;
+      color: var(--gold);
+    }
+
     @media (max-width: 768px) {
       .logo-area {
         flex-wrap: wrap;
@@ -74,6 +131,18 @@
 
       .logo-area h1 {
         white-space: normal !important;
+      }
+
+      .feature-grid,
+      .metric-row {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .feature-grid,
+      .metric-row {
+        grid-template-columns: 1fr;
       }
     }
   </style>
@@ -109,17 +178,16 @@
 
 <section class="hero">
   <div class="hero-content">
-    <h2>Professional Courier & Medical Delivery Services</h2>
+    <h2>Professional Courier & Logistics Solutions Across Maryland, Washington, DC & Northern Virginia</h2>
     <p>
-      Fast, secure, and reliable same-day delivery across Maryland,
-      Washington DC, and Virginia.
+      Same-Day Delivery • Medical Logistics • Legal Courier • Government Contract Support • Commercial Routes
     </p>
 
     <div class="hero-buttons">
     <a href="booking.html" class="btn">Book Delivery</a>
-    <a href="customer-login.html" class="btn">Customer Login</a>
-    <a href="pricing.html" class="btn">View Pricing</a>
-    <a href="tel:4108785949" class="btn">Call Now</a>
+    <a href="booking.html" class="btn-primary">Request a Quote</a>
+    <a href="track.html" class="btn">Track Package</a>
+    <a href="commercial-accounts.html" class="btn">Commercial Accounts</a>
     <a href="https://wa.me/14108785949?text=Hello%20C%26A%20Quality%20Solutions.%20I%20need%20a%20courier%20delivery.%20Please%20provide%20a%20quote."
        class="whatsapp-btn"
        target="_blank">
@@ -133,8 +201,24 @@
   </div>
 </section>
 
-<section class="emergency-banner">
-🚨 Need a package delivered today? Call (410) 878-5949 now for same-day courier service.
+<section class="executive-strip">
+  <div class="feature-grid">
+    <div class="feature-card"><h3>GPS Live Tracking</h3><p>Visibility from pickup through delivery with live route updates.</p></div>
+    <div class="feature-card"><h3>Electronic Proof of Delivery</h3><p>Digital delivery evidence for every completed stop.</p></div>
+    <div class="feature-card"><h3>Licensed & Insured</h3><p>Professional operations designed for business, healthcare, and contract work.</p></div>
+    <div class="feature-card"><h3>Same-Day Service</h3><p>Fast response for urgent, scheduled, and on-demand delivery needs.</p></div>
+    <div class="feature-card"><h3>Commercial Accounts</h3><p>Recurring route support, billing options, and dedicated account handling.</p></div>
+    <div class="feature-card"><h3>Professional Drivers</h3><p>Uniformed, service-minded drivers focused on reliability and care.</p></div>
+    <div class="feature-card"><h3>Secure Handling</h3><p>Chain-of-custody minded delivery for sensitive documents and parcels.</p></div>
+    <div class="feature-card"><h3>Fast Response</h3><p>Quick dispatch for commercial, legal, medical, and government requests.</p></div>
+  </div>
+
+  <div class="metric-row">
+    <div class="metric-card"><h3>Deliveries Completed</h3><strong>100+</strong><p>Reliable service milestones across the DMV.</p></div>
+    <div class="metric-card"><h3>Businesses Served</h3><strong>Commercial</strong><p>Built for recurring business and contract work.</p></div>
+    <div class="metric-card"><h3>Average Delivery Time</h3><strong>Same-Day</strong><p>Fast turnarounds for urgent deliveries.</p></div>
+    <div class="metric-card"><h3>Service Coverage</h3><strong>DMV</strong><p>Maryland, Washington DC, and Northern Virginia.</p></div>
+  </div>
 </section>
 
 <section class="trust-bar">
@@ -272,7 +356,7 @@
   <p>Book online or call us now to schedule your courier service.</p>
 
   <div class="hero-buttons">
-    <a href="booking.html" class="btn-primary">Requst Quote</a>
+    <a href="booking.html" class="btn-primary">Request Quote</a>
     <a href="tel:4108785949" class="btn-call">Call (410) 878-5949</a>
   </div>
 </section>
@@ -341,11 +425,20 @@
     </div>
 
     <div class="footer-box">
-      <h3>Services</h3>
-      <p>Same-Day Courier</p>
-      <p>Medical Courier</p>
-      <p>Rush / Priority Delivery</p>
-      <p>Long-Distance Delivery</p>
+      <h3>Quick Links</h3>
+      <p><a href="commercial-accounts.html">Commercial Accounts</a></p>
+      <p><a href="government-corporate.html">Government Contracts</a></p>
+      <p><a href="privacy.html">Privacy</a></p>
+      <p><a href="terms.html">Terms</a></p>
+      <p><a href="careers.html">Careers</a></p>
+      <p><a href="vendor-registration.html">Vendor Registration</a></p>
+    </div>
+
+    <div class="footer-box">
+      <h3>Social Media</h3>
+      <p><a href="https://www.facebook.com/" target="_blank" rel="noopener">Facebook</a></p>
+      <p><a href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a></p>
+      <p><a href="https://www.instagram.com/" target="_blank" rel="noopener">Instagram</a></p>
     </div>
 
   </div>
