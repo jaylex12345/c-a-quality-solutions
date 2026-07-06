@@ -247,7 +247,7 @@ async function loadDeliveries(){
         <td>${delivery.pickup_location || delivery.pickup_address || ""}</td>
         <td>${delivery.delivery_location || delivery.delivery_address || ""}</td>
         <td>${[delivery.pickup_contact, delivery.delivery_contact, delivery.customer_phone || delivery.recipient_phone].filter(Boolean).join("<br>")}</td>
-        <td>${[delivery.package_type, delivery.package_weight ? `${delivery.package_weight} lb` : ""].filter(Boolean).join(" â€¢ ")}</td>
+        <td>${[delivery.package_type, delivery.package_weight ? `${delivery.package_weight} lb` : ""].filter(Boolean).join(" • ")}</td>
         <td>${delivery.priority || "Standard"}</td>
         <td>${Number(delivery.cod_amount || 0).toLocaleString("en-US", { style:"currency", currency:"USD" })}</td>
         <td>${formatDateTime(delivery.estimated_delivery_time)}</td>
