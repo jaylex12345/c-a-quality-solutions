@@ -102,7 +102,7 @@
   </main>
 
 <script>
-const supabaseUrl='" + (window.CAQ_SUPABASE_URL || "") + "';
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
 const supabaseKey='sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR';
 const supabaseClient=supabase.createClient(supabaseUrl,supabaseKey);
 
@@ -155,23 +155,17 @@ function statusClass(value){
 }
 
 async function loadCustomerBilling(){
-  const [invByEmail, invByName, invByCustomerId, delByEmail, delByName] = await Promise.all([
-    supabaseClient.from('invoices').select('*').eq('customer_email', customerEmail),
-    supabaseClient.from('invoices').select('*').eq('customer_name', customerName || ''),
-    customerId ? supabaseClient.from('invoices').select('*').eq('customer_id', customerId) : Promise.resolve({ data: [], error: null }),
-    supabaseClient.from('deliveries').select('*').eq('customer_email', customerEmail).order('created_at', { ascending: false }),
-    supabaseClient.from('deliveries').select('*').eq('customer_name', customerName || '').order('created_at', { ascending: false })
-  ]);
+  const response = await fetch(`/.netlify/functions/customer-portal-data?customerId=${encodeURIComponent(customerId || '')}&email=${encodeURIComponent(customerEmail || '')}&customerName=${encodeURIComponent(customerName || '')}`);
+  const payload = await response.json();
 
-  const firstError = [invByEmail.error, invByName.error, invByCustomerId.error, delByEmail.error, delByName.error].find(Boolean);
-  if(firstError){
-    document.getElementById('invoiceRows').innerHTML = `<tr><td colspan="6">${firstError.message}</td></tr>`;
-    document.getElementById('deliveryRows').innerHTML = `<tr><td colspan="6">${firstError.message}</td></tr>`;
+  if(!response.ok){
+    document.getElementById('invoiceRows').innerHTML = `<tr><td colspan="6">${payload.error || 'Unable to load invoices.'}</td></tr>`;
+    document.getElementById('deliveryRows').innerHTML = `<tr><td colspan="6">${payload.error || 'Unable to load deliveries.'}</td></tr>`;
     return;
   }
 
-  const invoices = mergeRows(invByEmail.data || [], invByName.data || [], invByCustomerId.data || []).sort((a,b)=>new Date(b.created_at || 0)-new Date(a.created_at || 0));
-  const deliveries = mergeRows(delByEmail.data || [], delByName.data || []).sort((a,b)=>new Date(b.created_at || 0)-new Date(a.created_at || 0));
+  const invoices = mergeRows(payload.invoices || []).sort((a,b)=>new Date(b.created_at || 0)-new Date(a.created_at || 0));
+  const deliveries = mergeRows(payload.deliveries || []).sort((a,b)=>new Date(b.created_at || 0)-new Date(a.created_at || 0));
 
   const paidCount = invoices.filter(row => String(row.status || row.payment_status || '').toLowerCase() === 'paid').length;
   document.getElementById('invoiceTotal').innerText = invoices.length;

@@ -6,8 +6,60 @@ const SUPABASE_PUBLISHABLE_KEY =
   process.env.SUPABASE_PUBLISHABLE_KEY || "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
 const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || "contact@caqualitysolutions.com";
-const SITE_URL = process.env.SITE_URL || "https://caqualitysolutions.com";
+const CANONICAL_SITE_URL = "https://caqualitysolutions.com";
+const SITE_URL = normalizeSiteUrl(process.env.SITE_URL || CANONICAL_SITE_URL);
 const DRIVER_INVITE_EXPIRY_HOURS = Number(process.env.DRIVER_INVITE_EXPIRY_HOURS || 24);
+
+function normalizeSiteUrl(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    const host = String(parsed.hostname || "").toLowerCase();
+    const isLocalHost = host === "localhost" || host === "127.0.0.1" || host === "::1";
+
+    if (!/^https?:$/.test(parsed.protocol) || isLocalHost) {
+      return CANONICAL_SITE_URL;
+    }
+
+    return `${parsed.protocol}//${parsed.host}`.replace(/\/$/, "");
+  } catch {
+    return CANONICAL_SITE_URL;
+  }
+}
+
+function buildRedirectUrl(pathname) {
+  const cleanPath = String(pathname || "").replace(/^\/+/, "");
+  return `${SITE_URL}/${cleanPath}`;
+}
+
+function normalizeAuthActionLink(actionLink, redirectTo) {
+  if (!actionLink) return actionLink;
+
+  try {
+    const parsed = new URL(actionLink);
+    parsed.searchParams.set("redirect_to", redirectTo);
+    return parsed.toString();
+  } catch {
+    return actionLink;
+  }
+}
+
+function buildDriverPasswordLink({ actionLink, type }) {
+  if (!actionLink) return actionLink;
+
+  try {
+    const parsed = new URL(actionLink);
+    const tokenHash = parsed.searchParams.get("token") || parsed.searchParams.get("token_hash");
+    if (!tokenHash) return actionLink;
+
+    const pagePath = type === "recovery" ? "driver/reset-password.html" : "driver/setup-password.html";
+    const pageUrl = new URL(buildRedirectUrl(pagePath));
+    pageUrl.searchParams.set("token_hash", tokenHash);
+    pageUrl.searchParams.set("type", type === "recovery" ? "recovery" : "invite");
+    return pageUrl.toString();
+  } catch {
+    return actionLink;
+  }
+}
 
 function json(statusCode, payload) {
   return {
@@ -77,6 +129,43 @@ async function supabaseAuth(path, options = {}) {
   return text ? JSON.parse(text) : {};
 }
 
+async function enforceSupabaseAuthRedirectConfig() {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return;
+
+  const expectedAllowList = [
+    CANONICAL_SITE_URL,
+    `${CANONICAL_SITE_URL}/driver/setup-password.html`,
+    `${CANONICAL_SITE_URL}/driver/reset-password.html`,
+  ].join(",");
+
+  const payloads = [
+    {
+      SITE_URL: CANONICAL_SITE_URL,
+      URI_ALLOW_LIST: expectedAllowList,
+    },
+    {
+      site_url: CANONICAL_SITE_URL,
+      uri_allow_list: expectedAllowList,
+    },
+  ];
+
+  for (const payload of payloads) {
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/admin/config`, {
+      method: "PATCH",
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (response.ok) {
+      return;
+    }
+  }
+}
+
 async function supabasePublicRest(path, options = {}) {
   if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
     throw new Error("Missing SUPABASE_URL or SUPABASE_PUBLISHABLE_KEY");
@@ -133,10 +222,12 @@ async function sendDriverInviteEmail({ driverName, email, actionLink }) {
 }
 
 async function generateAuthLink({ type, email }) {
-  const redirectPath = type === "recovery" ? "driver/reset-password.html" : "driver/setup-password.html";
-  const redirectTo = `${SITE_URL}/${redirectPath}`;
+  await enforceSupabaseAuthRedirectConfig();
 
-  return supabaseAuth("admin/generate_link", {
+  const redirectPath = type === "recovery" ? "driver/reset-password.html" : "driver/setup-password.html";
+  const redirectTo = buildRedirectUrl(redirectPath);
+
+  const linkData = await supabaseAuth("admin/generate_link", {
     method: "POST",
     body: {
       type,
@@ -150,6 +241,13 @@ async function generateAuthLink({ type, email }) {
       },
     },
   });
+
+  if (linkData && linkData.action_link) {
+    const normalized = normalizeAuthActionLink(linkData.action_link, redirectTo);
+    linkData.action_link = buildDriverPasswordLink({ actionLink: normalized, type });
+  }
+
+  return linkData;
 }
 
 async function createDriverInvite(payload) {

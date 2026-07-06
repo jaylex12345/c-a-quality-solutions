@@ -192,6 +192,13 @@ select{padding:8px;border-radius:8px;width:100%}
         <button class="btn btn-green" onclick="loadDashboard()">Refresh</button>
         <button class="btn" onclick="location.href='/customer/tracking.html'">Track Package</button>
       </div>
+
+      <div class="card">
+        <h2>AI Dispatch Assistant</h2>
+        <p class="metric-sub">Nearest-driver recommendations, ETA prediction, delay risk, and workload balancing.</p>
+        <button class="btn btn-dark" onclick="runAIDispatchAssistant()">Generate AI Insights</button>
+        <div id="aiDispatchInsights" style="margin-top:12px;color:#334155;line-height:1.55;">AI insights will appear after data loads.</div>
+      </div>
     </div>
   </div>
 </div>
@@ -440,6 +447,91 @@ function mergedKey(row){
   return String(row.tracking_number || row.checkout_session_id || row.stripe_session_id || row.id || "");
 }
 
+function haversineMiles(lat1, lon1, lat2, lon2){
+  const toRad = value => (Number(value) * Math.PI) / 180;
+  const earthRadiusMiles = 3958.8;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return earthRadiusMiles * c;
+}
+
+function predictEtaMinutes(delivery){
+  const status = normalizeStatus(delivery.status || "Pending");
+  if(status === "Delivered") return 0;
+  if(status === "Out For Delivery") return 15;
+  if(status === "In Transit" || status === "Picked Up") return 25;
+  if(status === "Driver En Route") return 35;
+  if(status === "Assigned") return 45;
+  return 60;
+}
+
+function runAIDispatchAssistant(){
+  const box = document.getElementById("aiDispatchInsights");
+  if(!box) return;
+
+  const openDeliveries = deliveries.filter(row => normalizeStatus(row.status) !== "Delivered" && normalizeStatus(row.status) !== "Cancelled");
+  if(!openDeliveries.length){
+    box.innerHTML = "No active deliveries to optimize right now.";
+    return;
+  }
+
+  const onlineDrivers = drivers.filter(isDriverOnline);
+  const workload = new Map();
+  deliveries.forEach(row => {
+    if(row.driver_id && normalizeStatus(row.status) !== "Delivered" && normalizeStatus(row.status) !== "Cancelled"){
+      const key = String(row.driver_id);
+      workload.set(key, (workload.get(key) || 0) + 1);
+    }
+  });
+
+  const recommendations = [];
+  openDeliveries.slice(0, 6).forEach(delivery => {
+    let bestDriver = null;
+    let bestScore = Number.POSITIVE_INFINITY;
+
+    if(onlineDrivers.length && Number.isFinite(Number(delivery.driver_latitude)) && Number.isFinite(Number(delivery.driver_longitude))){
+      onlineDrivers.forEach(driver => {
+        if(!Number.isFinite(Number(driver.latitude)) || !Number.isFinite(Number(driver.longitude))) return;
+        const distance = haversineMiles(delivery.driver_latitude, delivery.driver_longitude, driver.latitude, driver.longitude);
+        const load = workload.get(String(driver.id)) || 0;
+        const score = distance + (load * 2.5);
+        if(score < bestScore){
+          bestScore = score;
+          bestDriver = { driver, distance, load };
+        }
+      });
+    }
+
+    const ageMinutes = Math.max(0, Math.round((Date.now() - new Date(delivery.created_at || Date.now()).getTime()) / 60000));
+    const delayed = ageMinutes > 90 && normalizeStatus(delivery.status) !== "Delivered";
+    const eta = predictEtaMinutes(delivery);
+
+    recommendations.push({
+      tracking: delivery.tracking_number || delivery.id || "Delivery",
+      recommendedDriver: bestDriver ? (bestDriver.driver.name || "Driver") : "No GPS-qualified online driver",
+      nearestMiles: bestDriver ? bestDriver.distance.toFixed(1) : "N/A",
+      predictedEta: eta,
+      delayed,
+      ageMinutes,
+      workloadNote: bestDriver ? `${bestDriver.load} active job(s)` : "Workload unavailable"
+    });
+  });
+
+  const delayedItems = recommendations.filter(item => item.delayed);
+  const workloadRanks = Array.from(workload.entries()).sort((a, b) => b[1] - a[1]).slice(0, 3).map(([driverId, jobs]) => {
+    const driver = drivers.find(row => String(row.id) === String(driverId));
+    return `${driver ? (driver.name || "Driver") : "Driver"}: ${jobs} active job(s)`;
+  });
+
+  box.innerHTML = [
+    `<strong>Nearest Driver Recommendations</strong><br>${recommendations.map(item => `${item.tracking}: ${item.recommendedDriver} (${item.nearestMiles} mi, ETA ~${item.predictedEta}m, ${item.workloadNote})`).join("<br>")}`,
+    `<br><br><strong>Delay Risk Flags</strong><br>${delayedItems.length ? delayedItems.map(item => `${item.tracking} is ${item.ageMinutes} minutes old without completion`).join("<br>") : "No delay risks detected above 90 minutes."}`,
+    `<br><br><strong>Workload Balance</strong><br>${workloadRanks.length ? workloadRanks.join("<br>") : "No assigned workload currently."}`
+  ].join("");
+}
+
 function mergeDispatcherRecords(bookingsRows, deliveriesRows){
   const records = new Map();
 
@@ -453,6 +545,7 @@ function mergeDispatcherRecords(bookingsRows, deliveriesRows){
     merged.record_type = existing.record_type || recordType;
     merged.booking_id = existing.booking_id || (recordType === "booking" ? row.id : null);
     merged.delivery_id = existing.delivery_id || (recordType === "delivery" ? row.id : null);
+    merged.id = merged.delivery_id || merged.booking_id || existing.id || row.id || null;
     merged.tracking_number = row.tracking_number || existing.tracking_number || "";
 
     merged.customer_name = row.customer_name || row.contact_person || existing.customer_name || "";
@@ -656,6 +749,7 @@ function assignmentBadge(status){
 
 function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, driverOptions, rowActions, assignmentStatus, response, clock){
   const isBookingOnly = delivery.record_type === "booking" && !delivery.delivery_id;
+  const actionDeliveryId = delivery.delivery_id || delivery.id || "";
   const bookingStatus = bookingBadge(delivery.booking_status || (isBookingOnly ? "Pending Quote" : "Pending Dispatch"));
   const paymentStatus = paymentBadge(delivery.payment_status);
   const deliveryStatus = statusBadge(delivery.status || (isBookingOnly ? "Pending" : "Pending"));
@@ -712,7 +806,7 @@ function renderDeliveryCard(delivery, currentDriver, isDelivered, proofHtml, dri
         </div>
       </div>
 
-      ${isDelivered || isBookingOnly ? "" : `<div style="margin-top:10px;"><select id="driver-${delivery.id}">${driverOptions}</select></div>`}
+      ${isDelivered || isBookingOnly ? "" : `<div style="margin-top:10px;"><select id="driver-${actionDeliveryId}">${driverOptions}</select></div>`}
 
       <div class="delivery-card-actions">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(delivery.delivery_location || delivery.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div>
     </article>
@@ -724,6 +818,7 @@ async function loadDashboard(){
   await loadDrivers();
   await loadDeliveries();
   await renderMap();
+  runAIDispatchAssistant();
 }
 
 async function loadDrivers(){
@@ -845,6 +940,7 @@ async function loadDeliveries(){
 
   const desktopRows = deliveries.map(d => {
         const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
+      const actionDeliveryId = d.delivery_id || d.id || "";
         const assignmentStatus = d.assignment_status || (d.driver_id ? "Assigned" : "Unassigned");
         const response = responseText(assignmentStatus);
         const clock = clockStatusForDriver(d.driver_id);
@@ -863,18 +959,18 @@ async function loadDeliveries(){
           `
           : isDelivered
           ? `
-            <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
-            <button class="btn btn-dark" onclick="printDeliveryTicket('${d.id}')">Print</button>
-            <button class="btn btn-blue" onclick="downloadDeliveryPdf('${d.id}')">Download PDF</button>
-            <button class="btn btn-green" onclick="emailCustomer('${d.id}')">Email Customer</button>
-            <button class="btn btn-green" onclick="smsCustomer('${d.id}')">SMS Customer</button>
+            <button class="btn btn-blue" onclick="editDelivery('${actionDeliveryId}')">Edit</button>
+            <button class="btn btn-dark" onclick="printDeliveryTicket('${actionDeliveryId}')">Print</button>
+            <button class="btn btn-blue" onclick="downloadDeliveryPdf('${actionDeliveryId}')">Download PDF</button>
+            <button class="btn btn-green" onclick="emailCustomer('${actionDeliveryId}')">Email Customer</button>
+            <button class="btn btn-green" onclick="smsCustomer('${actionDeliveryId}')">SMS Customer</button>
           `
           : `
-            <button class="btn" onclick="assignDriver('${d.id}')">${d.driver_id ? "Reassign" : "Assign"}</button>
-            ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${d.id}')">Unassign</button>` : ""}
-            <button class="btn btn-red" onclick="cancelDelivery('${d.id}')">Cancel</button>
-            <button class="btn btn-dark" onclick="duplicateDelivery('${d.id}')">Duplicate</button>
-            <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+            <button class="btn" onclick="assignDriver('${actionDeliveryId}')">${d.driver_id ? "Reassign" : "Assign"}</button>
+            ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${actionDeliveryId}')">Unassign</button>` : ""}
+            <button class="btn btn-red" onclick="cancelDelivery('${actionDeliveryId}')">Cancel</button>
+            <button class="btn btn-dark" onclick="duplicateDelivery('${actionDeliveryId}')">Duplicate</button>
+            <button class="btn btn-blue" onclick="editDelivery('${actionDeliveryId}')">Edit</button>
           `;
 
         return `
@@ -891,7 +987,7 @@ async function loadDeliveries(){
             <td>${currentDriver?.phone || "N/A"}</td>
             <td>${proofHtml}</td>
             <td>${currentDriver ? currentDriver.name : "Unassigned"}</td>
-            <td>${isDelivered || isBookingOnly ? "" : `<select id="driver-${d.id}">${driverOptions}</select>`}</td>
+            <td>${isDelivered || isBookingOnly ? "" : `<select id="driver-${actionDeliveryId}">${driverOptions}</select>`}</td>
             <td><div style="display:flex;gap:8px;flex-wrap:wrap;">${rowActions}<button class="btn btn-green" onclick="openDeliveryMap('${(d.delivery_location || d.pickup_location || "").replace(/'/g, "\\'")}')">Map</button></div></td>
           </tr>
         `;
@@ -899,6 +995,7 @@ async function loadDeliveries(){
 
   const mobileCards = deliveries.map(d => {
     const currentDriver = drivers.find(x => String(x.id) === String(d.driver_id));
+    const actionDeliveryId = d.delivery_id || d.id || "";
     const assignmentStatus = d.assignment_status || (d.driver_id ? "Assigned" : "Unassigned");
     const response = responseText(assignmentStatus);
     const clock = clockStatusForDriver(d.driver_id);
@@ -916,18 +1013,18 @@ async function loadDeliveries(){
       `
       : isDelivered
       ? `
-        <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
-        <button class="btn btn-dark" onclick="printDeliveryTicket('${d.id}')">Print</button>
-        <button class="btn btn-blue" onclick="downloadDeliveryPdf('${d.id}')">Download PDF</button>
-        <button class="btn btn-green" onclick="emailCustomer('${d.id}')">Email Customer</button>
-        <button class="btn btn-green" onclick="smsCustomer('${d.id}')">SMS Customer</button>
+        <button class="btn btn-blue" onclick="editDelivery('${actionDeliveryId}')">Edit</button>
+        <button class="btn btn-dark" onclick="printDeliveryTicket('${actionDeliveryId}')">Print</button>
+        <button class="btn btn-blue" onclick="downloadDeliveryPdf('${actionDeliveryId}')">Download PDF</button>
+        <button class="btn btn-green" onclick="emailCustomer('${actionDeliveryId}')">Email Customer</button>
+        <button class="btn btn-green" onclick="smsCustomer('${actionDeliveryId}')">SMS Customer</button>
       `
       : `
-        <button class="btn" onclick="assignDriver('${d.id}')">${d.driver_id ? "Reassign" : "Assign"}</button>
-        ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${d.id}')">Unassign</button>` : ""}
-        <button class="btn btn-red" onclick="cancelDelivery('${d.id}')">Cancel</button>
-        <button class="btn btn-dark" onclick="duplicateDelivery('${d.id}')">Duplicate</button>
-        <button class="btn btn-blue" onclick="editDelivery('${d.id}')">Edit</button>
+        <button class="btn" onclick="assignDriver('${actionDeliveryId}')">${d.driver_id ? "Reassign" : "Assign"}</button>
+        ${d.driver_id ? `<button class="btn btn-red" onclick="unassignDelivery('${actionDeliveryId}')">Unassign</button>` : ""}
+        <button class="btn btn-red" onclick="cancelDelivery('${actionDeliveryId}')">Cancel</button>
+        <button class="btn btn-dark" onclick="duplicateDelivery('${actionDeliveryId}')">Duplicate</button>
+        <button class="btn btn-blue" onclick="editDelivery('${actionDeliveryId}')">Edit</button>
       `;
 
     return renderDeliveryCard(d, currentDriver, isDelivered, proofHtml, driverOptions, rowActions, assignmentStatus, response, clock);

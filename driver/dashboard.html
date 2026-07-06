@@ -244,6 +244,7 @@ let clockTickerId = null;
 let gpsAutoIntervalId = null;
 let gpsSending = false;
 let realtimeDeliveryChannel = null;
+let lastDeliverySignals = new Map();
 
 if (!driverId || (role && role !== "driver")) window.location.href = "/driver/login.html";
 document.getElementById("driverName").innerText = driverName || "Driver";
@@ -1010,6 +1011,52 @@ function startAutoGPS(){
   }, 10000);
 }
 
+function signalForDelivery(row){
+  if(!row) return "";
+  return [
+    row.status || "",
+    row.assignment_status || "",
+    row.delivery_time || "",
+    row.proof_of_delivery || row.proof_photo_url || ""
+  ].join("|");
+}
+
+async function notifyDriverUpdate(title, body){
+  if(typeof Notification === "undefined") return;
+  if(Notification.permission !== "granted") return;
+
+  try{
+    if(navigator.serviceWorker && navigator.serviceWorker.ready){
+      const registration = await navigator.serviceWorker.ready;
+      if(registration && registration.showNotification){
+        await registration.showNotification(title, {
+          body,
+          icon: "/assets/images/logo.jpeg",
+          badge: "/assets/images/logo.jpeg",
+          tag: "driver-live-update",
+          data: { url: "/driver/dashboard.html" }
+        });
+        return;
+      }
+    }
+  }catch(_){
+    // fallback below
+  }
+
+  try{
+    new Notification(title, { body });
+  }catch(_){
+    // no-op
+  }
+}
+
+function requestDriverNotifyPermission(){
+  if(typeof Notification === "undefined") return;
+  if(Notification.permission === "default"){
+    Notification.requestPermission().catch(() => {});
+  }
+}
+
 function setDriverOfflineBeacon(){
   if(!driverId) return;
 
@@ -1034,8 +1081,21 @@ function initDriverRealtime(){
   realtimeDeliveryChannel = supabaseClient
     .channel(`driver-live-${driverId}`)
     .on("postgres_changes", { event: "*", schema: "public", table: "deliveries" }, payload => {
+      const oldRow = payload.old || {};
       const row = payload.new || payload.old || {};
       if(!row.driver_id || String(row.driver_id) !== String(driverId)) return;
+
+      const key = String(row.id || row.tracking_number || "");
+      const previous = lastDeliverySignals.get(key) || signalForDelivery(oldRow);
+      const current = signalForDelivery(row);
+
+      if(payload.eventType === "INSERT"){
+        notifyDriverUpdate("New Delivery Assignment", `Tracking ${row.tracking_number || "job"} was assigned to you.`);
+      }else if(previous && previous !== current){
+        notifyDriverUpdate("Delivery Status Updated", `${row.tracking_number || "Delivery"}: ${row.status || row.assignment_status || "updated"}`);
+      }
+
+      lastDeliverySignals.set(key, current);
       loadDeliveries();
     })
     .subscribe();
@@ -1076,6 +1136,7 @@ window.addEventListener("resize", () => {
 setConnectivity();
 bootstrapDriverAuth().then(ready => {
   if(!ready) return;
+  requestDriverNotifyPermission();
   loadDriverProfile();
   loadDeliveries();
   loadTimeClock();
