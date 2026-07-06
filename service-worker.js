@@ -1,7 +1,14 @@
-const CACHE_NAME = "c-a-driver-dashboard-v36";
+const CACHE_NAME = "c-a-driver-pwa-v37";
 const APP_SHELL = [
   "./",
+  "/driver-login.html",
+  "/driver/login.html",
   "/driver/dashboard.html",
+  "/driver/install.html",
+  "/driver/profile.html",
+  "/driver/history.html",
+  "/driver/reset-password.html",
+  "/driver/setup-password.html",
   "/manifest.json",
   "/assets/images/logo.jpeg"
 ];
@@ -49,7 +56,19 @@ self.addEventListener("fetch", event => {
 
   if (event.request.mode === "navigate") {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match("/driver/dashboard.html"))
+      fetch(event.request)
+        .then(response => {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, responseClone));
+          return response;
+        })
+        .catch(async () => {
+          return (
+            (await caches.match(event.request)) ||
+            (await caches.match("/driver/login.html")) ||
+            (await caches.match("/driver/dashboard.html"))
+          );
+        })
     );
     return;
   }

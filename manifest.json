@@ -1,13 +1,13 @@
 {
-  "name": "C&A Dispatch Platform Version 4.0 Professional Edition",
-  "short_name": "C&A Dispatch 4.0",
-  "start_url": "/driver/dashboard.html",
+  "name": "C&A Driver",
+  "short_name": "C&A Driver",
+  "start_url": "/driver-login.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "background_color": "#eef2f7",
   "theme_color": "#061b3a",
-  "description": "Professional logistics driver operations app for C&A Quality Solutions.",
+  "description": "Installable driver app for C&A Quality Solutions.",
   "icons": [
     {
       "src": "/assets/images/logo.jpeg",

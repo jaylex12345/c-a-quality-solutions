@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061b3a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="C&A Driver">
+  <title>Install C&amp;A Driver | C&amp;A Quality Solutions LLC</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/jpeg" href="/assets/images/logo.jpeg">
+  <link rel="apple-touch-icon" href="/assets/images/logo.jpeg">
+  <meta name="description" content="Install instructions for the C&amp;A Driver mobile app.">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,sans-serif;background:linear-gradient(180deg,#eef2f7 0%,#f7fbff 100%);color:#0f172a}
+    main{max-width:900px;margin:0 auto;padding:20px}
+    .hero{background:linear-gradient(135deg,#061b3a,#0b2d52);color:#fff;border-radius:24px;padding:28px;box-shadow:0 16px 40px rgba(6,27,58,.22)}
+    .hero-top{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+    .hero img{width:88px;height:88px;border-radius:20px;object-fit:cover;background:#fff;padding:6px}
+    h1{margin:0;font-size:34px}
+    .hero p{margin:10px 0 0;max-width:62ch;color:#d9e6f6;line-height:1.6}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:18px}
+    .card{background:#fff;border-radius:20px;padding:20px;box-shadow:0 10px 28px rgba(15,23,42,.08);border:1px solid #dbe5f2}
+    h2{margin:0 0 10px;font-size:20px;color:#061b3a}
+    ol{margin:0;padding-left:20px;line-height:1.7}
+    li{margin:8px 0}
+    .btn-row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+    a.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:12px 18px;border-radius:12px;text-decoration:none;font-weight:bold;border:0;cursor:pointer}
+    .btn-primary{background:#d9b431;color:#061b3a}
+    .btn-dark{background:#061b3a;color:#fff}
+    .tip{background:#f7fbff;border-left:4px solid #0b5ed7;padding:14px 16px;border-radius:12px;color:#17324d;line-height:1.6}
+    .steps{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+    .phone-card{background:#fff;border-radius:18px;padding:18px;border:1px solid #dbe5f2;box-shadow:0 8px 20px rgba(15,23,42,.06)}
+    .phone-card strong{display:block;margin-bottom:8px;color:#061b3a}
+    .footer{margin:22px 0 0;color:#64748b;text-align:center}
+    @media(max-width:720px){
+      main{padding:14px}
+      .hero{padding:22px;border-radius:20px}
+      h1{font-size:28px}
+      .grid,.steps{grid-template-columns:1fr}
+      .card{padding:18px}
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <div class="hero-top">
+        <img src="/assets/images/logo.jpeg" alt="C&amp;A Quality Solutions logo">
+        <div>
+          <h1>Install C&amp;A Driver</h1>
+          <p>Add the driver app to your phone so you can launch assigned jobs, send GPS updates, accept or reject work, and upload proof of delivery faster.</p>
+        </div>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="/driver/login.html">Open driver login</a>
+        <a class="btn btn-dark" href="/driver/dashboard.html">Open dashboard</a>
+      </div>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h2>iPhone</h2>
+        <ol>
+          <li>Open the driver login page in Safari.</li>
+          <li>Tap the Share button.</li>
+          <li>Choose Add to Home Screen.</li>
+          <li>Confirm the name C&amp;A Driver.</li>
+          <li>Launch the app from the home screen icon.</li>
+        </ol>
+      </section>
+
+      <section class="card">
+        <h2>Android</h2>
+        <ol>
+          <li>Open the driver login page in Chrome.</li>
+          <li>Tap the menu button in the browser.</li>
+          <li>Choose Install app or Add to Home screen.</li>
+          <li>Confirm the install prompt.</li>
+          <li>Open the new C&amp;A Driver icon from your home screen.</li>
+        </ol>
+      </section>
+    </div>
+
+    <div class="steps">
+      <div class="phone-card">
+        <strong>What stays the same</strong>
+        Your existing Supabase login, session handling, assigned jobs, GPS updates, proof uploads, and logout continue to use the website driver account.
+      </div>
+      <div class="phone-card">
+        <strong>What changes</strong>
+        The installable app gives drivers a more app-like launch experience on iPhone and Android while keeping the website URLs working.
+      </div>
+    </div>
+
+    <p class="tip" style="margin-top:16px;">
+      If the browser does not show an install prompt, use the instructions above. The app still works from the website driver login page.
+    </p>
+
+    <p class="footer">C&amp;A Quality Solutions LLC</p>
+  </main>
+</body>
+</html>
