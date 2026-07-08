@@ -2732,6 +2732,8 @@ grid-template-columns:1fr;
 
   .container,
   .section,
+  section,
+  .content,
   .cards,
   .grid,
   .service-grid,
@@ -2779,6 +2781,7 @@ grid-template-columns:1fr;
   .service-card,
   .feature-card,
   .pricing-card,
+  .quote-card,
   .price-card,
   .route-card,
   .contact-card,
@@ -2862,6 +2865,9 @@ grid-template-columns:1fr;
   .quick-actions .btn,
   .pricing-main-btn,
   .pricing-btn,
+  .book,
+  .request-quote,
+  .book-delivery,
   .price-card .btn,
   .pricing-card .btn {
     width: 100% !important;
