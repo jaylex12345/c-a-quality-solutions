@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Driver History | C&A Quality Solutions LLC</title>
 <link rel="stylesheet" href="/assets/css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="/.netlify/functions/public-supabase-config"></script>
   <meta name="description" content="Official driver history page for C&A Quality Solutions LLC operations and customer support.">
   <link rel="canonical" href="https://caqualitysolutions.com/driver/history.html">
   <meta name="robots" content="noindex, follow">
@@ -26,6 +28,52 @@
     <p>Completed delivery history will appear here.</p>
     <p><a href="/driver/dashboard.html">Back to Dashboard</a></p>
   </main>
+
+<script>
+const supabaseUrl = "" + (window.CAQ_SUPABASE_URL || "") + "";
+const supabaseKey = "sb_publishable_2PBI8u5Ja8mptMnFndFgNg_OCdabfqR";
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function requireDriverSession(){
+  const sessionResult = await supabaseClient.auth.getSession();
+  const session = sessionResult && sessionResult.data ? sessionResult.data.session : null;
+  if(!session || !session.user){
+    window.location.replace("/driver/login.html");
+    return null;
+  }
+
+  const user = session.user;
+  let driverResult = await supabaseClient
+    .from("drivers")
+    .select("id,name,is_active,account_status,email")
+    .eq("auth_user_id", user.id)
+    .limit(1)
+    .maybeSingle();
+
+  if(!driverResult.data && user.email){
+    driverResult = await supabaseClient
+      .from("drivers")
+      .select("id,name,is_active,account_status,email")
+      .eq("email", user.email)
+      .limit(1)
+      .maybeSingle();
+  }
+
+  const driver = driverResult && driverResult.data ? driverResult.data : null;
+  if(!driver || driver.is_active === false || driver.account_status === "Suspended"){
+    await supabaseClient.auth.signOut();
+    window.location.replace("/driver/login.html");
+    return null;
+  }
+
+  localStorage.setItem("driver_id", driver.id);
+  localStorage.setItem("driver_name", driver.name || "Driver");
+  localStorage.setItem("role", "driver");
+  return driver;
+}
+
+requireDriverSession();
+</script>
 </body>
 </html>
 

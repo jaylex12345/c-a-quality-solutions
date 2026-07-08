@@ -1,3 +1,11 @@
+# Production portal host routing
+http://admin.caqualitysolutions.com/* https://admin.caqualitysolutions.com/:splat 301!
+http://driver.caqualitysolutions.com/* https://driver.caqualitysolutions.com/:splat 301!
+https://admin.caqualitysolutions.com/ /admin.html 200
+https://admin.caqualitysolutions.com/* /admin/:splat 200
+https://driver.caqualitysolutions.com/ /driver/login.html 200
+https://driver.caqualitysolutions.com/* /driver/:splat 200
+
 # Force canonical host and HTTPS
 http://www.caqualitysolutions.com/* https://caqualitysolutions.com/:splat 301!
 http://caqualitysolutions.com/* https://caqualitysolutions.com/:splat 301!
@@ -5,6 +13,8 @@ https://www.caqualitysolutions.com/* https://caqualitysolutions.com/:splat 301!
 
 # Duplicate URL consolidation
 /booking.html /customer/booking.html 301
+/customer /customer-dashboard.html 301
+/customer/ /customer-dashboard.html 301
 /track.html /customer/tracking.html 301
 /driver-login.html /driver/login.html 301
 /driver-dashboard.html /driver/dashboard.html 301
