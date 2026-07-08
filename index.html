@@ -59,6 +59,26 @@
       gap: 8px;
     }
 
+    .menu-toggle {
+      display: none;
+      border: 1px solid rgba(255, 255, 255, 0.45);
+      background: rgba(8, 43, 79, 0.92);
+      color: #fff;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      line-height: 1;
+    }
+
+    .menu-toggle-icon {
+      font-size: 1.25rem;
+    }
+
     .logo-area h1 {
       font-size: clamp(1.4rem, 4.8vw, 2.6rem);
       line-height: 1.2;
@@ -122,15 +142,94 @@
     }
 
     @media (max-width: 768px) {
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 1002;
+      }
+
+      .nav-container {
+        position: relative;
+      }
+
       .logo-area {
         flex-wrap: wrap;
         justify-content: center;
         text-align: center;
-        padding: 10px;
+        padding: 10px 12px;
       }
 
       .logo-area h1 {
         white-space: normal !important;
+      }
+
+      .menu-toggle {
+        display: inline-flex;
+        position: absolute;
+        top: 14px;
+        right: 14px;
+      }
+
+      nav {
+        display: none;
+        width: 100%;
+      }
+
+      nav.open {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        position: fixed;
+        top: 72px;
+        left: 0;
+        right: 0;
+        background: #082b4f;
+        z-index: 9999;
+        padding: 18px 20px 24px;
+        box-shadow: 0 20px 40px rgba(6, 27, 58, 0.28);
+      }
+
+      nav.open a {
+        width: 100%;
+        text-align: center;
+      }
+
+      .hero {
+        padding-top: 120px;
+        min-height: auto;
+      }
+
+      body.menu-open .hero {
+        padding-top: calc(120px + var(--mobile-menu-height, 0px));
+      }
+
+      .hero h2 {
+        font-size: 2rem;
+        line-height: 1.2;
+        max-width: 95%;
+        margin: 0 auto 16px;
+      }
+
+      .hero p,
+      .hero .subtitle {
+        font-size: 1rem;
+        line-height: 1.5;
+        max-width: 92%;
+        margin: 0 auto 24px;
+      }
+
+      .hero .hero-buttons {
+        flex-direction: column;
+        gap: 14px;
+        align-items: center;
+      }
+
+      .hero .hero-buttons a,
+      .hero .hero-buttons button {
+        width: 85%;
+        max-width: 320px;
+        font-size: 1rem;
+        padding: 14px 18px;
       }
 
       .feature-grid,
@@ -161,7 +260,12 @@
       </div>
     </div>
 
-    <nav>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="primary-nav">
+      <span class="sr-only">Toggle navigation menu</span>
+      <span class="menu-toggle-icon" aria-hidden="true">☰</span>
+    </button>
+
+    <nav id="primary-nav">
       <a href="index.html">Home</a>
       <a href="services.html">Services</a>
       <a href="pricing.html">Request a Quote</a>
@@ -177,7 +281,7 @@
 
 <section class="hero">
   <div class="hero-content">
-    <h2>Professional Courier & Logistics Solutions Across Maryland, Washington, DC & Northern Virginia</h2>
+    <h2>Professional Courier & Logistics Solutions<br />Across Maryland, Washington, DC & Northern Virginia</h2>
     <p>
       Same-Day Delivery • Medical Logistics • Legal Courier • Government Contract Support • Commercial Routes
     </p>
@@ -448,6 +552,63 @@
    target="_blank">
    💬 WhatsApp
 </a>
+
+<script>
+  (function () {
+    const menuToggle = document.querySelector('.menu-toggle');
+    const nav = document.getElementById('primary-nav');
+
+    if (!menuToggle || !nav) {
+      return;
+    }
+
+    const closeMenu = () => {
+      nav.classList.remove('open');
+      document.body.classList.remove('menu-open');
+      menuToggle.setAttribute('aria-expanded', 'false');
+      menuToggle.querySelector('.menu-toggle-icon').textContent = '☰';
+      document.documentElement.style.setProperty('--mobile-menu-height', '0px');
+    };
+
+    const openMenu = () => {
+      nav.classList.add('open');
+      document.body.classList.add('menu-open');
+      menuToggle.setAttribute('aria-expanded', 'true');
+      menuToggle.querySelector('.menu-toggle-icon').textContent = '✕';
+      const navHeight = Math.ceil(nav.getBoundingClientRect().height);
+      document.documentElement.style.setProperty('--mobile-menu-height', `${navHeight + 12}px`);
+    };
+
+    menuToggle.addEventListener('click', function () {
+      if (nav.classList.contains('open')) {
+        closeMenu();
+      } else {
+        openMenu();
+      }
+    });
+
+    nav.addEventListener('click', function (event) {
+      if (event.target.tagName === 'A' && window.innerWidth <= 768) {
+        closeMenu();
+      }
+    });
+
+    document.addEventListener('keydown', function (event) {
+      if (event.key === 'Escape' && nav.classList.contains('open')) {
+        closeMenu();
+      }
+    });
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth > 768) {
+        closeMenu();
+      } else if (nav.classList.contains('open')) {
+        const navHeight = Math.ceil(nav.getBoundingClientRect().height);
+        document.documentElement.style.setProperty('--mobile-menu-height', `${navHeight + 12}px`);
+      }
+    });
+  })();
+</script>
 
 </body>
 </html>
