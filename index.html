@@ -59,6 +59,10 @@
       gap: 8px;
     }
 
+    body.menu-open {
+      overflow: hidden;
+    }
+
     .menu-toggle {
       display: none;
       border: 1px solid rgba(255, 255, 255, 0.45);
@@ -82,7 +86,8 @@
     .logo-area h1 {
       font-size: clamp(1.4rem, 4.8vw, 2.6rem);
       line-height: 1.2;
-      word-break: break-word;
+      word-break: normal;
+      overflow-wrap: normal;
     }
 
     .hero-buttons {
@@ -145,7 +150,7 @@
       .site-header {
         position: sticky;
         top: 0;
-        z-index: 1002;
+        z-index: 10020;
       }
 
       .nav-container {
@@ -168,45 +173,50 @@
         position: absolute;
         top: 14px;
         right: 14px;
+        z-index: 10030;
       }
 
-      nav {
+      .nav-menu {
         display: none;
-        width: 100%;
+        width: 100vw;
       }
 
-      nav.open {
+      .nav-menu.open {
         display: flex;
         flex-direction: column;
-        align-items: stretch;
+        align-items: center;
         position: fixed;
-        top: 72px;
-        left: 0;
-        right: 0;
-        background: #082b4f;
-        z-index: 9999;
-        padding: 18px 20px 24px;
+        inset: 0;
+        max-height: 100vh;
+        overflow-y: auto;
+        background: #072b4f;
+        z-index: 10025;
+        padding: 84px 22px 34px;
         box-shadow: 0 20px 40px rgba(6, 27, 58, 0.28);
       }
 
-      nav.open a {
+      .nav-menu.open a {
         width: 100%;
         text-align: center;
+        font-size: 1.2rem;
+        line-height: 1.3;
+        margin: 10px 0;
       }
 
       .hero {
-        padding-top: 120px;
+        width: 100%;
+        padding: 70px 18px 50px;
         min-height: auto;
-      }
-
-      body.menu-open .hero {
-        padding-top: calc(120px + var(--mobile-menu-height, 0px));
+        text-align: center;
       }
 
       .hero h2 {
-        font-size: 2rem;
-        line-height: 1.2;
-        max-width: 95%;
+        font-size: clamp(1.8rem, 7vw, 2.125rem);
+        line-height: 1.15;
+        max-width: 100%;
+        white-space: normal;
+        word-break: normal;
+        overflow-wrap: normal;
         margin: 0 auto 16px;
       }
 
@@ -265,30 +275,29 @@
       <span class="menu-toggle-icon" aria-hidden="true">☰</span>
     </button>
 
-    <nav id="primary-nav">
+    <nav id="primary-nav" class="nav-menu mobile-menu" aria-hidden="true">
       <a href="index.html">Home</a>
       <a href="services.html">Services</a>
-      <a href="pricing.html">Request a Quote</a>
-      <a href="track.html">Track Package</a>
+      <a href="request-quote.html">Request Quote</a>
+      <a href="tracking.html">Track Package</a>
       <a href="customer-login.html">Customer Login</a>
       <a href="about.html">About</a>
       <a href="contact.html">Contact</a>
-      <a class="nav-btn" href="booking.html">Request Quote</a>
     </nav>
   </div>
 </header>
 
 <section class="hero">
   <div class="hero-content">
-    <h2>Professional Courier & Logistics Solutions<br />Across Maryland, Washington, DC & Northern Virginia</h2>
+    <h2>Professional Courier and Logistics Solutions Across Maryland, Washington, DC and Northern Virginia</h2>
     <p>
       Same-Day Delivery • Medical Logistics • Legal Courier • Government Contract Support • Commercial Routes
     </p>
 
     <div class="hero-buttons">
-    <a href="booking.html" class="btn">Book Delivery</a>
-    <a href="booking.html" class="btn-primary">Request a Quote</a>
-    <a href="track.html" class="btn">Track Package</a>
+    <a href="request-quote.html" class="btn">Book Delivery</a>
+    <a href="request-quote.html" class="btn-primary">Request a Quote</a>
+    <a href="tracking.html" class="btn">Track Package</a>
     <a href="commercial-accounts.html" class="btn">Commercial Accounts</a>
     <a href="https://wa.me/14108785949?text=Hello%20C%26A%20Quality%20Solutions.%20I%20need%20a%20courier%20delivery.%20Please%20provide%20a%20quote."
        class="whatsapp-btn"
@@ -458,7 +467,7 @@
   <p>Book online or call us now to schedule your courier service.</p>
 
   <div class="hero-buttons">
-    <a href="booking.html" class="btn-primary">Request Quote</a>
+    <a href="request-quote.html" class="btn-primary">Request Quote</a>
     <a href="tel:4108785949" class="btn-call">Call (410) 878-5949</a>
   </div>
 </section>
@@ -565,17 +574,22 @@
       nav.classList.remove('open');
       document.body.classList.remove('menu-open');
       menuToggle.setAttribute('aria-expanded', 'false');
-      menuToggle.querySelector('.menu-toggle-icon').textContent = '☰';
-      document.documentElement.style.setProperty('--mobile-menu-height', '0px');
+      nav.setAttribute('aria-hidden', 'true');
+      const icon = menuToggle.querySelector('.menu-toggle-icon');
+      if (icon) {
+        icon.textContent = '☰';
+      }
     };
 
     const openMenu = () => {
       nav.classList.add('open');
       document.body.classList.add('menu-open');
       menuToggle.setAttribute('aria-expanded', 'true');
-      menuToggle.querySelector('.menu-toggle-icon').textContent = '✕';
-      const navHeight = Math.ceil(nav.getBoundingClientRect().height);
-      document.documentElement.style.setProperty('--mobile-menu-height', `${navHeight + 12}px`);
+      nav.setAttribute('aria-hidden', 'false');
+      const icon = menuToggle.querySelector('.menu-toggle-icon');
+      if (icon) {
+        icon.textContent = '✕';
+      }
     };
 
     menuToggle.addEventListener('click', function () {
@@ -592,6 +606,15 @@
       }
     });
 
+    document.addEventListener('click', function (event) {
+      if (window.innerWidth > 768 || !nav.classList.contains('open')) {
+        return;
+      }
+      if (!nav.contains(event.target) && !menuToggle.contains(event.target)) {
+        closeMenu();
+      }
+    });
+
     document.addEventListener('keydown', function (event) {
       if (event.key === 'Escape' && nav.classList.contains('open')) {
         closeMenu();
@@ -601,9 +624,6 @@
     window.addEventListener('resize', function () {
       if (window.innerWidth > 768) {
         closeMenu();
-      } else if (nav.classList.contains('open')) {
-        const navHeight = Math.ceil(nav.getBoundingClientRect().height);
-        document.documentElement.style.setProperty('--mobile-menu-height', `${navHeight + 12}px`);
       }
     });
   })();
