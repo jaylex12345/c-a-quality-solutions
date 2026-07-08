@@ -2677,3 +2677,248 @@ grid-template-columns:1fr;
   display: inline-block;
   margin-top: 20px;
 }
+
+/* Global mobile stabilization for public pages */
+@media (max-width: 768px) {
+  html,
+  body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    min-width: 0;
+  }
+
+  h1 {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  h2 {
+    font-size: 1.6rem !important;
+    line-height: 1.25 !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+    line-height: 1.3 !important;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  p,
+  li,
+  a,
+  button,
+  input,
+  textarea,
+  select,
+  td,
+  th {
+    font-size: 1rem !important;
+    line-height: 1.5 !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .container,
+  .section,
+  .cards,
+  .grid,
+  .service-grid,
+  .feature-grid,
+  .pricing-grid,
+  .services-preview,
+  .why-grid,
+  .contact-grid,
+  .routes-grid,
+  .commercial-grid,
+  .credentials-grid,
+  .metric-row,
+  .footer-container,
+  .section-inner,
+  .services-page,
+  .pricing,
+  .pricing-section,
+  .route-section,
+  .services {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .cards,
+  .grid,
+  .service-grid,
+  .feature-grid,
+  .pricing-grid,
+  .services-preview,
+  .why-grid,
+  .contact-grid,
+  .routes-grid,
+  .commercial-grid,
+  .credentials-grid,
+  .metric-row {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+
+  .card,
+  .service-card,
+  .feature-card,
+  .pricing-card,
+  .price-card,
+  .route-card,
+  .contact-card,
+  .credential-card,
+  .metric-card,
+  .delivery-card,
+  .driver-card,
+  .proof-card,
+  .track-card,
+  .phone-card,
+  .commercial-box,
+  .insight-card,
+  .job-card,
+  .footer-box {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 18px 0 !important;
+    padding: 22px !important;
+    border-radius: 18px !important;
+    overflow: hidden;
+  }
+
+  .hero,
+  .hero-content,
+  .hero-text,
+  .services-hero,
+  .pricing-header,
+  .section-text {
+    max-width: 100% !important;
+    width: 100% !important;
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+
+  .hero h1,
+  .hero h2,
+  .hero p,
+  .hero .subtitle,
+  .services-hero h1,
+  .services-hero h2,
+  .services-hero p,
+  .pricing-header h1,
+  .pricing-header p {
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  nav,
+  .nav,
+  .site-nav {
+    gap: 8px !important;
+    row-gap: 8px !important;
+  }
+
+  nav a,
+  .nav a,
+  .site-nav a,
+  .nav button,
+  .site-nav button {
+    max-width: 100%;
+    white-space: normal;
+  }
+
+  .hero-buttons,
+  .quick-actions,
+  .actions,
+  .job-actions,
+  .tool-grid,
+  .btn-row {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .hero-buttons .btn,
+  .hero-buttons .btn-primary,
+  .hero-buttons .btn-call,
+  .hero-buttons .whatsapp-btn,
+  .quick-actions .btn,
+  .pricing-main-btn,
+  .pricing-btn,
+  .price-card .btn,
+  .pricing-card .btn {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: 46px;
+    padding: 12px 14px !important;
+    font-size: 0.98rem !important;
+  }
+
+  img,
+  video,
+  canvas,
+  iframe,
+  table {
+    max-width: 100% !important;
+  }
+
+  table {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .floating-call,
+  .floating-whatsapp,
+  .chat-widget,
+  .call-button {
+    transform: scale(0.75);
+    transform-origin: bottom right;
+    bottom: 12px !important;
+    z-index: 50 !important;
+  }
+
+  .floating-call {
+    right: 8px !important;
+  }
+
+  .floating-whatsapp,
+  .chat-widget {
+    left: 8px !important;
+  }
+
+  .footer,
+  footer {
+    padding-bottom: 78px !important;
+  }
+}
+
+@media (max-width: 430px) {
+  .floating-whatsapp,
+  .chat-widget,
+  .call-button {
+    display: none !important;
+  }
+
+  .floating-call {
+    transform: scale(0.68);
+    bottom: 8px !important;
+    right: 6px !important;
+  }
+}
