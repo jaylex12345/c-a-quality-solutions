@@ -18,15 +18,17 @@ body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#071b33}
 .container{max-width:1200px;margin:24px auto;padding:0 16px}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
 .card{background:#fff;border-radius:14px;padding:18px;box-shadow:0 8px 20px rgba(0,0,0,.08)}
-.kpi{font-size:30px;font-weight:bold;color:#d9b431;margin:8px 0 0}
+.card h2,.card h3{line-height:1.3;overflow-wrap:anywhere}
+.kpi{font-size:clamp(1.45rem,7.2vw,1.9rem);line-height:1.15;font-weight:bold;color:#d9b431;margin:8px 0 0;overflow-wrap:anywhere}
 .actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.action{display:flex;align-items:center;justify-content:center;min-height:48px;text-align:center;background:#0b2d52;color:#fff;border-radius:10px;text-decoration:none;font-weight:bold;padding:10px}
+.action{display:flex;align-items:center;justify-content:center;min-height:48px;text-align:center;background:#0b2d52;color:#fff;border-radius:10px;text-decoration:none;font-weight:bold;padding:10px;line-height:1.3;overflow-wrap:anywhere;word-break:break-word}
 .favorites{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:12px}
-.favorite{background:#f8fbff;border:1px solid #dbe5f2;border-radius:12px;padding:12px;text-decoration:none;color:#071b33;font-weight:bold;min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center}
+.favorite{background:#f8fbff;border:1px solid #dbe5f2;border-radius:12px;padding:12px;text-decoration:none;color:#071b33;font-weight:bold;min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;line-height:1.3;overflow-wrap:anywhere;word-break:break-word}
 .table-wrap{overflow:auto}
 table{width:100%;border-collapse:collapse}
-th{background:#061b3a;color:#fff;padding:10px;text-align:left;white-space:nowrap}
+th{background:#061b3a;color:#fff;padding:10px;text-align:left;white-space:normal}
 td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
+th,td{word-break:break-word;overflow-wrap:anywhere}
 .status{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold}
 .status.pending{background:#fee2e2;color:#991b1b}
 .status.progress{background:#fef3c7;color:#92400e}
@@ -39,6 +41,10 @@ td{padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top}
 @media(max-width:640px){
   .grid,.actions{grid-template-columns:1fr}
   .favorites{grid-template-columns:1fr 1fr}
+  .header h1{font-size:clamp(1.4rem,7.2vw,1.7rem);line-height:1.2}
+  .header p{font-size:0.95rem;line-height:1.35}
+  .nav a,.nav button{font-size:0.95rem;line-height:1.3}
+  th,td{font-size:0.92rem}
 }
 </style>
   <meta name="description" content="Official customer dashboard page for C&A Quality Solutions LLC operations and customer support.">
